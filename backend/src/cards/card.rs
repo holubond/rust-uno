@@ -1,8 +1,12 @@
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
 pub struct Card {
     pub color: CardColor,
     pub symbol: CardSymbol
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum CardColor {
     Red,
     Yellow,
@@ -11,6 +15,7 @@ pub enum CardColor {
     Black,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum CardSymbol {
     Value(i8),
     Skip,
