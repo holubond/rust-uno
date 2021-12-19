@@ -22,13 +22,21 @@ impl Card {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum CardColor {
     Red,
     Yellow,
     Green,
     Blue,
     Black,
+}
+
+impl CardColor {
+    pub fn non_black_iter() -> impl Iterator<Item = CardColor> {
+        use CardColor::*;
+
+        [Red, Yellow, Green, Blue].iter().copied()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
