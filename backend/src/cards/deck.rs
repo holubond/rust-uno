@@ -44,6 +44,10 @@ impl Deck {
             Some(card) => card,
         }
     }
+
+    pub fn play(&mut self, card: Card) {
+        self.discard_pile.push(card);
+    }
 }
 
 fn insert_number_cards(card_stack: &mut Vec<Card>) {
