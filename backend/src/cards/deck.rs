@@ -1,4 +1,5 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
+use rand::seq::SliceRandom;
 
 pub struct Deck {
     draw_pile: Vec<Card>,
@@ -15,10 +16,17 @@ impl Deck {
 
         assert_eq!(draw_pile.len(), 108);
 
-        Deck {
+        let mut deck = Deck {
             draw_pile,
             discard_pile: Vec::new(),
-        }
+        };
+
+        deck.shuffle_draw_pile();
+        deck
+    }
+
+    fn shuffle_draw_pile(&mut self) {
+        self.draw_pile.shuffle(&mut rand::thread_rng());
     }
 }
 
