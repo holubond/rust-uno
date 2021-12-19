@@ -28,6 +28,22 @@ impl Deck {
     fn shuffle_draw_pile(&mut self) {
         self.draw_pile.shuffle(&mut rand::thread_rng());
     }
+
+    pub fn draw(&mut self) -> Card {
+        match self.draw_pile.pop() {
+            None => {
+                if self.discard_pile.is_empty() {
+                    // what should happen when the players hold all 108 cards, leaving both piles empty?
+                    panic!("No cards left in either the draw or discard pile!")
+                }
+
+                self.draw_pile.append(&mut self.discard_pile);
+                self.shuffle_draw_pile();
+                self.draw_pile.pop().unwrap()
+            }
+            Some(card) => card,
+        }
+    }
 }
 
 fn insert_number_cards(card_stack: &mut Vec<Card>) {
