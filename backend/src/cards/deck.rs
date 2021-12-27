@@ -29,19 +29,20 @@ impl Deck {
         self.draw_pile.shuffle(&mut rand::thread_rng());
     }
 
-    pub fn draw(&mut self) -> Card {
+    pub fn draw(&mut self) -> Option<Card> {
         match self.draw_pile.pop() {
             None => {
                 if self.discard_pile.is_empty() {
-                    // what should happen when the players hold all 108 cards, leaving both piles empty?
-                    panic!("No cards left in either the draw or discard pile!")
+                    return None;
                 }
 
                 self.draw_pile.append(&mut self.discard_pile);
                 self.shuffle_draw_pile();
-                self.draw_pile.pop().unwrap()
+
+                // should definitely be a safe operation
+                Some(self.draw_pile.pop().unwrap())
             }
-            Some(card) => card,
+            Some(card) => Some(card),
         }
     }
 
