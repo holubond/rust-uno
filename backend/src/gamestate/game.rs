@@ -39,7 +39,11 @@ impl Game {
     }
 
     pub fn get_finished_players(&self) -> Vec<&Player> {
-        let mut result = self.players.iter().filter(|player| player.position != None).collect::<Vec<&Player>>();
+        let mut result = self
+            .players
+            .iter()
+            .filter(|player| player.position != None)
+            .collect::<Vec<&Player>>();
         result.sort_by_key(|player| player.position.unwrap());
         result
     }
