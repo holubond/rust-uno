@@ -3,6 +3,7 @@ use crate::gamestate::player::Player;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum GameStatus {
     Lobby,
     Running,
