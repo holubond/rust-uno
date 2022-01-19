@@ -40,12 +40,12 @@ mod tests {
     fn test_play_card() {
         let mut player = Player::new("Chuck".into(), true);
 
-        assert!(player.play_card(0).is_err());
+        assert!(player.play_card_by_index(0).is_err());
 
         player.give_card(Card::new(CardColor::Black, CardSymbol::Wild).unwrap());
 
-        assert!(player.play_card(0).is_ok());
-        assert!(player.play_card(1).is_err());
+        assert!(player.play_card_by_index(0).is_ok());
+        assert!(player.play_card_by_index(1).is_err());
     }
 
     #[test]
