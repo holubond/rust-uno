@@ -19,3 +19,98 @@ impl Serialize for Card {
         state.end()
     }
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct LobbyStatus {
+    #[serde(rename = "type")]
+    typee: String,
+    status: GameStatus,
+    author: String,
+    you: String,
+    players: Vec<String>,
+}
+
+impl LobbyStatus {
+    pub fn new(game: &Game, target_player_name: String) -> LobbyStatus {
+        LobbyStatus {
+            typee: "STATUS".to_string(),
+            status: GameStatus::Lobby,
+            author: game.find_author_name(),
+            you: target_player_name,
+            players: game.players.iter().map(|p| p.name.clone()).collect(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct RunningPlayer {
+    name: String,
+    cards: usize,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RunningStatus {
+    #[serde(rename = "type")]
+    typee: String,
+    status: GameStatus,
+    author: String,
+    you: String,
+    current_player: String,
+    players: Vec<RunningPlayer>,
+    finished_players: Vec<String>,
+    cards: Vec<Card>,
+}
+
+impl RunningStatus {
+    pub fn new(game: &Game, target_player_name: String) -> RunningStatus {
+        RunningStatus {
+            typee: "STATUS".to_string(),
+            status: GameStatus::Running,
+            author: game.find_author_name(),
+            you: target_player_name.clone(),
+            current_player: game.get_current_player_name(),
+            players: RunningStatus::process_players(game),
+            finished_players: game.get_finished_player_names(),
+            cards: match game.find_player(target_player_name.clone()) {
+                None => vec![],
+                Some(player) => player.cards.clone(),
+            },
+        }
+    }
+
+    fn process_players(game: &Game) -> Vec<RunningPlayer> {
+        let mut players = Vec::new();
+
+        for player in game.players.clone() {
+            players.push(RunningPlayer {
+                name: player.name.clone(),
+                cards: player.cards.len(),
+            });
+        }
+
+        players
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FinishedStatus {
+    #[serde(rename = "type")]
+    typee: String,
+    status: GameStatus,
+    author: String,
+    you: String,
+    finished_players: Vec<String>,
+}
+
+impl FinishedStatus {
+    pub fn new(game: &Game, target_player_name: String) -> FinishedStatus {
+        FinishedStatus {
+            typee: "STATUS".into(),
+            status: GameStatus::Finished,
+            author: game.find_author_name(),
+            you: target_player_name.clone(),
+            finished_players: game.get_finished_player_names(),
+        }
+    }
+}
