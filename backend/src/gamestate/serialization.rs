@@ -35,7 +35,7 @@ impl LobbyStatus {
         LobbyStatus {
             typee: "STATUS".to_string(),
             status: GameStatus::Lobby,
-            author: game.find_author_name(),
+            author: find_author_name(game),
             you: target_player_name,
             players: game.players.iter().map(|p| p.name()).collect(),
         }
@@ -67,11 +67,11 @@ impl RunningStatus {
         RunningStatus {
             typee: "STATUS".to_string(),
             status: GameStatus::Running,
-            author: game.find_author_name(),
+            author: find_author_name(game),
             you: target_player_name.clone(),
-            current_player: game.get_current_player_name(),
+            current_player: get_current_player_name(game),
             players: RunningStatus::process_players(game),
-            finished_players: game.get_finished_player_names(),
+            finished_players: get_finished_player_names(game),
             cards: match game.find_player(target_player_name.clone()) {
                 None => vec![],
                 Some(player) => player.cards(),
@@ -108,9 +108,30 @@ impl FinishedStatus {
         FinishedStatus {
             typee: "STATUS".into(),
             status: GameStatus::Finished,
-            author: game.find_author_name(),
+            author: find_author_name(game),
             you: target_player_name.clone(),
-            finished_players: game.get_finished_player_names(),
+            finished_players: get_finished_player_names(game),
         }
+    }
+}
+
+fn get_finished_player_names(game: &Game) -> Vec<String> {
+    game.get_finished_players()
+        .iter()
+        .map(|p| p.name())
+        .collect()
+}
+
+fn find_author_name(game: &Game) -> String {
+    match game.find_author() {
+        None => "UnknownAuthor".into(),
+        Some(author) => author.name(),
+    }
+}
+
+fn get_current_player_name(game: &Game) -> String {
+    match game.get_current_player() {
+        None => "UnknownCurrentPlayer".into(),
+        Some(player) => player.name(),
     }
 }

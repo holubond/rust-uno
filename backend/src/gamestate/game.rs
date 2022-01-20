@@ -39,13 +39,6 @@ impl Game {
         self.players.iter().find(|player| player.is_author)
     }
 
-    pub fn find_author_name(&self) -> String {
-        match self.find_author() {
-            None => "UnknownAuthor".into(),
-            Some(author) => author.name(),
-        }
-    }
-
     pub fn add_player(&mut self, name: String) {
         self.players.push(Player::new(name, false))
     }
@@ -60,22 +53,8 @@ impl Game {
         result
     }
 
-    pub fn get_finished_player_names(&self) -> Vec<String> {
-        self.get_finished_players()
-            .iter()
-            .map(|p| p.name())
-            .collect()
-    }
-
     pub fn get_current_player(&self) -> Option<&Player> {
         self.players.get(self.turns_played % self.players.len())
-    }
-
-    pub fn get_current_player_name(&self) -> String {
-        match self.get_current_player() {
-            None => "UnknownCurrentPlayer".into(),
-            Some(player) => player.name(),
-        }
     }
 
     pub fn next_turn(&mut self) {
