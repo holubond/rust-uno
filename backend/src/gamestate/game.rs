@@ -30,7 +30,9 @@ impl Game {
     }
 
     pub fn find_player(&self, name: String) -> Option<&Player> {
-        self.players.iter().find(|player| player.name == name)
+        self.players
+            .iter()
+            .find(|player| player.name() == name)
     }
 
     pub fn find_author(&self) -> Option<&Player> {
@@ -40,7 +42,7 @@ impl Game {
     pub fn find_author_name(&self) -> String {
         match self.find_author() {
             None => "UnknownAuthor".into(),
-            Some(author) => author.name.clone(),
+            Some(author) => author.name(),
         }
     }
 
@@ -52,16 +54,16 @@ impl Game {
         let mut result = self
             .players
             .iter()
-            .filter(|player| player.position != None)
+            .filter(|p| p.is_finished())
             .collect::<Vec<&Player>>();
-        result.sort_by_key(|player| player.position.unwrap());
+        result.sort_by_key(|player| player.position().unwrap());
         result
     }
 
     pub fn get_finished_player_names(&self) -> Vec<String> {
         self.get_finished_players()
             .iter()
-            .map(|p| p.name.clone())
+            .map(|p| p.name())
             .collect()
     }
 
@@ -72,7 +74,7 @@ impl Game {
     pub fn get_current_player_name(&self) -> String {
         match self.get_current_player() {
             None => "UnknownCurrentPlayer".into(),
-            Some(player) => player.name.clone(),
+            Some(player) => player.name(),
         }
     }
 

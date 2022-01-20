@@ -37,7 +37,7 @@ impl LobbyStatus {
             status: GameStatus::Lobby,
             author: game.find_author_name(),
             you: target_player_name,
-            players: game.players.iter().map(|p| p.name.clone()).collect(),
+            players: game.players.iter().map(|p| p.name()).collect(),
         }
     }
 }
@@ -74,7 +74,7 @@ impl RunningStatus {
             finished_players: game.get_finished_player_names(),
             cards: match game.find_player(target_player_name.clone()) {
                 None => vec![],
-                Some(player) => player.cards.clone(),
+                Some(player) => player.cards(),
             },
         }
     }
@@ -84,8 +84,8 @@ impl RunningStatus {
 
         for player in game.players.clone() {
             players.push(RunningPlayer {
-                name: player.name.clone(),
-                cards: player.cards.len(),
+                name: player.name(),
+                cards: player.get_card_count(),
             });
         }
 
