@@ -50,6 +50,10 @@ impl Player {
         self.cards.push(card)
     }
 
+    pub fn drop_all_cards(&mut self) {
+        self.cards.clear();
+    }
+
     pub fn is_finished(&self) -> bool {
         self.position != None
     }
@@ -60,6 +64,10 @@ impl Player {
 
     pub fn set_position(&mut self, position: usize) {
         self.position = Some(position)
+    }
+
+    pub fn clear_position(&mut self) {
+        self.position = None
     }
 
     pub fn get_card_count(&self) -> usize {
