@@ -74,7 +74,7 @@ impl Component for Home {
 
     fn view(&self) -> Html {
         return html! {
-            <main class="w-screen h-screen flex justify-center items-center bg-gray-300	">
+            <main class="w-screen h-screen flex justify-center items-center bg-gray-300">
                 <div class="flex flex-col text-center p-12 rounded-lg bg-white shadow-md">
                     <div class="flex justify-center">
                         <img class="h-40 w-1/2" src="resources/Logo.png" alt="Uno"/>
