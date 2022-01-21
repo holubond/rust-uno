@@ -1,15 +1,17 @@
-use crate::gamestate::game_repo::StableGameRepo;
 use actix_web::{web, App, HttpServer};
 use std::sync::{Arc, Mutex};
+use crate::repo::game_repo::InMemoryGameRepo;
 
 mod cards;
 mod gamestate;
 mod handlers;
+mod repo;
+mod jwt_generate;
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
     let games = Vec::new();
-    let game_repo = Arc::new(Mutex::new(StableGameRepo::new(games)));
+    let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new(games)));
 
     HttpServer::new(move || {
         App::new()

@@ -1,3 +1,4 @@
+use nanoid::nanoid;
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
 use serde::{Deserialize, Serialize};
@@ -20,12 +21,13 @@ pub struct Game {
 
 impl Game {
     pub fn new(author_name: String) -> Game {
+        let id = nanoid!(10);
         Game {
             status: GameStatus::Lobby,
             players: vec![Player::new(author_name, true)],
             deck: Deck::new(),
             turns_played: 0,
-            id: "".to_string(),
+            id,
         }
     }
 
