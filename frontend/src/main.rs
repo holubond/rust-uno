@@ -1,10 +1,10 @@
 #![recursion_limit="500"]
 use yew::prelude::*;
-use yew_router::{route::Route, switch::Permissive};
 
+use yew_router::{prelude::*, Switch};
+
+use yew_router::switch::{Permissive};
 mod pages;
-mod route;
-use route::{AppAnchor, AppRoute, AppRouter, PublicUrlSwitch};
 use crate::pages::home::Home;
 use crate::pages::game::Game;
 
@@ -28,41 +28,36 @@ impl Component for App {
 
     fn view(&self) -> Html {
         return html! {
-            <main>
-                <AppRouter
-                    render=AppRouter::render(Self::switch)
-                    redirect=AppRouter::redirect(|route: Route| {
-                        AppRoute::PageNotFound(Permissive(Some(route.route))).into_public()
+                <Router<AppRoute>
+                    render = Router::render(|switch: AppRoute| {
+                        match switch {
+                            AppRoute::Test => {
+                                html!{<Home />}
+                            },
+                            AppRoute::HomePage => html!{<Home />},
+                            AppRoute::Lobby(u32) => html!{<Game />},
+                            AppRoute::PageNotFound(Permissive(None)) => html!{"Page not found"},
+                            AppRoute::PageNotFound(Permissive(Some(missed_route))) => html!{format!("Page '{}' not found", missed_route)}
+                        }
+                    })
+                    redirect = Router::redirect(|route: Route| {
+                        AppRoute::PageNotFound(Permissive(Some(route.route)))
                     })
                 />
-            </main>
         };
     }
 }
 
-impl App {
-    fn switch(switch: PublicUrlSwitch) -> Html {
-        match switch.route() {
-            AppRoute::Lobby(id) => {
-                return html! {<Game />};
-            }
-            AppRoute::Test => {
-                return html! {
-                    <main>
-                        <h1>{"lul"}</h1>
-                    </main>};
-            }
-            AppRoute::HomePage => {
-                return html! {<Home />};
-            }
-            AppRoute::PageNotFound(Permissive(route)) => {
-                return html! {
-                    <main>
-                        <h1>{"My custom pageNotFound"}</h1>
-                    </main>};
-            }
-        }
-    }
+#[derive(Debug, Switch, Clone)]
+pub enum AppRoute  {
+    #[to = "/game/{id}"]
+    Lobby(u32),
+    #[to = "/test"]
+    Test,
+    #[to = "/page-not-found"]
+    PageNotFound(Permissive<String>),
+    #[to = "/!"]
+    HomePage,
 }
 
 fn main() {
