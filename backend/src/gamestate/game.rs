@@ -1,11 +1,8 @@
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
-use crate::gamestate::serialization::{FinishedStatus, LobbyStatus, RunningStatus};
-use crate::gamestate::WSMessage;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
-#[serde(rename_all = "UPPERCASE")]
 pub enum GameStatus {
     Lobby,
     Running,
@@ -30,9 +27,7 @@ impl Game {
     }
 
     pub fn find_player(&self, name: String) -> Option<&Player> {
-        self.players
-            .iter()
-            .find(|player| player.name() == name)
+        self.players.iter().find(|player| player.name == name)
     }
 
     pub fn find_author(&self) -> Option<&Player> {
@@ -47,9 +42,9 @@ impl Game {
         let mut result = self
             .players
             .iter()
-            .filter(|p| p.is_finished())
+            .filter(|player| player.position != None)
             .collect::<Vec<&Player>>();
-        result.sort_by_key(|player| player.position().unwrap());
+        result.sort_by_key(|player| player.position.unwrap());
         result
     }
 
@@ -59,18 +54,5 @@ impl Game {
 
     pub fn next_turn(&mut self) {
         self.turns_played += 1;
-    }
-
-    pub fn serialize_status_message(&self, target_player_name: String) -> WSMessage {
-        match self.status {
-            GameStatus::Lobby => serde_json::to_string(&LobbyStatus::new(self, target_player_name)),
-            GameStatus::Running => {
-                serde_json::to_string(&RunningStatus::new(self, target_player_name))
-            }
-            GameStatus::Finished => {
-                serde_json::to_string(&FinishedStatus::new(self, target_player_name))
-            }
-        }
-        .unwrap()
     }
 }
