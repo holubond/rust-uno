@@ -23,6 +23,8 @@ impl Deck {
         };
 
         deck.shuffle_draw_pile();
+        // ensure discard pile starts with one random card
+        deck.discard_pile.push(deck.draw_pile.pop().unwrap());
         deck
     }
 
@@ -37,8 +39,12 @@ impl Deck {
                     return None;
                 }
 
+                let last_discarded_card = self.discard_pile.pop().unwrap();
+
                 self.draw_pile.append(&mut self.discard_pile);
                 self.shuffle_draw_pile();
+
+                self.discard_pile.push(last_discarded_card);
 
                 // should definitely be a safe operation
                 Some(self.draw_pile.pop().unwrap())
