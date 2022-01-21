@@ -56,6 +56,22 @@ impl Deck {
     pub fn play(&mut self, card: Card) {
         self.discard_pile.push(card);
     }
+
+    pub fn top_discard_card(&self) -> &Card {
+        // draw pile should always have at least one card
+        self.discard_pile.last().unwrap()
+    }
+
+    pub fn can_play_card(&self, played_card: &Card) -> bool {
+        use CardColor::*;
+        use CardSymbol::*;
+
+        let top_card = self.top_discard_card();
+
+        played_card.color == Black
+            || played_card.color == top_card.color
+            || played_card.symbol == top_card.symbol
+    }
 }
 
 fn insert_number_cards(card_stack: &mut Vec<Card>) {
@@ -85,5 +101,50 @@ fn insert_black_symbol_cards(card_stack: &mut Vec<Card>) {
     for _ in 0..4 {
         card_stack.push(Card::new(CardColor::Black, CardSymbol::Wild).unwrap());
         card_stack.push(Card::new(CardColor::Black, CardSymbol::Draw4).unwrap());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::cards::deck::Deck;
+    use crate::cards::card::{Card, CardColor, CardSymbol};
+
+    #[test]
+    fn test_card_symbol_eq() {
+        use crate::cards::card::CardSymbol::Value;
+
+        assert_ne!(Value(8), Value(9));
+        assert_eq!(Value(8), Value(8));
+    }
+
+    #[test]
+    fn test_can_play_card() {
+        use CardColor::*;
+        use CardSymbol::*;
+
+        let mut deck = Deck::new();
+        deck.discard_pile.push(Card::new(Red, Value(5)).unwrap());
+
+        assert!(deck.can_play_card(&Card::new(Red, Value(5)).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Red, Value(6)).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Blue, Value(5)).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Red, Reverse).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Black, Wild).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Black, Draw4).unwrap()));
+
+        assert!(!deck.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
+        assert!(!deck.can_play_card(&Card::new(Green, Draw2).unwrap()));
+        assert!(!deck.can_play_card(&Card::new(Yellow, Skip).unwrap()));
+
+        deck.discard_pile.push(Card::new(Red, Draw2).unwrap());
+        assert!(deck.can_play_card(&Card::new(Red, Draw2).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Blue, Draw2).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Red, Value(5)).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Black, Wild).unwrap()));
+        assert!(deck.can_play_card(&Card::new(Black, Draw4).unwrap()));
+
+        assert!(!deck.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
+        assert!(!deck.can_play_card(&Card::new(Green, Reverse).unwrap()));
+        assert!(!deck.can_play_card(&Card::new(Yellow, Skip).unwrap()));
     }
 }
