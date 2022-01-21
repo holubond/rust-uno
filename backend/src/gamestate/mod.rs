@@ -26,17 +26,17 @@ mod tests {
 
         let current_player = game.get_current_player();
         assert!(current_player.is_some());
-        assert_eq!(current_player.unwrap().get_name_clone(), "Andy".to_string());
+        assert_eq!(current_player.unwrap().name(), "Andy".to_string());
 
         game.next_turn();
         let current_player = game.get_current_player();
         assert!(current_player.is_some());
-        assert_eq!(current_player.unwrap().get_name_clone(), "Bob".to_string());
+        assert_eq!(current_player.unwrap().name(), "Bob".to_string());
 
         game.next_turn();
         let current_player = game.get_current_player();
         assert!(current_player.is_some());
-        assert_eq!(current_player.unwrap().get_name_clone(), "Andy".to_string());
+        assert_eq!(current_player.unwrap().name(), "Andy".to_string());
     }
 
     #[test]
@@ -66,7 +66,7 @@ mod tests {
         assert_eq!(
             finished
                 .into_iter()
-                .map(|p| p.get_name_clone())
+                .map(|p| p.name())
                 .collect::<Vec<String>>(),
             vec!["Bob".to_string(), "Andy".to_string()]
         );
