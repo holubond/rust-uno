@@ -1,6 +1,7 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use rand::seq::SliceRandom;
 
+#[derive(Clone)]
 pub struct Deck {
     draw_pile: Vec<Card>,
     discard_pile: Vec<Card>,
