@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct Card {
     pub color: CardColor,
     pub symbol: CardSymbol,
@@ -28,6 +28,7 @@ impl Card {
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum CardColor {
     Red,
     Yellow,
@@ -45,8 +46,9 @@ impl CardColor {
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum CardSymbol {
-    Value(i8),
+    Value(#[serde(skip)] i8),
     Skip,
     Reverse,
     Draw2,

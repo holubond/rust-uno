@@ -1,5 +1,8 @@
 pub mod game;
 pub mod player;
+pub mod serialization;
+
+pub type WSMessage = String;
 
 #[cfg(test)]
 mod tests {
@@ -23,17 +26,17 @@ mod tests {
 
         let current_player = game.get_current_player();
         assert!(current_player.is_some());
-        assert_eq!(current_player.unwrap().name, "Andy".to_string());
+        assert_eq!(current_player.unwrap().name(), "Andy".to_string());
 
         game.next_turn();
         let current_player = game.get_current_player();
         assert!(current_player.is_some());
-        assert_eq!(current_player.unwrap().name, "Bob".to_string());
+        assert_eq!(current_player.unwrap().name(), "Bob".to_string());
 
         game.next_turn();
         let current_player = game.get_current_player();
         assert!(current_player.is_some());
-        assert_eq!(current_player.unwrap().name, "Andy".to_string());
+        assert_eq!(current_player.unwrap().name(), "Andy".to_string());
     }
 
     #[test]
@@ -56,14 +59,14 @@ mod tests {
 
         assert!(game.get_finished_players().is_empty());
 
-        game.players.get_mut(0).unwrap().position = Some(2);
-        game.players.get_mut(1).unwrap().position = Some(1);
+        game.players.get_mut(0).unwrap().set_position(2); // Andy is second
+        game.players.get_mut(1).unwrap().set_position(1); // Bob is first
 
         let finished = game.get_finished_players();
         assert_eq!(
             finished
                 .into_iter()
-                .map(|p| p.name.clone())
+                .map(|p| p.name())
                 .collect::<Vec<String>>(),
             vec!["Bob".to_string(), "Andy".to_string()]
         );
