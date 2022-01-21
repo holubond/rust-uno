@@ -1,8 +1,5 @@
 pub mod game;
 pub mod player;
-pub mod serialization;
-
-pub type WSMessage = String;
 
 #[cfg(test)]
 mod tests {
@@ -59,8 +56,8 @@ mod tests {
 
         assert!(game.get_finished_players().is_empty());
 
-        game.players.get_mut(0).unwrap().set_position(2); // Andy is second
-        game.players.get_mut(1).unwrap().set_position(1); // Bob is first
+        game.players.get_mut(0).unwrap().position = Some(2);
+        game.players.get_mut(1).unwrap().position = Some(1);
 
         let finished = game.get_finished_players();
         assert_eq!(
