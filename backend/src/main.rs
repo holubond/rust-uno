@@ -1,12 +1,12 @@
+use crate::repo::game_repo::InMemoryGameRepo;
 use actix_web::{web, App, HttpServer};
 use std::sync::{Arc, Mutex};
-use crate::repo::game_repo::InMemoryGameRepo;
 
 mod cards;
 mod gamestate;
 mod handlers;
-mod repo;
 mod jwt_generate;
+mod repo;
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {

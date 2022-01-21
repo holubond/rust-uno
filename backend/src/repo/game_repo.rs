@@ -1,9 +1,9 @@
-use std::borrow::BorrowMut;
 use crate::gamestate::game::Game;
+use crate::jwt_generate::generate_jwt;
 use anyhow::anyhow;
 use async_trait::async_trait;
 use nanoid::nanoid;
-use crate::jwt_generate::generate_jwt;
+use std::borrow::BorrowMut;
 
 #[async_trait]
 pub trait GameRepo {

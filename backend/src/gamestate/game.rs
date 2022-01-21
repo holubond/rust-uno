@@ -1,6 +1,6 @@
-use nanoid::nanoid;
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
+use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
