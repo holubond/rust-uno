@@ -22,7 +22,7 @@ impl LobbyStatusWSMessage {
             status: GameStatus::Lobby,
             author: find_author_name(game)?,
             you: target_player_name,
-            players: game.players.iter().map(|p| p.name()).collect(),
+            players: game.players().iter().map(|p| p.name()).collect(),
         })
     }
 }
@@ -67,7 +67,7 @@ impl RunningStatusWSMessage {
     fn process_players(game: &Game) -> Vec<RunningPlayer> {
         let mut players = Vec::new();
 
-        for player in game.players.clone() {
+        for player in game.players() {
             players.push(RunningPlayer {
                 name: player.name(),
                 cards: player.get_card_count(),
