@@ -15,17 +15,25 @@ pub struct create_response {
     server: String,
     token: String,
 }
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct join_response {
+    server: String,
+    token: String,
+}
 
 pub enum Msg {
     InputChanged,
     SubmitCreate,
+    SubmitJoin,
     SubmitCreateSuccess(create_response),
+    SubmitJoinSuccess(join_response),
     SubmitFailure,
 }
 
 pub struct Home {
     client: Arc<Client>,
-    name: NodeRef,
+    name_create: NodeRef,
+    name_join: NodeRef,
     game_id: NodeRef,
 }
 
@@ -36,7 +44,8 @@ impl Component for Home {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             client: Arc::new(Client::new()),
-            name: NodeRef::default(),
+            name_join: NodeRef::default(),
+            name_create: NodeRef::default(),
             game_id: NodeRef::default(),
         }
     }
@@ -47,10 +56,10 @@ impl Component for Home {
             }
             Msg::SubmitCreate => {
                 let client = self.client.clone();
-                if let Some(input) = self.name.cast::<HtmlInputElement>() {
-                    let name = input.value();
+                if let Some(input) = self.name_create.cast::<HtmlInputElement>() {
+                    let name_create = input.value();
                     _ctx.link().send_future(async {
-                        match submit_create_form(client, name).await {
+                        match submit_create_form(client, name_create).await {
                             Ok(result) => Msg::SubmitCreateSuccess(result),
                             _ => Msg::SubmitFailure,
                         }
@@ -59,11 +68,39 @@ impl Component for Home {
                     return false;
                 }
             }
+            Msg::SubmitJoin => {
+                let client = self.client.clone();
+                if let Some(name) = self.name_join.cast::<HtmlInputElement>(){
+                    if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
+                        let name_join = name.value();
+                        let game_id = game.value();
+                        _ctx.link().send_future(async {
+                            match submit_join_form(client, name_join, game_id).await {
+                                Ok(result) => Msg::SubmitJoinSuccess(result),
+                                _ => Msg::SubmitFailure,
+                            }
+                        });
+                    }
+                }
+                return false;
+            }
 
             Msg::SubmitCreateSuccess(result) => {
                 let id = result.gameID.clone();
                 gloo_storage::LocalStorage::set("timestampPH",result);
                 _ctx.link().history().unwrap().push(Route::Lobby {id});
+            }
+            Msg::SubmitJoinSuccess(result) => {
+                if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
+                    let game_id = game.value();
+                    let game_data = create_response{
+                        gameID: game_id.clone(),
+                        token: result.token,
+                        server: result.server,
+                    };
+                    gloo_storage::LocalStorage::set("timestampPH",game_data);
+                    _ctx.link().history().unwrap().push(Route::Lobby { id: game_id});
+                }
             }
             Msg::SubmitFailure => {
                 web_sys::window().unwrap().alert_with_message("Error occured during sending data");
@@ -96,9 +133,9 @@ impl Component for Home {
                                 <div class="md:w-2/3">
                                   <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
                                     id="name"
-                                    ref={self.name.clone()}
+                                    ref={self.name_create.clone()}
                                     {onchange}
-                                    placeholder="Filter products" />
+                                    placeholder="Username" />
                                 </div>
                               </div>
                               <div class="md:flex md:items-center">
@@ -112,7 +149,7 @@ impl Component for Home {
                             </form>
                         </div>
                         <div class="flex-1 text-center p-12 rounded-lg">
-                            <form class="w-full max-w-sm">
+                            <form onsubmit={ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::SubmitJoin })} class="w-full max-w-sm">
                               <div class="md:flex md:items-center mb-6">
                                 <div class="md:w-1/3">
                                   <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
@@ -120,24 +157,30 @@ impl Component for Home {
                                   </label>
                                 </div>
                                 <div class="md:w-2/3">
-                                  <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text" />
+                                  <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
+                                    id="name1"
+                                    ref={self.name_join.clone()}
+                                    placeholder="Username" />
                                 </div>
                               </div>
                               <div class="md:flex md:items-center mb-6">
                                 <div class="md:w-1/3">
-                                  <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-password">
+                                  <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="text">
                                     {"Game ID"}
                                   </label>
                                   <p class="text-red-500 text-xs italic">{"If joining Game."}</p>
                                 </div>
                                 <div class="md:w-2/3">
-                                  <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"/>
+                                  <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
+                                    id="gameId"
+                                    ref={self.game_id.clone()}
+                                    placeholder="Game ID" />
                                 </div>
                               </div>
                               <div class="md:flex md:items-center">
                                 <div class="md:w-1/3"></div>
                                 <div class="md:w-2/3">
-                                  <button class="shadow bg-red-600 hover:bg-red-800 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="button">
+                                  <button class="shadow bg-red-600 hover:bg-red-800 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
                                     {"Join game"}
                                   </button>
                                 </div>
@@ -150,7 +193,6 @@ impl Component for Home {
         };
     }
 }
-// async fn submit_form(client: Arc<Client>, name: String) -> reqwest::Result<Create_response> {
 async fn submit_create_form(client: Arc<Client>, name: String) -> Result<create_response, &'static str> {
     let mut map = HashMap::new();
     map.insert("name",name);
@@ -162,6 +204,25 @@ async fn submit_create_form(client: Arc<Client>, name: String) -> Result<create_
     match response.status() {
         StatusCode::CREATED => {
             match response.json::<create_response>().await {
+                Ok(x) => return Ok(x),
+                _ => return Err("Error")
+            }
+        },
+        _ => return Err("Error")
+    }
+}
+async fn submit_join_form(client: Arc<Client>, name: String, game_id: String) -> Result<join_response, &'static str> {
+    let mut map = HashMap::new();
+    map.insert("name",name);
+    let url = format!("http://localhost:9000/game/{}/player",game_id);
+    let response = client.post(url).json(&map).send().await;
+    if response.is_err() {
+        return Err("Error");
+    }
+    let response = response.unwrap();
+    match response.status() {
+        StatusCode::CREATED => {
+            match response.json::<join_response>().await {
                 Ok(x) => return Ok(x),
                 _ => return Err("Error")
             }
