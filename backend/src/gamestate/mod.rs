@@ -12,7 +12,7 @@ mod tests {
 
     #[test]
     fn test_find_player() {
-        let mut game = Game::new("Andy".into());
+        let mut game = Game::new(&"Andy".into());
         game.add_player("Bob".into());
 
         assert!(game.find_player("Andy".into()).is_some());
@@ -21,7 +21,7 @@ mod tests {
 
     #[test]
     fn test_current_next_players() {
-        let mut game = Game::new("Andy".into());
+        let mut game = Game::new(&"Andy".into());
         game.add_player("Bob".into());
 
         let current_player = game.get_current_player();
@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn test_finished_players() {
-        let mut game = Game::new("Andy".into());
+        let mut game = Game::new(&"Andy".into());
         game.add_player("Bob".into());
         game.add_player("Danny".into());
 

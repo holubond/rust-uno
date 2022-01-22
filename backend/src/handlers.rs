@@ -27,18 +27,21 @@ pub async fn create_game(
     body: web::Json<GamePostData>,
 ) -> impl Responder {
 
-    let author_name = body.name.clone();
+    let author_name = &body.name;
     
     if author_name.is_empty() {
         return HttpResponse::BadRequest().json("Name of the player cannot be empty");
     }
 
     let game = Game::new(author_name);
-    game_repo.lock().unwrap().add_game(game.clone());
+    let game_id = game.id.clone();
+    let jwt = generate_jwt(author_name, &game_id);
+    
+    game_repo.lock().unwrap().add_game(game);
 
     HttpResponse::Created().json(GameCreateResponse {
-        gameID: game.id.clone(),
+        gameID: game_id,
         server: address_repo.full_local_address(),
-        token: generate_jwt(body.name.clone(), game.id.clone()),
+        token: jwt,
     })
 }

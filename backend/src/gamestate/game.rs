@@ -23,11 +23,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(author_name: String) -> Game {
+    pub fn new(author_name: &String) -> Game {
         let id = nanoid!(10);
         Game {
             status: GameStatus::Lobby,
-            players: vec![Player::new(author_name, true)],
+            players: vec![Player::new(author_name.clone(), true)],
             deck: Deck::new(),
             turns_played: 0,
             id,
