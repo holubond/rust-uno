@@ -1,4 +1,3 @@
-use std::fmt::format;
 use crate::jwt_generate::generate_jwt;
 use crate::repo::game_repo::GameRepo;
 use crate::InMemoryGameRepo;
@@ -6,6 +5,7 @@ use actix_web::{post, web, HttpResponse, Responder};
 use local_ip_address::local_ip;
 use serde::Deserialize;
 use serde::Serialize;
+use std::fmt::format;
 use std::sync::{Arc, Mutex};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -33,7 +33,7 @@ pub async fn create_game(
 
     HttpResponse::Created().json(GameCreateResponse {
         gameID: game_result.as_ref().unwrap().id.clone(),
-        server: format!("{}:{}",local_ip().unwrap(), port),
+        server: format!("{}:{}", local_ip().unwrap(), port),
         token: generate_jwt(body.name.clone(), game_result.as_ref().unwrap().id.clone()),
     })
 }

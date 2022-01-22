@@ -1,14 +1,13 @@
 use crate::repo::game_repo::InMemoryGameRepo;
 use actix_web::{web, App, HttpServer};
-use std::sync::{Arc, Mutex};
 use clap::Parser;
+use std::sync::{Arc, Mutex};
 
 mod cards;
 mod gamestate;
 mod handlers;
 mod jwt_generate;
 mod repo;
-
 
 #[derive(Parser)]
 #[clap(version = "1.0", author = "L.G.")]

@@ -9,7 +9,7 @@ pub trait GameRepo {
 #[derive(Clone)]
 pub struct InMemoryGameRepo {
     games: Vec<Game>,
-    pub port: String
+    pub port: String,
 }
 
 impl InMemoryGameRepo {

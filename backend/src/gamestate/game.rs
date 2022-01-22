@@ -35,9 +35,7 @@ impl Game {
     }
 
     pub fn find_player(&self, name: String) -> Option<&Player> {
-        self.players
-            .iter()
-            .find(|player| player.name() == name)
+        self.players.iter().find(|player| player.name() == name)
     }
 
     pub fn find_author(&self) -> Option<&Player> {
