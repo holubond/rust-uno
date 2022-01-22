@@ -9,7 +9,7 @@ use serde::Serialize;
 use std::sync::{Arc, Mutex};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GamePostData {
+pub struct GameCreateData {
     name: String,
 }
 
@@ -24,7 +24,7 @@ pub struct GameCreateResponse {
 pub async fn create_game(
     game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
     address_repo: web::Data<Arc<AddressRepo>>,
-    body: web::Json<GamePostData>,
+    body: web::Json<GameCreateData>,
 ) -> impl Responder {
 
     let author_name = &body.name;
