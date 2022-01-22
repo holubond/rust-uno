@@ -1,6 +1,6 @@
+use crate::cards::card::CardColor::{Blue, Green, Red, Yellow};
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use rand::seq::SliceRandom;
-use crate::cards::card::CardColor::{Red, Blue, Green, Yellow};
 use rand::Rng;
 
 #[derive(Clone)]
@@ -77,17 +77,6 @@ impl Deck {
         // draw pile should always have at least one card
         self.discard_pile.last().unwrap()
     }
-
-    pub fn can_play_card(&self, played_card: &Card) -> bool {
-        use CardColor::*;
-        use CardSymbol::*;
-
-        let top_card = self.top_discard_card();
-
-        played_card.color == Black
-            || played_card.color == top_card.color
-            || played_card.symbol == top_card.symbol
-    }
 }
 
 fn insert_number_cards(card_stack: &mut Vec<Card>) {
@@ -135,37 +124,6 @@ mod tests {
     }
 
     #[test]
-    fn test_can_play_card() {
-        use CardColor::*;
-        use CardSymbol::*;
-
-        let mut deck = Deck::new();
-        deck.discard_pile.push(Card::new(Red, Value(5)).unwrap());
-
-        assert!(deck.can_play_card(&Card::new(Red, Value(5)).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Red, Value(6)).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Blue, Value(5)).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Red, Reverse).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Black, Wild).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Black, Draw4).unwrap()));
-
-        assert!(!deck.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
-        assert!(!deck.can_play_card(&Card::new(Green, Draw2).unwrap()));
-        assert!(!deck.can_play_card(&Card::new(Yellow, Skip).unwrap()));
-
-        deck.discard_pile.push(Card::new(Red, Draw2).unwrap());
-        assert!(deck.can_play_card(&Card::new(Red, Draw2).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Blue, Draw2).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Red, Value(5)).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Black, Wild).unwrap()));
-        assert!(deck.can_play_card(&Card::new(Black, Draw4).unwrap()));
-
-        assert!(!deck.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
-        assert!(!deck.can_play_card(&Card::new(Green, Reverse).unwrap()));
-        assert!(!deck.can_play_card(&Card::new(Yellow, Skip).unwrap()));
-    }
-
-    #[test]
     fn test_108_new_cards() {
         let deck = Deck::new();
         assert_eq!(deck.draw_pile.len(), 107);
@@ -200,7 +158,6 @@ mod tests {
         assert!(deck.draw_pile.iter().all(|card| if card.should_be_black() {card.color == Black} else {true}));
         assert_eq!(deck.top_discard_card(), &leftover_card);
     }
-
 }
 
 fn random_color() -> CardColor {

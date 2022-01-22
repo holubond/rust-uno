@@ -1,4 +1,4 @@
-use crate::cards::card::{Card, CardSymbol};
+use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
 use crate::gamestate::CARDS_DEALT_AT_GAME_START;
@@ -37,7 +37,7 @@ impl Game {
             deck: Deck::new(),
             current_player: 0,
             is_top_card_active: false,
-            is_clockwise: true
+            is_clockwise: true,
         }
     }
 
@@ -147,6 +147,14 @@ impl Game {
         }
     }
 
+    pub fn can_play_card(&self, played_card: &Card) -> bool {
+        let top_card = self.deck.top_discard_card();
+
+        played_card.color == CardColor::Black
+            || played_card.color == top_card.color
+            || played_card.symbol == top_card.symbol
+    }
+
     // Performs immutable checks whether the player is eligible to draw a card.
     fn can_player_draw(&self, player_name: String) -> anyhow::Result<()> {
         let player = self.find_player(player_name.clone());
@@ -166,11 +174,7 @@ impl Game {
             )
         }
 
-        if player
-            .cards()
-            .iter()
-            .any(|card| self.deck.can_play_card(card))
-        {
+        if player.cards().iter().any(|card| self.can_play_card(card)) {
             anyhow::bail!(
                 "Player of name {} can play a card, no need to draw!",
                 player_name
@@ -377,5 +381,37 @@ mod tests {
             game.get_current_player().unwrap().name(),
             "Candace".to_string()
         );
+    }
+
+    #[test]
+    fn test_can_play_card_without_context() {
+        use CardColor::*;
+        use CardSymbol::*;
+
+        let mut game = Game::new("Andy".into());
+        game.deck.play(Card::new(Red, Value(5)).unwrap());
+
+        assert!(game.can_play_card(&Card::new(Red, Value(5)).unwrap()));
+        assert!(game.can_play_card(&Card::new(Red, Value(6)).unwrap()));
+        assert!(game.can_play_card(&Card::new(Blue, Value(5)).unwrap()));
+        assert!(game.can_play_card(&Card::new(Red, Reverse).unwrap()));
+        assert!(game.can_play_card(&Card::new(Black, Wild).unwrap()));
+        assert!(game.can_play_card(&Card::new(Black, Draw4).unwrap()));
+
+        assert!(!game.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Green, Draw2).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
+
+        game.deck.play(Card::new(Red, Draw2).unwrap());
+        assert!(!game.is_top_card_active);
+        assert!(game.can_play_card(&Card::new(Red, Draw2).unwrap()));
+        assert!(game.can_play_card(&Card::new(Blue, Draw2).unwrap()));
+        assert!(game.can_play_card(&Card::new(Red, Value(5)).unwrap()));
+        assert!(game.can_play_card(&Card::new(Black, Wild).unwrap()));
+        assert!(game.can_play_card(&Card::new(Black, Draw4).unwrap()));
+
+        assert!(!game.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Green, Reverse).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
     }
 }
