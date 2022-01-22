@@ -1,5 +1,8 @@
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
+use crate::gamestate::serialization::{FinishedStatus, LobbyStatus, RunningStatus};
+use crate::gamestate::WSMessage;
+use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
@@ -9,25 +12,29 @@ pub enum GameStatus {
     Finished,
 }
 
+#[derive(Clone)]
 pub struct Game {
     status: GameStatus,
     pub players: Vec<Player>,
     deck: Deck,
     turns_played: usize,
+    pub id: String,
 }
 
 impl Game {
     pub fn new(author_name: String) -> Game {
+        let id = nanoid!(10);
         Game {
             status: GameStatus::Lobby,
             players: vec![Player::new(author_name, true)],
             deck: Deck::new(),
             turns_played: 0,
+            id,
         }
     }
 
     pub fn find_player(&self, name: String) -> Option<&Player> {
-        self.players.iter().find(|player| player.name == name)
+        self.players.iter().find(|player| player.name() == name)
     }
 
     pub fn find_author(&self) -> Option<&Player> {
