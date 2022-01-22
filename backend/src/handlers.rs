@@ -19,7 +19,7 @@ pub struct GameCreateResponse {
     token: String,
 }
 
-#[post("/GameCreateData")]
+#[post("/game")]
 pub async fn create_game(
     data: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
     address_repo: web::Data<Arc<AddressRepo>>,
