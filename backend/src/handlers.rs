@@ -22,7 +22,7 @@ pub struct GameCreateResponse {
 
 #[post("/game")]
 pub async fn create_game(
-    data: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
+    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
     address_repo: web::Data<Arc<AddressRepo>>,
     body: web::Json<GamePostData>,
 ) -> impl Responder {
@@ -34,7 +34,7 @@ pub async fn create_game(
     }
 
     let game = Game::new(author_name);
-    data.lock().unwrap().add_game(game.clone());
+    game_repo.lock().unwrap().add_game(game.clone());
 
     HttpResponse::Created().json(GameCreateResponse {
         gameID: game.id.clone(),
