@@ -300,7 +300,7 @@ mod tests {
         game.players.get_mut(0).unwrap().give_card(top_card);
         assert!(game.draw_cards("Andy".into()).is_err()); // can definitely play the same card, doesn't need to draw
 
-        game.deck.play(Card::new(CardColor::Blue, CardSymbol::Draw4).unwrap());
+        game.deck.play(Card::new(CardColor::Black, CardSymbol::Draw4).unwrap().morph_black_card(CardColor::Blue).unwrap());
         game.players.get_mut(0).unwrap().give_card(Card::new(CardColor::Black, CardSymbol::Draw4).unwrap());
         assert!(game.draw_cards("Andy".into()).is_err()); // can definitely play +4 on a +4
     }
