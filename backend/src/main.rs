@@ -27,6 +27,7 @@ async fn main() -> anyhow::Result<()> {
         App::new()
             .app_data(web::Data::new(game_repo.clone()))
             .service(handlers::create_game)
+            .service(handlers::start_game)
     })
     .bind(format!("127.0.0.1:{}", port))?
     .run()

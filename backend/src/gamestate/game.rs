@@ -1,7 +1,6 @@
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
-use crate::gamestate::serialization::{FinishedStatus, LobbyStatus, RunningStatus};
-use crate::gamestate::WSMessage;
+use crate::jwt_generate::generate_jwt;
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +13,7 @@ pub enum GameStatus {
 
 #[derive(Clone)]
 pub struct Game {
-    status: GameStatus,
+    pub status: GameStatus,
     pub players: Vec<Player>,
     deck: Deck,
     turns_played: usize,
@@ -26,7 +25,11 @@ impl Game {
         let id = nanoid!(10);
         Game {
             status: GameStatus::Lobby,
-            players: vec![Player::new(author_name, true)],
+            players: vec![Player::new(
+                author_name.clone(),
+                true,
+                generate_jwt(author_name, id.clone()),
+            )],
             deck: Deck::new(),
             turns_played: 0,
             id,
@@ -34,7 +37,7 @@ impl Game {
     }
 
     pub fn find_player(&self, name: String) -> Option<&Player> {
-        self.players.iter().find(|player| player.name() == name)
+        self.players.iter().find(|player| player.name == name)
     }
 
     pub fn find_author(&self) -> Option<&Player> {
@@ -42,7 +45,11 @@ impl Game {
     }
 
     pub fn add_player(&mut self, name: String) {
-        self.players.push(Player::new(name, false))
+        self.players.push(Player::new(
+            name.clone(),
+            false,
+            generate_jwt(name, self.id.clone()),
+        ))
     }
 
     pub fn get_finished_players(&self) -> Vec<&Player> {

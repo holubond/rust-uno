@@ -7,17 +7,17 @@ pub struct Player {
     pub is_author: bool,
     pub jwt: String,
     cards: Vec<Card>,
-    position: Option<usize>,
+    pub(crate) position: Option<usize>,
 }
 
 impl Player {
-    pub fn new(name: String, is_author: bool) -> Player {
+    pub fn new(name: String, is_author: bool, jwt: String) -> Player {
         Player {
             name,
             is_author,
             cards: vec![],
             position: None,
-            jwt: "".to_string(),
+            jwt,
         }
     }
 

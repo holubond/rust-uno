@@ -1,8 +1,8 @@
-use yew::prelude::*;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
+use yew::prelude::*;
 use yew::services::{ConsoleService, Task, TimeoutService};
 use yewtil::future::LinkFuture;
 
@@ -62,8 +62,7 @@ impl Component for Home {
                 );
                 self.timeout_job = Some(Box::new(handle));
             }
-            Msg::ResetSubmitResult => {
-            }
+            Msg::ResetSubmitResult => {}
         }
         true
     }
