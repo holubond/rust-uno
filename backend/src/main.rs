@@ -1,12 +1,13 @@
 use crate::repo::game_repo::InMemoryGameRepo;
 use crate::repo::address_repo::AddressRepo;
+use crate::handler::create_game::create_game;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use std::sync::{Arc, Mutex};
 
 mod cards;
 mod gamestate;
-mod handlers;
+mod handler;
 mod jwt;
 mod repo;
 
@@ -29,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
         App::new()
             .app_data(web::Data::new(game_repo.clone()))
             .app_data(web::Data::new(address_repo.clone()))
-            .service(handlers::create_game)
+            .service(create_game)
     })
     .bind(format!("127.0.0.1:{}", port))?
     .run()
