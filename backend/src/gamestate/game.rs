@@ -24,7 +24,7 @@ pub struct Game {
     deck: Deck,
     current_player: usize,
     /// An active card means that the current player must respond to that card, e.g. by being skipped, by drawing...
-    is_top_card_active: bool,
+    active_cards: Vec<Card>,
     pub is_clockwise: bool,
 }
 
@@ -36,7 +36,7 @@ impl Game {
             players: vec![Player::new(author_name.clone(), true)],
             deck: Deck::new(),
             current_player: 0,
-            is_top_card_active: false,
+            active_cards: vec![],
             is_clockwise: true,
         }
     }
@@ -151,6 +151,19 @@ impl Game {
         }
     }
 
+    fn is_top_card_active(&self) -> bool {
+        !self.active_cards.is_empty()
+    }
+
+    fn sum_active_cards(&self, multiplicand: usize) -> usize {
+        self.active_cards.len() * multiplicand
+    }
+
+    fn are_active_cards_skips(&self) -> bool {
+        use CardSymbol::Skip;
+        self.is_top_card_active() && self.active_cards.iter().all(|card| card.symbol == Skip)
+    }
+
     pub fn can_play_card(&self, played_card: &Card) -> bool {
         let top_card = self.deck.top_discard_card();
 
@@ -198,6 +211,14 @@ impl Game {
             )
         }
 
+        if self.are_active_cards_skips() {
+            anyhow::bail!(
+                "Player {} cannot draw, they must respond to the {}",
+                player_name,
+                self.deck.top_discard_card()
+            )
+        }
+
         Ok(())
     }
 
@@ -208,12 +229,14 @@ impl Game {
         self.can_player_draw(player_name.clone())?;
 
         let top_symbol = &self.deck.top_discard_card().symbol;
-        let draw_count = if self.is_top_card_active && top_symbol == &CardSymbol::Draw2 {
-            self.is_top_card_active = false;
-            2
-        } else if self.is_top_card_active && top_symbol == &CardSymbol::Draw4 {
-            self.is_top_card_active = false;
-            4
+        let draw_count = if self.is_top_card_active() && top_symbol == &CardSymbol::Draw2 {
+            let count = self.sum_active_cards(2);
+            self.active_cards.clear();
+            count
+        } else if self.is_top_card_active() && top_symbol == &CardSymbol::Draw4 {
+            let count = self.sum_active_cards(4);
+            self.active_cards.clear();
+            count
         } else {
             1
         };
@@ -344,11 +367,11 @@ mod tests {
     fn test_draw_cards_draws() {
         let mut game = Game::new("Andy".into());
         game.deck.play(Card::new(CardColor::Blue, CardSymbol::Draw2).unwrap());
-        game.is_top_card_active = true;
+        game.active_cards.push(game.deck.top_discard_card().clone());
 
         assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 2);
 
-        game.is_top_card_active = false;
+        game.active_cards.clear();
         game.players.get_mut(0).unwrap().drop_all_cards();
         game.players.get_mut(0).unwrap().give_card(Card::new(CardColor::Red, CardSymbol::Value(2)).unwrap()); // cannot play this
         assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 1);
@@ -420,7 +443,7 @@ mod tests {
         assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
 
         game.deck.play(Card::new(Red, Draw2).unwrap());
-        assert!(!game.is_top_card_active);
+        assert!(!game.is_top_card_active());
         assert!(game.can_play_card(&Card::new(Red, Draw2).unwrap()));
         assert!(game.can_play_card(&Card::new(Blue, Draw2).unwrap()));
         assert!(game.can_play_card(&Card::new(Red, Value(5)).unwrap()));
