@@ -268,6 +268,68 @@ impl Game {
 
         drawn_cards
     }
+
+    fn can_player_play(&self, player_name: String, card: &Card) -> anyhow::Result<()> {
+        let player = self.does_player_exist(player_name.clone())?;
+
+        self.is_player_at_turn(player)?;
+
+        if !self.can_play_card(card) {
+            anyhow::bail!(
+                "You cannot play a {} after a {}.",
+                card,
+                self.deck.top_discard_card()
+            )
+        }
+
+        Ok(())
+    }
+
+    fn handle_played_card(&mut self, the_card: &Card) {
+        match the_card.symbol {
+            CardSymbol::Value(_) | CardSymbol::Wild => self.active_cards.clear(),
+            CardSymbol::Reverse => {
+                self.reverse();
+                self.active_cards.clear();
+            }
+            CardSymbol::Draw2 | CardSymbol::Draw4 | CardSymbol::Skip => {
+                self.active_cards.push(the_card.clone())
+            }
+        }
+    }
+
+    pub fn play_card(
+        &mut self,
+        player_name: String,
+        card: Card,
+        maybe_new_color: Option<CardColor>,
+    ) -> anyhow::Result<()> {
+        self.can_player_play(player_name.clone(), &card)?;
+
+        let possible_position = self.get_finished_players().len();
+        let player = self
+            .players
+            .iter_mut()
+            .find(|player| player.name() == player_name)
+            .unwrap();
+
+        let mut played_card = player.play_card_by_eq(card)?;
+        if played_card.should_be_black() {
+            if let Some(color) = maybe_new_color {
+                played_card = played_card.morph_black_card(color).unwrap();
+            }
+        }
+
+        self.deck.play(played_card);
+        // todo!("Send PlayCardWSMessage");
+
+        if player.cards().is_empty() {
+            player.set_position(possible_position);
+            // todo!("Send FinishWSMessage");
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
