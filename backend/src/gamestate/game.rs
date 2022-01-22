@@ -163,24 +163,33 @@ impl Game {
         }
     }
 
-    // Performs immutable checks whether the player is eligible to draw a card.
-    fn can_player_draw(&self, player_name: String) -> anyhow::Result<()> {
+    fn does_player_exist(&self, player_name: String) -> anyhow::Result<&Player> {
         let player = self.find_player(player_name.clone());
 
         if player.is_none() {
             anyhow::bail!("Player of name {} does not exist!", player_name)
         }
-        let player = player.unwrap();
 
-        if match self.get_current_player() {
+        Ok(player.unwrap())
+    }
+
+    fn is_player_at_turn(&self, player: &Player) -> anyhow::Result<()> {
+        match self.get_current_player() {
             None => anyhow::bail!("No player is currently playing?!"),
-            Some(current_player) => player != current_player,
-        } {
-            anyhow::bail!(
-                "It is not player {}'s turn right now, cannot draw a card!",
-                player_name
-            )
+            Some(current_player) => {
+                if player != current_player {
+                    anyhow::bail!("It is not player {}'s turn right now!", player.name())
+                } else {
+                    Ok(())
+                }
+            }
         }
+    }
+
+    // Performs immutable checks whether the player is eligible to draw a card.
+    fn can_player_draw(&self, player_name: String) -> anyhow::Result<()> {
+        let player = self.does_player_exist(player_name.clone())?;
+        self.is_player_at_turn(player)?;
 
         if player.cards().iter().any(|card| self.can_play_card(card)) {
             anyhow::bail!(
