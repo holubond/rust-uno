@@ -154,9 +154,13 @@ impl Game {
     pub fn can_play_card(&self, played_card: &Card) -> bool {
         let top_card = self.deck.top_discard_card();
 
-        played_card.color == CardColor::Black
-            || played_card.color == top_card.color
-            || played_card.symbol == top_card.symbol
+        if self.active_cards.is_empty() {
+            played_card.color == CardColor::Black
+                || played_card.color == top_card.color
+                || played_card.symbol == top_card.symbol
+        } else {
+            played_card.symbol == top_card.symbol
+        }
     }
 
     // Performs immutable checks whether the player is eligible to draw a card.
@@ -414,6 +418,44 @@ mod tests {
         assert!(game.can_play_card(&Card::new(Black, Wild).unwrap()));
         assert!(game.can_play_card(&Card::new(Black, Draw4).unwrap()));
 
+        assert!(!game.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Green, Reverse).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
+    }
+
+    #[test]
+    fn test_can_play_card_with_context() {
+        use CardColor::*;
+        use CardSymbol::*;
+
+        let mut game = Game::new("Andy".into());
+        let plus_4 = Card::new(CardColor::Black, CardSymbol::Draw4)
+            .unwrap()
+            .morph_black_card(CardColor::Blue)
+            .unwrap();
+        game.deck.play(plus_4.clone());
+        game.active_cards.push(plus_4.clone());
+
+        assert!(game.can_play_card(&plus_4.clone()));
+        assert!(game.can_play_card(&Card::new(Black, Draw4).unwrap()));
+
+        assert!(!game.can_play_card(&Card::new(Red, Value(6)).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Blue, Value(5)).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Red, Reverse).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Black, Wild).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Green, Draw2).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
+
+        game.deck.play(Card::new(Red, Draw2).unwrap());
+        assert!(game.can_play_card(&Card::new(Red, Draw2).unwrap()));
+        assert!(game.can_play_card(&Card::new(Blue, Draw2).unwrap()));
+        assert!(game.can_play_card(&Card::new(Green, Draw2).unwrap()));
+        assert!(game.can_play_card(&Card::new(Yellow, Draw2).unwrap()));
+
+        assert!(!game.can_play_card(&Card::new(Red, Value(5)).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Black, Wild).unwrap()));
+        assert!(!game.can_play_card(&Card::new(Black, Draw4).unwrap()));
         assert!(!game.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
         assert!(!game.can_play_card(&Card::new(Green, Reverse).unwrap()));
         assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
