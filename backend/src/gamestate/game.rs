@@ -9,11 +9,13 @@ pub enum GameStatus {
     Finished,
 }
 
+#[derive(Clone)]
 pub struct Game {
     status: GameStatus,
     pub players: Vec<Player>,
     deck: Deck,
     turns_played: usize,
+    pub id: String,
 }
 
 impl Game {
@@ -23,6 +25,7 @@ impl Game {
             players: vec![Player::new(author_name, true)],
             deck: Deck::new(),
             turns_played: 0,
+            id: "".to_string(),
         }
     }
 

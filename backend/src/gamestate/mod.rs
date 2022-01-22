@@ -1,4 +1,5 @@
 pub mod game;
+pub(crate) mod game_repo;
 pub mod player;
 
 #[cfg(test)]

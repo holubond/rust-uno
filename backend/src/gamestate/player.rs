@@ -7,6 +7,7 @@ pub struct Player {
     pub is_author: bool,
     pub cards: Vec<Card>,
     pub position: Option<usize>,
+    pub jwt: String,
 }
 
 impl Player {
@@ -16,6 +17,7 @@ impl Player {
             is_author,
             cards: vec![],
             position: None,
+            jwt: "".to_string(),
         }
     }
 
