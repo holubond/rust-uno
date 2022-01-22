@@ -1,5 +1,5 @@
 use crate::gamestate::game::Game;
-use crate::jwt_generate::generate_jwt;
+use crate::jwt::generate_jwt;
 use crate::repo::game_repo::GameRepo;
 use crate::repo::address_repo::AddressRepo;
 use crate::InMemoryGameRepo;
@@ -36,7 +36,7 @@ pub async fn create_game(
     let game = Game::new(author_name);
     let game_id = game.id.clone();
     let jwt = generate_jwt(author_name, &game_id);
-    
+
     game_repo.lock().unwrap().add_game(game);
 
     HttpResponse::Created().json(GameCreateResponse {

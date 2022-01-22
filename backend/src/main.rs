@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 mod cards;
 mod gamestate;
 mod handlers;
-mod jwt_generate;
+mod jwt;
 mod repo;
 
 #[derive(Parser)]
