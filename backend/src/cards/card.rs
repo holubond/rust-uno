@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::SerializeStruct;
 
@@ -63,6 +64,12 @@ impl Serialize for Card {
     }
 }
 
+impl Display for Card {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {} Card", self.color, self.symbol)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum CardColor {
@@ -81,6 +88,12 @@ impl CardColor {
     }
 }
 
+impl Display for CardColor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum CardSymbol {
@@ -90,4 +103,17 @@ pub enum CardSymbol {
     Draw2,
     Draw4,
     Wild,
+}
+
+impl Display for CardSymbol {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            CardSymbol::Value(number) => number.to_string(),
+            CardSymbol::Skip => "Skip".into(),
+            CardSymbol::Reverse => "Reverse".into(),
+            CardSymbol::Draw2 => "+2".into(),
+            CardSymbol::Draw4 => "+4".into(),
+            CardSymbol::Wild => "Wild".into(),
+        })
+    }
 }
