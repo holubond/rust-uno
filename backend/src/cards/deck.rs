@@ -1,5 +1,7 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use rand::seq::SliceRandom;
+use crate::cards::card::CardColor::{Red, Blue, Green, Yellow};
+use rand::Rng;
 
 #[derive(Clone)]
 pub struct Deck {
@@ -21,8 +23,14 @@ impl Deck {
         };
 
         deck.shuffle_draw_pile();
+
         // ensure discard pile starts with one random card
-        deck.discard_pile.push(deck.draw_pile.pop().unwrap());
+        let mut new_top_card = deck.draw_pile.pop().unwrap();
+        if new_top_card.should_be_black() {
+            new_top_card = new_top_card.morph_black_card(random_color()).unwrap();
+        }
+        deck.discard_pile.push(new_top_card);
+
         deck
     }
 
@@ -150,5 +158,14 @@ mod tests {
     fn test_108_new_cards() {
         let deck = Deck::new();
         assert_eq!(deck.draw_pile.len(), 108);
+    }
+}
+
+fn random_color() -> CardColor {
+    match rand::thread_rng().gen_range(0..4) {
+        0 => Red,
+        1 => Blue,
+        2 => Green,
+        _ => Yellow
     }
 }
