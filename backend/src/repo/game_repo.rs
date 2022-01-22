@@ -13,8 +13,11 @@ pub struct InMemoryGameRepo {
 }
 
 impl InMemoryGameRepo {
-    pub fn new(games: Vec<Game>, port: String) -> Self {
-        Self { games, port }
+    pub fn new(port: String) -> Self {
+        Self { 
+            games: Vec::new(),
+            port
+        }
     }
 }
 

@@ -20,8 +20,7 @@ struct Opts {
 async fn main() -> anyhow::Result<()> {
     let opts = Opts::parse();
     let port = opts.port;
-    let games = Vec::new();
-    let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new(games, port.clone())));
+    let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new(port.clone())));
 
     HttpServer::new(move || {
         App::new()
