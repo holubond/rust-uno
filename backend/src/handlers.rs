@@ -25,9 +25,11 @@ pub async fn create_game(
     address_repo: web::Data<Arc<AddressRepo>>,
     body: web::Json<GamePostData>,
 ) -> impl Responder {
+    
     if body.name.is_empty() {
         return HttpResponse::BadRequest().json("Name of the player cannot be empty");
     }
+    
     let game_result = data.lock().unwrap().create_game(body.name.clone()).await;
 
     HttpResponse::Created().json(GameCreateResponse {
