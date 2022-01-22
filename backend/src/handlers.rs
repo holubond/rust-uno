@@ -1,3 +1,4 @@
+use std::fmt::format;
 use crate::jwt_generate::generate_jwt;
 use crate::repo::game_repo::GameRepo;
 use crate::InMemoryGameRepo;
@@ -28,10 +29,11 @@ pub async fn create_game(
         return HttpResponse::BadRequest().json("Name of the player cannot be empty");
     }
     let game_result = data.lock().unwrap().create_game(body.name.clone()).await;
+    let port = data.lock().unwrap().port.clone();
 
     HttpResponse::Created().json(GameCreateResponse {
         gameID: game_result.as_ref().unwrap().id.clone(),
-        server: local_ip().unwrap().to_string() + ":9000",
+        server: format!("{}:{}",local_ip().unwrap(), port),
         token: generate_jwt(body.name.clone(), game_result.as_ref().unwrap().id.clone()),
     })
 }

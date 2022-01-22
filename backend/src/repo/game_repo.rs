@@ -9,11 +9,12 @@ pub trait GameRepo {
 #[derive(Clone)]
 pub struct InMemoryGameRepo {
     games: Vec<Game>,
+    pub port: String
 }
 
 impl InMemoryGameRepo {
-    pub fn new(games: Vec<Game>) -> Self {
-        Self { games }
+    pub fn new(games: Vec<Game>, port: String) -> Self {
+        Self { games, port }
     }
 }
 
