@@ -1,9 +1,6 @@
 #![recursion_limit="500"]
 use yew::prelude::*;
-
-use yew_router::{prelude::*, Switch};
-
-use yew_router::switch::{Permissive};
+use yew_router::prelude::*;
 mod pages;
 use crate::pages::home::Home;
 use crate::pages::game::Game;
@@ -14,52 +11,41 @@ impl Component for App {
     type Message = ();
     type Properties = ();
 
-    fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         false
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        false
-    }
-
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         return html! {
-                <Router<AppRoute>
-                    render = Router::render(|switch: AppRoute| {
-                        match switch {
-                            AppRoute::Test => {
-                                html!{<Home />}
-                            },
-                            AppRoute::HomePage => html!{<Home />},
-                            AppRoute::Lobby(u32) => html!{<Game />},
-                            AppRoute::PageNotFound(Permissive(None)) => html!{"Page not found"},
-                            AppRoute::PageNotFound(Permissive(Some(missed_route))) => html!{format!("Page '{}' not found", missed_route)}
-                        }
-                    })
-                    redirect = Router::redirect(|route: Route| {
-                        AppRoute::PageNotFound(Permissive(Some(route.route)))
-                    })
-                />
+                <BrowserRouter>
+                    <Switch<Route> render={Switch::render(switch)} />
+                </BrowserRouter>
         };
     }
 }
 
-#[derive(Debug, Switch, Clone)]
-pub enum AppRoute  {
-    #[to = "/game/{id}"]
-    Lobby(u32),
-    #[to = "/test"]
-    Test,
-    #[to = "/page-not-found"]
-    PageNotFound(Permissive<String>),
-    #[to = "/!"]
+#[derive(Debug, Clone, PartialEq, Routable)]
+pub enum Route  {
+    #[at("/game/:id")]
+    Lobby { id: String },
+    #[not_found]
+    #[at("/404")]
+    PageNotFound,
+    #[at("/")]
     HomePage,
 }
 
+fn switch(routes: &Route) -> Html {
+    match routes {
+        Route::HomePage => html! { <Home /> },
+        Route::Lobby { id } => html! {<p>{format!("You are looking at game lobby {}", id)}</p>},
+        Route::PageNotFound => html! { <h1>{ "404" }</h1> },
+    }
+}
 fn main() {
     yew::start_app::<App>();
 }
