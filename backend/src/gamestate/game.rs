@@ -1,3 +1,4 @@
+use crate::cards::card::{Card, CardSymbol};
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
 use crate::gamestate::CARDS_DEALT_AT_GAME_START;
@@ -17,21 +18,24 @@ pub enum GameStatus {
 
 #[derive(Clone)]
 pub struct Game {
+    pub id: String,
     status: GameStatus,
     players: Vec<Player>,
     deck: Deck,
     turns_played: usize,
-    pub id: String,
+    /// An active card means that the current player must respond to that card, e.g. by being skipped, by drawing...
+    is_top_card_active: bool,
 }
 
 impl Game {
     pub fn new(author_name: &String) -> Game {
         Game {
+            id: nanoid!(10),
             status: GameStatus::Lobby,
             players: vec![Player::new(author_name.clone(), true)],
             deck: Deck::new(),
             turns_played: 0,
-            id: nanoid!(10)
+            is_top_card_active: false,
         }
     }
 
@@ -128,6 +132,84 @@ impl Game {
             player.message(msg.clone());
         }
     }
+
+    // Performs immutable checks whether the player is eligible to draw a card.
+    fn can_player_draw(&self, player_name: String) -> anyhow::Result<()> {
+        let player = self.find_player(player_name.clone());
+
+        if player.is_none() {
+            anyhow::bail!("Player of name {} does not exist!", player_name)
+        }
+        let player = player.unwrap();
+
+        if match self.get_current_player() {
+            None => anyhow::bail!("No player is currently playing?!"),
+            Some(current_player) => player != current_player,
+        } {
+            anyhow::bail!(
+                "It is not player {}'s turn right now, cannot draw a card!",
+                player_name
+            )
+        }
+
+        if player
+            .cards()
+            .iter()
+            .any(|card| self.deck.can_play_card(card))
+        {
+            anyhow::bail!(
+                "Player of name {} can play a card, no need to draw!",
+                player_name
+            )
+        }
+
+        Ok(())
+    }
+
+    /// Returns a cloned vector of what the player received as drawn cards.
+    /// Returns an error if the player does not exist, is not the current player, or has a valid card to play.
+    /// Should get called whenever a player clicks the draw card pile.
+    pub fn draw_cards(&mut self, player_name: String) -> anyhow::Result<Vec<Card>> {
+        self.can_player_draw(player_name.clone())?;
+
+        let top_symbol = &self.deck.top_discard_card().symbol;
+        let draw_count = if self.is_top_card_active && top_symbol == &CardSymbol::Draw2 {
+            self.is_top_card_active = false;
+            2
+        } else if self.is_top_card_active && top_symbol == &CardSymbol::Draw4 {
+            self.is_top_card_active = false;
+            4
+        } else {
+            1
+        };
+        // Cannot be extracted to a method because the whole self will be borrowed mutably, not just self.players
+        let player = self
+            .players
+            .iter_mut()
+            .find(|player| player.name() == player_name)
+            .unwrap(); // safe because of check_player_drawing()
+
+        Ok(Game::draw_n_cards(player, &mut self.deck, draw_count))
+    }
+
+    // Again, the function's signature is like this due to mutability borrow-checker issues
+    fn draw_n_cards(player: &mut Player, deck: &mut Deck, n: usize) -> Vec<Card> {
+        let mut drawn_cards = vec![];
+
+        for _ in 0..n {
+            let drawn_card = deck.draw();
+            if drawn_card.is_none() {
+                // there are no cards on the table at all
+                break;
+            }
+            let drawn_card = drawn_card.unwrap();
+
+            drawn_cards.push(drawn_card.clone());
+            player.give_card(drawn_card);
+        }
+
+        drawn_cards
+    }
 }
 
 #[cfg(test)]
@@ -196,5 +278,44 @@ mod tests {
                 .collect::<Vec<String>>(),
             vec!["Bob".to_string(), "Andy".to_string()]
         );
+    }
+
+    // prerequisite for some other tests
+    #[test]
+    fn test_author_is_first_before_start() {
+        let mut game = Game::new("Andy".into());
+        assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
+    }
+
+    #[test]
+    fn test_draw_cards_errors() {
+        let mut game = Game::new("Andy".into());
+
+        assert!(game.draw_cards("Bobby".into()).is_err()); // nonexistent player
+
+        game.add_player("Bobby".into());
+        assert!(game.draw_cards("Bobby".into()).is_err()); // not the current player
+
+        let top_card = game.deck.top_discard_card().clone();
+        game.players.get_mut(0).unwrap().give_card(top_card);
+        assert!(game.draw_cards("Andy".into()).is_err()); // can definitely play the same card, doesn't need to draw
+
+        game.deck.play(Card::new(CardColor::Blue, CardSymbol::Draw4).unwrap());
+        game.players.get_mut(0).unwrap().give_card(Card::new(CardColor::Black, CardSymbol::Draw4).unwrap());
+        assert!(game.draw_cards("Andy".into()).is_err()); // can definitely play +4 on a +4
+    }
+
+    #[test]
+    fn test_draw_cards_draws() {
+        let mut game = Game::new("Andy".into());
+        game.deck.play(Card::new(CardColor::Blue, CardSymbol::Draw2).unwrap());
+        game.is_top_card_active = true;
+
+        assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 2);
+
+        game.is_top_card_active = false;
+        game.players.get_mut(0).unwrap().drop_all_cards();
+        game.players.get_mut(0).unwrap().give_card(Card::new(CardColor::Red, CardSymbol::Value(2)).unwrap()); // cannot play this
+        assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 1);
     }
 }
