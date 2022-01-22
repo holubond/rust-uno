@@ -25,7 +25,7 @@ pub struct Game {
     current_player: usize,
     /// An active card means that the current player must respond to that card, e.g. by being skipped, by drawing...
     is_top_card_active: bool,
-    is_clockwise: bool,
+    pub is_clockwise: bool,
 }
 
 impl Game {
@@ -101,6 +101,10 @@ impl Game {
 
     pub fn players(&self) -> &Vec<Player> {
         &self.players
+    }
+
+    pub fn deck(&self) -> &Deck {
+        &self.deck
     }
 
     pub fn add_player(&mut self, name: String) {
