@@ -22,9 +22,10 @@ pub struct Game {
     status: GameStatus,
     players: Vec<Player>,
     deck: Deck,
-    turns_played: usize,
+    current_player: usize,
     /// An active card means that the current player must respond to that card, e.g. by being skipped, by drawing...
     is_top_card_active: bool,
+    is_clockwise: bool,
 }
 
 impl Game {
@@ -34,8 +35,9 @@ impl Game {
             status: GameStatus::Lobby,
             players: vec![Player::new(author_name.clone(), true)],
             deck: Deck::new(),
-            turns_played: 0,
+            current_player: 0,
             is_top_card_active: false,
+            is_clockwise: true
         }
     }
 
@@ -62,7 +64,7 @@ impl Game {
 
     /// Imitates a random starting player by pretending that some rounds have already been played.
     fn randomize_starting_player(&mut self) {
-        self.turns_played = rand::thread_rng().gen_range(0..self.players.len());
+        self.current_player = rand::thread_rng().gen_range(0..self.players.len());
     }
 
     fn clear_player_positions(&mut self) {
@@ -116,11 +118,23 @@ impl Game {
     }
 
     pub fn get_current_player(&self) -> Option<&Player> {
-        self.players.get(self.turns_played % self.players.len())
+        self.players.get(self.current_player)
     }
 
     pub fn next_turn(&mut self) {
-        self.turns_played += 1;
+        self.current_player = if self.is_clockwise {
+            self.current_player + 1
+        } else {
+            match self.current_player.checked_sub(1) {
+                None => self.players.len() - 1,
+                Some(number) => number,
+            }
+        }
+        .rem_euclid(self.players.len());
+    }
+
+    pub fn reverse(&mut self) {
+        self.is_clockwise = !self.is_clockwise
     }
 
     pub fn status(&self) -> GameStatus {
@@ -317,5 +331,51 @@ mod tests {
         game.players.get_mut(0).unwrap().drop_all_cards();
         game.players.get_mut(0).unwrap().give_card(Card::new(CardColor::Red, CardSymbol::Value(2)).unwrap()); // cannot play this
         assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_is_clockwise() {
+        let mut game = Game::new("Andy".into());
+        game.add_player("Bob".into());
+        game.add_player("Candace".into());
+        assert!(game.is_clockwise);
+
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Andy".to_string()
+        );
+        game.next_turn();
+        assert_eq!(game.get_current_player().unwrap().name(), "Bob".to_string());
+        game.next_turn();
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Candace".to_string()
+        );
+        game.next_turn();
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Andy".to_string()
+        );
+
+        game.reverse(); // Andy plays a reverse card
+        assert!(!game.is_clockwise);
+
+        game.next_turn();
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Candace".to_string()
+        );
+        game.next_turn();
+        assert_eq!(game.get_current_player().unwrap().name(), "Bob".to_string());
+        game.next_turn();
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Andy".to_string()
+        );
+        game.next_turn();
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Candace".to_string()
+        );
     }
 }
