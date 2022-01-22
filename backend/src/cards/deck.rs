@@ -15,8 +15,6 @@ impl Deck {
         insert_colored_symbol_cards(&mut draw_pile);
         insert_black_symbol_cards(&mut draw_pile);
 
-        assert_eq!(draw_pile.len(), 108);
-
         let mut deck = Deck {
             draw_pile,
             discard_pile: Vec::new(),
@@ -146,5 +144,11 @@ mod tests {
         assert!(!deck.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
         assert!(!deck.can_play_card(&Card::new(Green, Reverse).unwrap()));
         assert!(!deck.can_play_card(&Card::new(Yellow, Skip).unwrap()));
+    }
+
+    #[test]
+    fn test_108_new_cards() {
+        let deck = Deck::new();
+        assert_eq!(deck.draw_pile.len(), 108);
     }
 }
