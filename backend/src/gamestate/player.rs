@@ -15,7 +15,7 @@ impl Player {
             name,
             is_author,
             cards: vec![],
-            position: None,
+            position: None
         }
     }
 
