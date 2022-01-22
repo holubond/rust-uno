@@ -16,7 +16,7 @@ impl Player {
             name,
             is_author,
             cards: vec![],
-            position: None
+            position: None,
         }
     }
 
@@ -75,7 +75,7 @@ impl Player {
         self.cards.len()
     }
 
-    /// Clones the name of the player.
+    /// Clones the vector of cards of the player.
     pub fn cards(&self) -> Vec<Card> {
         self.cards.clone()
     }

@@ -82,8 +82,10 @@ impl Game {
 
             for _ in 0..CARDS_DEALT_AT_GAME_START {
                 match self.deck.draw() {
-                    None => anyhow::bail!("Draw pile is empty when starting game, this should not happen."),
-                    Some(card) => player.give_card(card)
+                    None => anyhow::bail!(
+                        "Draw pile is empty when starting game, this should not happen."
+                    ),
+                    Some(card) => player.give_card(card),
                 }
             }
         }
@@ -404,7 +406,10 @@ mod tests {
     #[test]
     fn test_author_is_first_before_start() {
         let mut game = Game::new("Andy".into());
-        assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Andy".to_string()
+        );
     }
 
     #[test]
@@ -420,22 +425,34 @@ mod tests {
         game.players.get_mut(0).unwrap().give_card(top_card);
         assert!(game.draw_cards("Andy".into()).is_err()); // can definitely play the same card, doesn't need to draw
 
-        game.deck.play(Card::new(CardColor::Black, CardSymbol::Draw4).unwrap().morph_black_card(CardColor::Blue).unwrap());
-        game.players.get_mut(0).unwrap().give_card(Card::new(CardColor::Black, CardSymbol::Draw4).unwrap());
+        game.deck.play(
+            Card::new(CardColor::Black, CardSymbol::Draw4)
+                .unwrap()
+                .morph_black_card(CardColor::Blue)
+                .unwrap(),
+        );
+        game.players
+            .get_mut(0)
+            .unwrap()
+            .give_card(Card::new(CardColor::Black, CardSymbol::Draw4).unwrap());
         assert!(game.draw_cards("Andy".into()).is_err()); // can definitely play +4 on a +4
     }
 
     #[test]
     fn test_draw_cards_draws() {
         let mut game = Game::new("Andy".into());
-        game.deck.play(Card::new(CardColor::Blue, CardSymbol::Draw2).unwrap());
+        game.deck
+            .play(Card::new(CardColor::Blue, CardSymbol::Draw2).unwrap());
         game.active_cards.push(game.deck.top_discard_card().clone());
 
         assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 2);
 
         game.active_cards.clear();
         game.players.get_mut(0).unwrap().drop_all_cards();
-        game.players.get_mut(0).unwrap().give_card(Card::new(CardColor::Red, CardSymbol::Value(2)).unwrap()); // cannot play this
+        game.players
+            .get_mut(0)
+            .unwrap()
+            .give_card(Card::new(CardColor::Red, CardSymbol::Value(2)).unwrap()); // cannot play this
         assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 1);
     }
 

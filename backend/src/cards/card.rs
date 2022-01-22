@@ -32,7 +32,7 @@ impl Card {
 
     /// Allows for in-place transformation of a black card's color.
     /// Returns Err when it is called on a non-black card.
-    pub fn morph_black_card(mut self, new_color: CardColor) -> anyhow::Result<Card>{
+    pub fn morph_black_card(mut self, new_color: CardColor) -> anyhow::Result<Card> {
         if self.should_be_black() {
             self.color = new_color;
             Ok(self)
@@ -107,13 +107,17 @@ pub enum CardSymbol {
 
 impl Display for CardSymbol {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            CardSymbol::Value(number) => number.to_string(),
-            CardSymbol::Skip => "Skip".into(),
-            CardSymbol::Reverse => "Reverse".into(),
-            CardSymbol::Draw2 => "+2".into(),
-            CardSymbol::Draw4 => "+4".into(),
-            CardSymbol::Wild => "Wild".into(),
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                CardSymbol::Value(number) => number.to_string(),
+                CardSymbol::Skip => "Skip".into(),
+                CardSymbol::Reverse => "Reverse".into(),
+                CardSymbol::Draw2 => "+2".into(),
+                CardSymbol::Draw4 => "+4".into(),
+                CardSymbol::Wild => "Wild".into(),
+            }
+        )
     }
 }

@@ -112,7 +112,7 @@ fn insert_black_symbol_cards(card_stack: &mut Vec<Card>) {
 #[cfg(test)]
 mod tests {
     use crate::cards::card::{Card, CardColor, CardSymbol};
-    use crate::cards::deck::{Deck, random_color};
+    use crate::cards::deck::{random_color, Deck};
     use rand::Rng;
 
     #[test]
@@ -155,7 +155,11 @@ mod tests {
 
         assert_eq!(deck.discard_pile.len(), 1);
         assert_eq!(deck.draw_pile.len(), 107);
-        assert!(deck.draw_pile.iter().all(|card| if card.should_be_black() {card.color == Black} else {true}));
+        assert!(deck.draw_pile.iter().all(|card| if card.should_be_black() {
+            card.color == Black
+        } else {
+            true
+        }));
         assert_eq!(deck.top_discard_card(), &leftover_card);
     }
 }
@@ -165,6 +169,6 @@ fn random_color() -> CardColor {
         0 => Red,
         1 => Blue,
         2 => Green,
-        _ => Yellow
+        _ => Yellow,
     }
 }
