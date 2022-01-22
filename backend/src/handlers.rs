@@ -1,3 +1,4 @@
+use crate::gamestate::game::Game;
 use crate::jwt_generate::generate_jwt;
 use crate::repo::game_repo::GameRepo;
 use crate::repo::address_repo::AddressRepo;
@@ -25,16 +26,19 @@ pub async fn create_game(
     address_repo: web::Data<Arc<AddressRepo>>,
     body: web::Json<GamePostData>,
 ) -> impl Responder {
+
+    let author_name = body.name.clone();
     
-    if body.name.is_empty() {
+    if author_name.is_empty() {
         return HttpResponse::BadRequest().json("Name of the player cannot be empty");
     }
-    
-    let game_result = data.lock().unwrap().create_game(body.name.clone()).await;
+
+    let game = Game::new(author_name);
+    data.lock().unwrap().add_game(game.clone());
 
     HttpResponse::Created().json(GameCreateResponse {
-        gameID: game_result.as_ref().unwrap().id.clone(),
+        gameID: game.id.clone(),
         server: address_repo.full_local_address(),
-        token: generate_jwt(body.name.clone(), game_result.as_ref().unwrap().id.clone()),
+        token: generate_jwt(body.name.clone(), game.id.clone()),
     })
 }
