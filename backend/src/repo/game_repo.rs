@@ -21,7 +21,7 @@ impl InMemoryGameRepo {
 #[async_trait]
 impl GameRepo for InMemoryGameRepo {
     async fn create_game(&mut self, author_name: String) -> anyhow::Result<Game> {
-        let mut game = Game::new(author_name);
+        let game = Game::new(author_name);
         self.games.push(game.clone());
 
         return Ok(game);
