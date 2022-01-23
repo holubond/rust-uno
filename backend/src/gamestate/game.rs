@@ -272,6 +272,13 @@ impl Game {
             draw_count,
         );
 
+        self.end_turn();
+        self.message_all(WSMsg::draw(
+            player_name,
+            self.get_current_player().unwrap().name(),
+            draw_count,
+        ));
+
         Ok(drawn_cards)
     }
 
