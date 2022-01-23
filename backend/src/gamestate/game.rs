@@ -1,7 +1,5 @@
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
-use crate::gamestate::serialization::{FinishedStatus, LobbyStatus, RunningStatus};
-use crate::gamestate::WSMessage;
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 
@@ -64,16 +62,7 @@ impl Game {
         self.turns_played += 1;
     }
 
-    pub fn serialize_status_message(&self, target_player_name: String) -> WSMessage {
-        match self.status {
-            GameStatus::Lobby => serde_json::to_string(&LobbyStatus::new(self, target_player_name)),
-            GameStatus::Running => {
-                serde_json::to_string(&RunningStatus::new(self, target_player_name))
-            }
-            GameStatus::Finished => {
-                serde_json::to_string(&FinishedStatus::new(self, target_player_name))
-            }
-        }
-        .unwrap()
+    pub fn status(&self) -> GameStatus {
+        self.status
     }
 }
