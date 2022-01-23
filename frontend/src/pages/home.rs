@@ -10,13 +10,13 @@ use gloo_storage::{LocalStorage, Storage};
 use crate::Route;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct create_response {
+pub struct CreateResponse {
     gameID: String,
     server: String,
     token: String,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct join_response {
+pub struct JoinRespons {
     server: String,
     token: String,
 }
@@ -25,8 +25,8 @@ pub enum Msg {
     InputChanged,
     SubmitCreate,
     SubmitJoin,
-    SubmitCreateSuccess(create_response),
-    SubmitJoinSuccess(join_response),
+    SubmitCreateSuccess(CreateResponse),
+    SubmitJoinSuccess(JoinRespons),
     SubmitFailure,
 }
 
@@ -41,7 +41,7 @@ impl Component for Home {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             client: Arc::new(Client::new()),
             name_join: NodeRef::default(),
@@ -50,16 +50,16 @@ impl Component for Home {
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::InputChanged => {
             }
             Msg::SubmitCreate => {
-                let client = self.client.clone();
                 if let Some(input) = self.name_create.cast::<HtmlInputElement>() {
                     let name_create = input.value();
-                    _ctx.link().send_future(async {
-                        match submit_create_form(client, name_create).await {
+                    let client = self.client.clone();
+                    ctx.link().send_future(async {
+                        match send_create_game_request(client, name_create).await {
                             Ok(result) => Msg::SubmitCreateSuccess(result),
                             _ => Msg::SubmitFailure,
                         }
@@ -69,13 +69,13 @@ impl Component for Home {
                 }
             }
             Msg::SubmitJoin => {
-                let client = self.client.clone();
                 if let Some(name) = self.name_join.cast::<HtmlInputElement>(){
                     if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
                         let name_join = name.value();
                         let game_id = game.value();
-                        _ctx.link().send_future(async {
-                            match submit_join_form(client, name_join, game_id).await {
+                        let client = self.client.clone();
+                        ctx.link().send_future(async {
+                            match send_join_game_request(client, name_join, game_id).await {
                                 Ok(result) => Msg::SubmitJoinSuccess(result),
                                 _ => Msg::SubmitFailure,
                             }
@@ -87,23 +87,38 @@ impl Component for Home {
 
             Msg::SubmitCreateSuccess(result) => {
                 let id = result.gameID.clone();
-                gloo_storage::LocalStorage::set("timestampPH",result);
-                _ctx.link().history().unwrap().push(Route::Lobby {id});
+                match gloo_storage::LocalStorage::set("timestampPH",result) {
+                    Ok(_) => (),
+                    _ => match web_sys::window().unwrap().alert_with_message("Local storage Error") {
+                        Ok(_) => (),
+                        _ => log!("Alert failed to pop up!"),
+                    }
+                }
+                ctx.link().history().unwrap().push(Route::Lobby {id});
             }
             Msg::SubmitJoinSuccess(result) => {
                 if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
                     let game_id = game.value();
-                    let game_data = create_response{
+                    let game_data = CreateResponse {
                         gameID: game_id.clone(),
                         token: result.token,
                         server: result.server,
                     };
-                    gloo_storage::LocalStorage::set("timestampPH",game_data);
-                    _ctx.link().history().unwrap().push(Route::Lobby { id: game_id});
+                    match gloo_storage::LocalStorage::set("timestampPH",game_data) {
+                        Ok(_) => (),
+                        _ => match web_sys::window().unwrap().alert_with_message("Local storage Error") {
+                            Ok(_) => (),
+                            _ => log!("Alert failed to pop up!"),
+                        }
+                    }
+                    ctx.link().history().unwrap().push(Route::Lobby { id: game_id});
                 }
             }
             Msg::SubmitFailure => {
-                web_sys::window().unwrap().alert_with_message("Error occured during sending data");
+                match web_sys::window().unwrap().alert_with_message("Error occured during sending data") {
+                    Ok(_) => (),
+                    _ => log!("Alert failed to pop up!"),
+                };
                 log!("Got Err response sending create");
             }
         }
@@ -124,67 +139,67 @@ impl Component for Home {
                     <div class="flex">
                         <div class="flex-1 text-center p-12 rounded-lg">
                             <form onsubmit={ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::SubmitCreate })} class="w-full max-w-sm">
-                              <div class="md:flex md:items-center mb-6">
-                                <div class="md:w-1/3">
-                                  <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
-                                    {"Username"}
-                                  </label>
-                                </div>
+                                <div class="md:flex md:items-center mb-6">
+                                    <div class="md:w-1/3">
+                                        <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
+                                            {"Username"}
+                                        </label>
+                                    </div>
                                 <div class="md:w-2/3">
-                                  <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
-                                    id="name"
-                                    ref={self.name_create.clone()}
-                                    {onchange}
-                                    placeholder="Username" />
+                                    <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
+                                        id="name"
+                                        ref={self.name_create.clone()}
+                                        {onchange}
+                                        placeholder="Username" />
+                                    </div>
                                 </div>
-                              </div>
-                              <div class="md:flex md:items-center">
-                                <div class="md:w-1/3"></div>
-                                <div class="md:w-2/3">
-                                  <button class="shadow bg-red-600 hover:bg-red-800 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
-                                    {"Create game"}
-                                  </button>
+                                <div class="md:flex md:items-center">
+                                    <div class="md:w-1/3"></div>
+                                    <div class="md:w-2/3">
+                                        <button class="shadow bg-red-600 hover:bg-red-800 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
+                                            {"Create game"}
+                                        </button>
+                                    </div>
                                 </div>
-                              </div>
                             </form>
                         </div>
                         <div class="flex-1 text-center p-12 rounded-lg">
                             <form onsubmit={ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::SubmitJoin })} class="w-full max-w-sm">
-                              <div class="md:flex md:items-center mb-6">
-                                <div class="md:w-1/3">
-                                  <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
-                                    {"Username"}
-                                  </label>
+                                <div class="md:flex md:items-center mb-6">
+                                    <div class="md:w-1/3">
+                                        <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
+                                            {"Username"}
+                                        </label>
+                                    </div>
+                                    <div class="md:w-2/3">
+                                        <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
+                                            id="name1"
+                                            ref={self.name_join.clone()}
+                                            placeholder="Username" />
+                                    </div>
                                 </div>
-                                <div class="md:w-2/3">
-                                  <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
-                                    id="name1"
-                                    ref={self.name_join.clone()}
-                                    placeholder="Username" />
+                                <div class="md:flex md:items-center mb-6">
+                                    <div class="md:w-1/3">
+                                            <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="text">
+                                            {"Game ID"}
+                                            </label>
+                                            <p class="text-red-500 text-xs italic">{"If joining Game."}</p>
+                                    </div>
+                                    <div class="md:w-2/3">
+                                        <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
+                                        id="gameId"
+                                        ref={self.game_id.clone()}
+                                        placeholder="Game ID" />
+                                    </div>
                                 </div>
-                              </div>
-                              <div class="md:flex md:items-center mb-6">
-                                <div class="md:w-1/3">
-                                  <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="text">
-                                    {"Game ID"}
-                                  </label>
-                                  <p class="text-red-500 text-xs italic">{"If joining Game."}</p>
+                                <div class="md:flex md:items-center">
+                                    <div class="md:w-1/3"></div>
+                                    <div class="md:w-2/3">
+                                        <button class="shadow bg-red-600 hover:bg-red-800 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
+                                            {"Join game"}
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="md:w-2/3">
-                                  <input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text"
-                                    id="gameId"
-                                    ref={self.game_id.clone()}
-                                    placeholder="Game ID" />
-                                </div>
-                              </div>
-                              <div class="md:flex md:items-center">
-                                <div class="md:w-1/3"></div>
-                                <div class="md:w-2/3">
-                                  <button class="shadow bg-red-600 hover:bg-red-800 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
-                                    {"Join game"}
-                                  </button>
-                                </div>
-                              </div>
                             </form>
                         </div>
                     </div>
@@ -193,17 +208,17 @@ impl Component for Home {
         };
     }
 }
-async fn submit_create_form(client: Arc<Client>, name: String) -> Result<create_response, &'static str> {
-    let mut map = HashMap::new();
-    map.insert("name",name);
-    let response = client.post("http://localhost:9000/game").json(&map).send().await;
+async fn send_create_game_request(client: Arc<Client>, name: String) -> Result<CreateResponse, &'static str> {
+    let mut request_body = HashMap::new();
+    request_body.insert("name", name);
+    let response = client.post("http://localhost:9000/game").json(&request_body).send().await;
     if response.is_err() {
         return Err("Error");
     }
     let response = response.unwrap();
     match response.status() {
         StatusCode::CREATED => {
-            match response.json::<create_response>().await {
+            match response.json::<CreateResponse>().await {
                 Ok(x) => return Ok(x),
                 _ => return Err("Error")
             }
@@ -211,18 +226,18 @@ async fn submit_create_form(client: Arc<Client>, name: String) -> Result<create_
         _ => return Err("Error")
     }
 }
-async fn submit_join_form(client: Arc<Client>, name: String, game_id: String) -> Result<join_response, &'static str> {
-    let mut map = HashMap::new();
-    map.insert("name",name);
+async fn send_join_game_request(client: Arc<Client>, name: String, game_id: String) -> Result<JoinRespons, &'static str> {
+    let mut request_body = HashMap::new();
+    request_body.insert("name", name);
     let url = format!("http://localhost:9000/game/{}/player",game_id);
-    let response = client.post(url).json(&map).send().await;
+    let response = client.post(url).json(&request_body).send().await;
     if response.is_err() {
         return Err("Error");
     }
     let response = response.unwrap();
     match response.status() {
         StatusCode::CREATED => {
-            match response.json::<join_response>().await {
+            match response.json::<JoinRespons>().await {
                 Ok(x) => return Ok(x),
                 _ => return Err("Error")
             }
