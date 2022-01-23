@@ -1,8 +1,12 @@
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
+use crate::gamestate::serialization::{FinishedStatus, LobbyStatus, RunningStatus};
+use crate::gamestate::WSMessage;
+use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum GameStatus {
     Lobby,
     Running,
@@ -19,18 +23,19 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(author_name: String) -> Game {
+    pub fn new(author_name: &String) -> Game {
+        let id = nanoid!(10);
         Game {
             status: GameStatus::Lobby,
-            players: vec![Player::new(author_name, true)],
+            players: vec![Player::new(author_name.clone(), true)],
             deck: Deck::new(),
             turns_played: 0,
-            id: "".to_string(),
+            id,
         }
     }
 
     pub fn find_player(&self, name: String) -> Option<&Player> {
-        self.players.iter().find(|player| player.name == name)
+        self.players.iter().find(|player| player.name() == name)
     }
 
     pub fn find_author(&self) -> Option<&Player> {
@@ -45,9 +50,9 @@ impl Game {
         let mut result = self
             .players
             .iter()
-            .filter(|player| player.position != None)
+            .filter(|p| p.is_finished())
             .collect::<Vec<&Player>>();
-        result.sort_by_key(|player| player.position.unwrap());
+        result.sort_by_key(|player| player.position().unwrap());
         result
     }
 
@@ -57,5 +62,18 @@ impl Game {
 
     pub fn next_turn(&mut self) {
         self.turns_played += 1;
+    }
+
+    pub fn serialize_status_message(&self, target_player_name: String) -> WSMessage {
+        match self.status {
+            GameStatus::Lobby => serde_json::to_string(&LobbyStatus::new(self, target_player_name)),
+            GameStatus::Running => {
+                serde_json::to_string(&RunningStatus::new(self, target_player_name))
+            }
+            GameStatus::Finished => {
+                serde_json::to_string(&FinishedStatus::new(self, target_player_name))
+            }
+        }
+        .unwrap()
     }
 }
