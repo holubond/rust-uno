@@ -9,15 +9,18 @@ use reqwasm::websocket::{Message, futures::WebSocket};
 use wasm_bindgen_futures::spawn_local;
 use futures::{SinkExt, StreamExt};
 use gloo_storage::Storage;
+use web_sys::HtmlInputElement;
 use crate::components::card::{Card, CardProps, CardType, Color};
 use crate::pages::game::GameState::Lobby;
 use crate::components::myuser::MyUser;
 use crate::components::oponent::{Oponents, Oponent};
 
 pub enum Msg {
+    UnoChanged,
     SubmitStart,
     SubmitSuccess,
     SubmitFailure,
+    PlayCard(CardProps),
 }
 
 pub struct Game {
@@ -31,6 +34,7 @@ pub struct Game {
     current_player: Option<String>,
     finished_players: Option<Vec<String>>,
     clockwise: bool,
+    uno_bool: bool,
     //todo discarted card
 
 }
@@ -127,11 +131,16 @@ impl Component for Game {
             current_player: Some("Holy".to_string()),
             finished_players: None,
             clockwise: true,
+            uno_bool: false,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
+            Msg:: UnoChanged => {
+                self.uno_bool = !self.uno_bool;
+                return false;
+            }
             Msg::SubmitStart => {
                 let client = self.client.clone();
                 let id = self.game.gameID.clone();
@@ -143,6 +152,10 @@ impl Component for Game {
                         _ => Msg::SubmitFailure,
                     }
                 });
+            }
+            Msg::PlayCard(card) => {
+                log!("PLAY CARD");
+                // todo send ret api play card
             }
             Msg::SubmitSuccess => {
 
@@ -165,10 +178,11 @@ impl Component for Game {
                         <img class="h-full w-full" src="../resources/draw_pile.png" alt="card"/>
                     </div>
                     <div class="-mt-16 -mb-16 opacity-10">
+                        // todo change ratation
                         <img class="h-full w-full" src="../resources/rotate_arrow-L.png" alt="turn"/>
                     </div>
                     <div class="rounded-lg bg-black shadow-md">
-                        // odhazovací deck
+                        // todo odhazovací deck
                         <img class="h-full w-full" src="../resources/deck/r1.png" alt="top_of_deck_card"/>
                     </div>
                 </div>
@@ -177,9 +191,12 @@ impl Component for Game {
                     onclick={ctx.link().callback(|_| { Msg::SubmitStart })}>
                         {"Start game"}
                     </button>
-                    <button class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white m-8 w-32 h-32 border border-red-500 hover:border-transparent rounded">
-                        {"Uno"}
-                    </button>
+                    <div>
+                        <input class="bg-gray-200 w-full py-2 px-4" type="checkbox"
+                            id="uno"
+                            onchange={ctx.link().callback(|_| Msg::UnoChanged)}/>
+                        <label for="uno">{"UNO!"}</label>
+                    </div>
                     <MyUser name={self.you.clone()} current={self.current_player.clone()} cards={self.cards.clone()} />
                     <p></p>
                 </div>
@@ -202,4 +219,3 @@ async fn submit_start_game(client: Arc<Client>, game_id: String, token: String) 
         _ => return Err("Error")
     }
 }
-
