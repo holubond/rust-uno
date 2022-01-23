@@ -1,5 +1,7 @@
+use crate::cards::card::Card;
 use crate::gamestate::game::{Game, GameStatus};
 use crate::ws::ws_structs::draw::DrawWSMessage;
+use crate::ws::ws_structs::play_card::PlayCardWSMessage;
 use crate::ws::ws_structs::status::{
     FinishedStatusWSMessage, LobbyStatusWSMessage, RunningStatusWSMessage,
 };
@@ -36,6 +38,15 @@ impl WSMsg {
 
     pub fn draw(target_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
         let msg = DrawWSMessage::new(target_player_name, next_player_name, cards_drawn);
+        Self::custom(msg.ws_serialize())
+    }
+
+    pub fn play_card(
+        target_player_name: String,
+        next_player_name: String,
+        card_drawn: Card,
+    ) -> Self {
+        let msg = PlayCardWSMessage::new(target_player_name, next_player_name, card_drawn);
         Self::custom(msg.ws_serialize())
     }
 }
