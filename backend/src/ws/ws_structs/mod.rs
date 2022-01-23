@@ -5,6 +5,7 @@ use crate::gamestate::WSMessage;
 pub(super) mod status;
 pub(super) mod draw;
 pub(super) mod play_card;
+pub(super) mod finish;
 
 pub trait WsMessageWrapper: Serialize {
     fn ws_serialize(&self) -> WSMessage {
