@@ -9,6 +9,11 @@ use serde::Serialize;
 use std::sync::{Arc, Mutex};
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct MessageResponse {
+    message: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GameCreateData {
     name: String,
 }
@@ -30,7 +35,7 @@ pub async fn create_game(
     let author_name = &body.name;
     
     if author_name.is_empty() {
-        return HttpResponse::BadRequest().json("Name of the player cannot be empty");
+        return HttpResponse::BadRequest().json(MessageResponse{message: "Name of the player cannot be empty".to_string()});
     }
 
     let game = Game::new(author_name);
