@@ -1,5 +1,5 @@
 use crate::handler::create_game::create_game;
-//todo use crate::handler::
+use crate::handler::restart_game::start_game;
 use crate::repo::address_repo::AddressRepo;
 use crate::repo::game_repo::InMemoryGameRepo;
 use actix_web::{web, App, HttpServer};
@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
             .app_data(web::Data::new(game_repo.clone()))
             .app_data(web::Data::new(address_repo.clone()))
             .service(create_game)
-            // todo .service(start_game)
+            .service(start_game)
             .service(ws_connect)
     })
     .bind(format!("127.0.0.1:{}", port))?

@@ -3,14 +3,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct Player {
-    pub name: String,
+    pub(crate) name: String,
     pub is_author: bool,
     cards: Vec<Card>,
     pub(crate) position: Option<usize>,
 }
 
 impl Player {
-    pub fn new(name: String, is_author: bool, jwt: String) -> Player {
+    pub fn new(name: String, is_author: bool) -> Player {
         Player {
             name,
             is_author,
@@ -48,5 +48,31 @@ impl Player {
 
     pub fn give_card(&mut self, card: Card) {
         self.cards.push(card)
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.position != None
+    }
+
+    pub fn position(&self) -> Option<usize> {
+        self.position
+    }
+
+    pub fn set_position(&mut self, position: usize) {
+        self.position = Some(position)
+    }
+
+    pub fn get_card_count(&self) -> usize {
+        self.cards.len()
+    }
+
+    /// Clones the name of the player.
+    pub fn cards(&self) -> Vec<Card> {
+        self.cards.clone()
+    }
+
+    /// Clones the name of the player.
+    pub fn name(&self) -> String {
+        self.name.clone()
     }
 }
