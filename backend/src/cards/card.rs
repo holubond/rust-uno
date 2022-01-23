@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct Card {
     pub color: CardColor,
     pub symbol: CardSymbol,
