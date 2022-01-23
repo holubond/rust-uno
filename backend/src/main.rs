@@ -1,16 +1,31 @@
-use crate::gamestate::game_repo::StableGameRepo;
+use crate::repo::game_repo::InMemoryGameRepo;
+use crate::repo::address_repo::AddressRepo;
+use crate::handler::create_game::create_game;
 use actix_web::{web, App, HttpServer};
+use clap::Parser;
 use std::sync::{Arc, Mutex};
 use actix_cors::Cors;
 
 mod cards;
 mod gamestate;
-mod handlers;
+mod handler;
+mod jwt;
+mod repo;
+
+#[derive(Parser)]
+#[clap(version = "1.0", author = "L.G.")]
+struct Opts {
+    #[clap(short = 'p', long = "port", default_value = "9000")]
+    port: String,
+}
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
-    let games = Vec::new();
-    let game_repo = Arc::new(Mutex::new(StableGameRepo::new(games)));
+    let opts = Opts::parse();
+    let port = opts.port;
+    
+    let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new()));
+    let address_repo = Arc::new(AddressRepo::new(port.clone()));
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -20,9 +35,10 @@ async fn main() -> anyhow::Result<()> {
         App::new()
             .wrap(cors)
             .app_data(web::Data::new(game_repo.clone()))
-            .service(handlers::create_game)
+            .app_data(web::Data::new(address_repo.clone()))
+            .service(create_game)
     })
-    .bind("127.0.0.1:9000")?
+    .bind(format!("127.0.0.1:{}", port))?
     .run()
     .await?;
 
