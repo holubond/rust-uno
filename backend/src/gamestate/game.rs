@@ -2,7 +2,7 @@ use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
 use crate::gamestate::game::active_cards::ActiveCards;
 use crate::gamestate::player::Player;
-use crate::gamestate::{WSMessage, CARDS_DEALT_TO_PLAYERS};
+use crate::gamestate::CARDS_DEALT_TO_PLAYERS;
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
 use rand::seq::SliceRandom;
@@ -321,30 +321,46 @@ impl Game {
 
         // required to be borrowed before mutable section
         let possible_position = self.get_finished_players().len();
+        let (played_card, player_finished) =
+            self.mutate_player(&player_name, card, maybe_new_color, possible_position)?;
 
-        // scope where player needs to be mutable
-        let (played_card, player_finished) = {
-            let player = self
-                .players
-                .iter_mut()
-                .find(|player| player.name() == player_name)
-                .unwrap();
+        self.handle_played_card(&played_card);
+        self.deck.play(played_card.clone());
+        self.end_turn();
+        self.play_card_messages(player_finished, player_name, played_card)?;
 
-            let mut played_card = player.play_card_by_eq(card)?;
-            if played_card.should_be_black() {
-                if let Some(color) = maybe_new_color {
-                    played_card = played_card.morph_black_card(color).unwrap();
-                }
+        Ok(())
+    }
+
+    fn mutate_player(
+        &mut self,
+        player_name: &String,
+        wanted_card: Card,
+        maybe_new_color: Option<CardColor>,
+        possible_position: usize,
+    ) -> anyhow::Result<(Card, bool)> {
+        let player = self
+            .players
+            .iter_mut()
+            .find(|player| player.name() == *player_name)
+            .unwrap();
+
+        let mut played_card = player.play_card_by_eq(wanted_card)?;
+        if played_card.should_be_black() {
+            if let Some(color) = maybe_new_color {
+                played_card = played_card.morph_black_card(color).unwrap();
             }
+        }
 
-            let player_finished = player.cards().is_empty();
-            if player_finished {
-                player.set_position(possible_position);
-            }
+        let player_finished = player.cards().is_empty();
+        if player_finished {
+            player.set_position(possible_position);
+        }
 
-            (played_card, player_finished)
-        };
+        Ok((played_card, player_finished))
+    }
 
+    fn handle_played_card(&mut self, played_card: &Card) {
         match played_card.symbol {
             CardSymbol::Value(_) | CardSymbol::Wild => self.active_cards.clear(),
             CardSymbol::Reverse => {
@@ -355,12 +371,6 @@ impl Game {
                 self.active_cards.push(played_card.clone()).unwrap();
             }
         }
-
-        self.deck.play(played_card.clone());
-        self.end_turn();
-        self.play_card_messages(player_finished, player_name, played_card)?;
-
-        Ok(())
     }
 
     fn play_card_messages(
