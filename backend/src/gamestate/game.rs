@@ -1,6 +1,5 @@
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
-use crate::jwt::generate_jwt;
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 
