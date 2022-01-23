@@ -3,6 +3,7 @@ use serde::Serialize;
 use crate::gamestate::WSMessage;
 
 pub(super) mod status;
+pub(super) mod draw;
 
 pub trait WsMessageWrapper: Serialize {
     fn ws_serialize(&self) -> WSMessage {

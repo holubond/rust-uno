@@ -1,7 +1,10 @@
-use actix::Message;
 use crate::gamestate::game::{Game, GameStatus};
-use crate::ws::ws_structs::status::{LobbyStatusWSMessage, RunningStatusWSMessage, FinishedStatusWSMessage};
+use crate::ws::ws_structs::draw::DrawWSMessage;
+use crate::ws::ws_structs::status::{
+    FinishedStatusWSMessage, LobbyStatusWSMessage, RunningStatusWSMessage,
+};
 use crate::ws::ws_structs::WsMessageWrapper;
+use actix::Message;
 
 /// WebSocket message that can be sent to a WebSocket connection
 #[derive(Message)]
@@ -29,5 +32,10 @@ impl WSMsg {
         };
 
         Self::custom(msg)
+    }
+
+    pub fn draw(target_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
+        let msg = DrawWSMessage::new(target_player_name, next_player_name, cards_drawn);
+        Self::custom(msg.ws_serialize())
     }
 }
