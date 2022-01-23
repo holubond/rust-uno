@@ -8,6 +8,7 @@ use local_ip_address::local_ip;
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
+use crate::jwt_generate::verify_jwt;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GamePostData {
@@ -88,19 +89,8 @@ pub async fn start_game(
     let jwt = Authorization::<Bearer>::parse(&request)
         .unwrap()
         .to_string();
-    let jwt_author = format!(
-        "Bearer {}",
-        data.lock()
-            .unwrap()
-            .games
-            .get(game_index)
-            .unwrap()
-            .find_author()
-            .unwrap()
-            .clone()
-            .jwt
-    );
-    if jwt != jwt_author {
+    let author_name = data.lock().unwrap().games.get(game_index).unwrap().find_author().unwrap().clone().name;
+    if !verify_jwt(author_name,gameID, jwt) {
         return HttpResponse::Forbidden();
     }
 
