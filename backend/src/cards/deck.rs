@@ -77,6 +77,14 @@ impl Deck {
         // draw pile should always have at least one card
         self.discard_pile.last().unwrap()
     }
+
+    pub fn draw_pile_size(&self) -> usize {
+        self.draw_pile.len()
+    }
+
+    pub fn discard_pile_size(&self) -> usize {
+        self.discard_pile.len()
+    }
 }
 
 fn insert_number_cards(card_stack: &mut Vec<Card>) {

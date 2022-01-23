@@ -1,7 +1,7 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
-use crate::gamestate::CARDS_DEALT_AT_GAME_START;
+use crate::gamestate::{WSMessage, CARDS_DEALT_TO_PLAYERS};
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
@@ -80,10 +80,10 @@ impl Game {
         for player in self.players.iter_mut() {
             player.drop_all_cards();
 
-            for _ in 0..CARDS_DEALT_AT_GAME_START {
+            for _ in 0..CARDS_DEALT_TO_PLAYERS {
                 match self.deck.draw() {
                     None => anyhow::bail!(
-                        "Draw pile is empty when starting game, this should not happen."
+                        "Draw pile is empty and unable to be switched with discard pile when starting game, this should not happen."
                     ),
                     Some(card) => player.give_card(card),
                 }
@@ -337,8 +337,9 @@ impl Game {
 #[cfg(test)]
 mod tests {
     use crate::cards::card::{Card, CardColor, CardSymbol};
-    use crate::gamestate::game::Game;
+    use crate::gamestate::game::{Game, GameStatus};
     use crate::gamestate::player::Player;
+    use crate::gamestate::{CARDS_DEALT_TO_PLAYERS, CARDS_TOTAL_IN_GAME};
 
     #[test]
     fn test_find_player() {
@@ -570,5 +571,39 @@ mod tests {
         assert!(!game.can_play_card(&Card::new(Blue, Value(6)).unwrap()));
         assert!(!game.can_play_card(&Card::new(Green, Reverse).unwrap()));
         assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
+    }
+
+    #[test]
+    fn test_start_game() {
+        let mut game = Game::new("Andy".into());
+        game.add_player("Bob".into());
+        game.add_player("Candace".into());
+
+        assert!(game.start().is_ok());
+        for player in game.players() {
+            assert_eq!(player.cards().len(), CARDS_DEALT_TO_PLAYERS);
+        }
+        assert_eq!(game.deck.discard_pile_size(), 1);
+        assert_eq!(
+            game.deck.draw_pile_size(),
+            CARDS_TOTAL_IN_GAME - (game.players.len() * CARDS_DEALT_TO_PLAYERS) - 1
+        );
+    }
+
+    #[test]
+    fn test_start_game_errors() {
+        let mut game = Game::new("Andy".into());
+        game.add_player("Bob".into());
+        game.add_player("Candace".into());
+
+        game.status = GameStatus::Running;
+        assert!(game.start().is_err()); // cannot start running game
+
+        game.status = GameStatus::Lobby; // reset
+        for _ in 0..106 {
+            // simulate cards leaving deck completely
+            let card = game.deck.draw().unwrap();
+        }
+        assert!(game.start().is_ok()); // game creates a completely new deck, does not rely on previous one
     }
 }
