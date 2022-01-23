@@ -27,7 +27,10 @@ pub async fn join_game(
 ) -> impl Responder {
     let gameID = params.into_inner();
     if body.name.clone().is_empty() {
-        return HttpResponse::BadRequest().json("Name of the player cannot be empty");
+        return HttpResponse::BadRequest().message_body("Name of the player cannot be empty");
+    }
+    if data.lock().unwrap().games.iter_mut().find(|x|x.id == gameID).is_none(){
+        return HttpResponse::NotFound().message_body("Game does not exist.");
     }
     data.lock().unwrap().games.iter_mut().find(|x|x.id == gameID).unwrap().add_player(body.name.clone());
 
