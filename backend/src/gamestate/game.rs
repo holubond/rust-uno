@@ -133,7 +133,7 @@ impl Game {
         self.players.get(self.current_player)
     }
 
-    pub fn next_turn(&mut self) {
+    fn next_turn(&mut self) {
         self.current_player = if self.is_clockwise {
             self.current_player + 1
         } else {
@@ -143,6 +143,25 @@ impl Game {
             }
         }
         .rem_euclid(self.players.len());
+    }
+
+    /// Attempts to find the next player in line. Returns true if found, false otherwise.
+    pub fn end_turn(&mut self) -> bool {
+        if self.get_finished_players().len() == self.players.len() {
+            return false;
+        }
+
+        loop {
+            self.next_turn();
+
+            if let Some(player) = self.get_current_player() {
+                if !player.is_finished() {
+                    break;
+                }
+            }
+        }
+
+        return true;
     }
 
     pub fn reverse(&mut self) {
@@ -726,5 +745,92 @@ mod tests {
         assert!(game.play_card("Andy".into(), green_skip.clone(), None).is_ok());
         assert_eq!(game.active_cards.active_symbol(), Some(Skip));
         assert_eq!(game.active_cards.sum_active_draw_cards(), None);
+    }
+
+    #[test]
+    fn test_end_turn() {
+        let mut game = Game::new("Andy".into());
+        game.add_player("Bob".into());
+        game.add_player("Candace".into());
+        game.add_player("Danny".into());
+        game.add_player("Eli".into());
+        game.add_player("Farquaad".into());
+
+        assert!(game.is_clockwise);
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Andy".to_string()
+        );
+
+        assert!(game.end_turn());
+        assert_eq!(game.get_current_player().unwrap().name(), "Bob".to_string());
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Candace".to_string()
+        );
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Danny".to_string()
+        );
+        assert!(game.end_turn());
+        assert_eq!(game.get_current_player().unwrap().name(), "Eli".to_string());
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Farquaad".to_string()
+        );
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Andy".to_string()
+        );
+
+        // simulate Bob finishing
+        game.players.get_mut(1).unwrap().set_position(1);
+
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Candace".to_string()
+        );
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Danny".to_string()
+        );
+        assert!(game.end_turn());
+        assert_eq!(game.get_current_player().unwrap().name(), "Eli".to_string());
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Farquaad".to_string()
+        );
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Andy".to_string()
+        );
+
+        // simulate everyone but Candace finishing
+        game.players.get_mut(0).unwrap().set_position(2);
+        game.players.get_mut(3).unwrap().set_position(3);
+        game.players.get_mut(4).unwrap().set_position(4);
+        game.players.get_mut(5).unwrap().set_position(5);
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Candace".to_string()
+        );
+
+        // the game should end by this point, but lets make sure the end_turn doesn't loop endlessly
+        assert!(game.end_turn());
+        assert_eq!(
+            game.get_current_player().unwrap().name(),
+            "Candace".to_string()
+        );
+        game.players.get_mut(2).unwrap().set_position(6);
+        assert!(!game.end_turn());
     }
 }
