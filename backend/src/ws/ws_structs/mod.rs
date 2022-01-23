@@ -1,11 +1,11 @@
 use crate::gamestate::game::Game;
-use serde::Serialize;
 use crate::gamestate::WSMessage;
+use serde::Serialize;
 
-pub(super) mod status;
 pub(super) mod draw;
-pub(super) mod play_card;
 pub(super) mod finish;
+pub(super) mod play_card;
+pub(super) mod status;
 
 pub trait WsMessageWrapper: Serialize {
     fn ws_serialize(&self) -> WSMessage {
@@ -20,16 +20,16 @@ fn get_finished_player_names(game: &Game) -> Vec<String> {
         .collect()
 }
 
-fn find_author_name(game: &Game) -> String {
+fn find_author_name(game: &Game) -> anyhow::Result<String> {
     match game.find_author() {
-        None => "UnknownAuthor".into(),
-        Some(author) => author.name(),
+        None => anyhow::bail!("Unable to find author of game id={}", game.id),
+        Some(author) => Ok(author.name()),
     }
 }
 
-fn get_current_player_name(game: &Game) -> String {
+fn get_current_player_name(game: &Game) -> anyhow::Result<String> {
     match game.get_current_player() {
-        None => "UnknownCurrentPlayer".into(),
-        Some(player) => player.name(),
+        None => anyhow::bail!("Unable to find current player of game id={}", game.id),
+        Some(player) => Ok(player.name()),
     }
 }

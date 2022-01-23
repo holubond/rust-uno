@@ -21,18 +21,20 @@ impl WSMsg {
         Self { msg: msg }
     }
 
-    pub fn status(game: &Game, target_player_name: String) -> Self {
+    pub fn status(game: &Game, target_player_name: String) -> anyhow::Result<Self> {
         let msg = match game.status() {
-            GameStatus::Lobby => LobbyStatusWSMessage::new(game, target_player_name).ws_serialize(),
+            GameStatus::Lobby => {
+                LobbyStatusWSMessage::new(game, target_player_name)?.ws_serialize()
+            }
             GameStatus::Running => {
-                RunningStatusWSMessage::new(game, target_player_name).ws_serialize()
+                RunningStatusWSMessage::new(game, target_player_name)?.ws_serialize()
             }
             GameStatus::Finished => {
-                FinishedStatusWSMessage::new(game, target_player_name).ws_serialize()
+                FinishedStatusWSMessage::new(game, target_player_name)?.ws_serialize()
             }
         };
 
-        Self::new(msg)
+        Ok(Self::new(msg))
     }
 
     pub fn draw(target_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
