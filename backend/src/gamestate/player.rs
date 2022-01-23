@@ -86,6 +86,6 @@ impl Player {
     }
 
     pub fn message(&self, msg: WSMsg) {
-        todo!("self.ws.send(msg);")
+        // todo!("self.ws.send(msg);")
     }
 }
