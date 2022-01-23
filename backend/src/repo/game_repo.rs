@@ -1,29 +1,24 @@
 use crate::gamestate::game::Game;
-use async_trait::async_trait;
 
-#[async_trait]
 pub trait GameRepo {
-    async fn create_game(&mut self, name: String) -> anyhow::Result<Game>;
+    fn add_game(&mut self, name: Game);
 }
 
 #[derive(Clone)]
 pub struct InMemoryGameRepo {
-    pub games: Vec<Game>,
-    pub port: String,
+    games: Vec<Game>,
 }
 
 impl InMemoryGameRepo {
-    pub fn new(games: Vec<Game>, port: String) -> Self {
-        Self { games, port }
+    pub fn new() -> Self {
+        Self { 
+            games: Vec::new()
+        }
     }
 }
 
-#[async_trait]
 impl GameRepo for InMemoryGameRepo {
-    async fn create_game(&mut self, author_name: String) -> anyhow::Result<Game> {
-        let game = Game::new(author_name);
-        self.games.push(game.clone());
-
-        return Ok(game);
+    fn add_game(&mut self, game: Game){
+        self.games.push(game);
     }
 }

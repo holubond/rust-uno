@@ -6,10 +6,10 @@ struct JwtData {
     game_id: String,
 }
 
-pub(crate) fn generate_jwt(player_name: String, game_id: String) -> String {
+pub(crate) fn generate_jwt(player_name: &String, game_id: &String) -> String {
     let jwt_data = JwtData {
-        player_name,
-        game_id,
+        player_name: player_name.clone(),
+        game_id: game_id.clone(),
     };
     let key = HS256Key::generate();
     let claims = Claims::with_custom_claims(jwt_data, Duration::from_hours(2));

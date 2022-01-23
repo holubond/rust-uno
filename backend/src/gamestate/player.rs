@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 pub struct Player {
     pub name: String,
     pub is_author: bool,
-    pub jwt: String,
     cards: Vec<Card>,
     pub(crate) position: Option<usize>,
 }
@@ -16,8 +15,7 @@ impl Player {
             name,
             is_author,
             cards: vec![],
-            position: None,
-            jwt,
+            position: None
         }
     }
 
