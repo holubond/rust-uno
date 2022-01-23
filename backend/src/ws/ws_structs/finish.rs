@@ -9,10 +9,10 @@ pub struct FinishWSMessage {
 }
 
 impl FinishWSMessage {
-    pub fn new(finished_player: String) -> FinishWSMessage {
+    pub fn new(finished_player_name: String) -> FinishWSMessage {
         FinishWSMessage {
             typee: "FINISH".into(),
-            who: finished_player,
+            who: finished_player_name,
         }
     }
 }

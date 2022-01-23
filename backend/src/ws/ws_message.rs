@@ -37,17 +37,17 @@ impl WSMsg {
         Ok(Self::new(msg))
     }
 
-    pub fn draw(target_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
-        let msg = DrawWSMessage::new(target_player_name, next_player_name, cards_drawn);
+    pub fn draw(drawing_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
+        let msg = DrawWSMessage::new(drawing_player_name, next_player_name, cards_drawn);
         Self::new(msg.ws_serialize())
     }
 
     pub fn play_card(
-        target_player_name: String,
+        playing_player_name: String,
         next_player_name: String,
         card_drawn: Card,
     ) -> Self {
-        let msg = PlayCardWSMessage::new(target_player_name, next_player_name, card_drawn);
+        let msg = PlayCardWSMessage::new(playing_player_name, next_player_name, card_drawn);
         Self::new(msg.ws_serialize())
     }
 
