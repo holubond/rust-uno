@@ -1,8 +1,8 @@
 use crate::gamestate::game::Game;
-use crate::repo::game_repo::GameRepo;
 use crate::repo::address_repo::AddressRepo;
 use crate::repo::authorization_repo::AuthorizationRepo;
-use crate::{InMemoryGameRepo};
+use crate::repo::game_repo::GameRepo;
+use crate::InMemoryGameRepo;
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
@@ -27,9 +27,8 @@ pub async fn create_game(
     address_repo: web::Data<Arc<AddressRepo>>,
     body: web::Json<GameCreateData>,
 ) -> impl Responder {
-
     let author_name = &body.name;
-    
+
     if author_name.is_empty() {
         return HttpResponse::BadRequest().json("Name of the player cannot be empty");
     }

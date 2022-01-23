@@ -1,7 +1,7 @@
 use jwt_simple::prelude::*;
 
 pub struct AuthorizationRepo {
-    pub key: HS256Key
+    pub key: HS256Key,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -11,7 +11,11 @@ struct JwtData {
 }
 
 impl AuthorizationRepo {
-    pub fn new() -> AuthorizationRepo { Self { key: HS256Key::generate() } }
+    pub fn new() -> AuthorizationRepo {
+        Self {
+            key: HS256Key::generate(),
+        }
+    }
 
     pub fn generate_jwt(&self, player_name: &String, game_id: &String) -> String {
         let jwt_data = JwtData {
@@ -26,7 +30,7 @@ impl AuthorizationRepo {
         let token = self.rem_bearer(&token);
         let claims = self.key.verify_token::<JwtData>(&token, None);
         if claims.is_err() {
-            return false
+            return false;
         }
         let claims = claims.unwrap();
         let is_author = claims.custom.game_id == game_id;

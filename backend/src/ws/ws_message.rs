@@ -9,7 +9,6 @@ pub struct WSMsg {
 
 // TODO - implement all types of WS messages
 impl WSMsg {
-
     // This is a sample function, delete after implementation of others
     pub fn custom(msg: String) -> Self {
         Self { msg: msg }

@@ -40,10 +40,7 @@ impl Game {
     }
 
     pub fn add_player(&mut self, name: String) {
-        self.players.push(Player::new(
-            name.clone(),
-            false,
-        ))
+        self.players.push(Player::new(name.clone(), false))
     }
 
     pub fn get_finished_players(&self) -> Vec<&Player> {

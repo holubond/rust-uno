@@ -1,9 +1,9 @@
 use crate::gamestate::game::GameStatus;
 use crate::{AuthorizationRepo, InMemoryGameRepo};
+use actix_web::http::header::Header;
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use std::sync::{Arc, Mutex};
-use actix_web::http::header::Header;
 
 #[post("game/{gameID}/statusRunning")]
 pub async fn start_game(
@@ -38,8 +38,17 @@ pub async fn start_game(
     let jwt = Authorization::<Bearer>::parse(&request)
         .unwrap()
         .to_string();
-    let author_name = data.lock().unwrap().games.get(game_index).unwrap().find_author().unwrap().clone().name;
-    if !authorization_repo.verify_jwt(author_name,gameID, jwt) {
+    let author_name = data
+        .lock()
+        .unwrap()
+        .games
+        .get(game_index)
+        .unwrap()
+        .find_author()
+        .unwrap()
+        .clone()
+        .name;
+    if !authorization_repo.verify_jwt(author_name, gameID, jwt) {
         return HttpResponse::Forbidden();
     }
 

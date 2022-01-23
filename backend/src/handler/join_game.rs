@@ -1,10 +1,11 @@
-use std::sync::{Arc, Mutex};
-use actix_web::{post, HttpResponse, Responder, web};
-use actix_web::web::Path;
-use local_ip_address::local_ip;
+use crate::gamestate::game::GameStatus;
 use crate::{AddressRepo, AuthorizationRepo, InMemoryGameRepo};
-use serde::Serialize;
+use actix_web::web::Path;
+use actix_web::{post, web, HttpResponse, Responder};
+use local_ip_address::local_ip;
 use serde::Deserialize;
+use serde::Serialize;
+use std::sync::{Arc, Mutex};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GameJoinData {
@@ -17,6 +18,11 @@ pub struct GameJoinResponse {
     token: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ErrorResponse {
+    message: String,
+}
+
 #[post("/game/{gameID}/player")]
 pub async fn join_game(
     data: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
@@ -27,14 +33,45 @@ pub async fn join_game(
 ) -> impl Responder {
     let gameID = params.into_inner();
     if body.name.clone().is_empty() {
-        return HttpResponse::BadRequest().message_body("Name of the player cannot be empty");
+        return HttpResponse::BadRequest().json(ErrorResponse {
+            message: "Name of the player cannot be empty.".to_string(),
+        });
     }
-    if data.lock().unwrap().games.iter_mut().find(|x|x.id == gameID).is_none(){
-        return HttpResponse::NotFound().message_body("Game does not exist.");
+    if data
+        .lock()
+        .unwrap()
+        .games
+        .iter_mut()
+        .find(|x| x.id == gameID)
+        .is_none()
+    {
+        return HttpResponse::NotFound().json(ErrorResponse {
+            message: "Game does not exist.".to_string(),
+        });
     }
-    data.lock().unwrap().games.iter_mut().find(|x|x.id == gameID).unwrap().add_player(body.name.clone());
+    if data
+        .lock()
+        .unwrap()
+        .games
+        .iter_mut()
+        .find(|x| x.id == gameID)
+        .unwrap()
+        .status
+        != GameStatus::Lobby
+    {
+        return HttpResponse::NotFound().json(ErrorResponse {
+            message: "Game does not accept any new players.".to_string(),
+        });
+    }
+    data.lock()
+        .unwrap()
+        .games
+        .iter_mut()
+        .find(|x| x.id == gameID)
+        .unwrap()
+        .add_player(body.name.clone());
 
-    let jwt = authorization_repo.generate_jwt(&body.name,&gameID);
+    let jwt = authorization_repo.generate_jwt(&body.name, &gameID);
 
     HttpResponse::Created().json(GameJoinResponse {
         server: address_repo.full_local_address(),

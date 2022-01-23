@@ -11,14 +11,12 @@ pub struct InMemoryGameRepo {
 
 impl InMemoryGameRepo {
     pub fn new() -> Self {
-        Self { 
-            games: Vec::new()
-        }
+        Self { games: Vec::new() }
     }
 }
 
 impl GameRepo for InMemoryGameRepo {
-    fn add_game(&mut self, game: Game){
+    fn add_game(&mut self, game: Game) {
         self.games.push(game);
     }
 }
