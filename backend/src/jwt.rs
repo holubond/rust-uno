@@ -19,7 +19,7 @@ pub(crate) fn generate_jwt(player_name: &String, game_id: &String) -> String {
 pub(crate) fn verify_jwt(player_name: String, game_id: String, token: String) -> bool {
     let key = HS256Key::generate();
     let token = rem_bearer(&token);
-    let mut claims = key.verify_token::<JwtData>(&token, None);
+    let mut claims = key.verify_token::<JwtData>(token, None);
     if claims.is_err() {
         return false
     }
@@ -30,9 +30,11 @@ pub(crate) fn verify_jwt(player_name: String, game_id: String, token: String) ->
 }
 
 fn rem_bearer(value: &str) -> &str {
+    println!("{}",value);
     let mut chars = value.chars();
-    for _ in 0..6{
+    for _ in 0..7{
        chars.next();
     }
+    println!("{}",chars.as_str());
     chars.as_str()
 }
