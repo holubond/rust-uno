@@ -23,7 +23,7 @@ pub struct Game {
     players: Vec<Player>,
     deck: Deck,
     current_player: usize,
-    /// An active card means that the current player must respond to that card, e.g. by being skipped, by drawing...
+    /// An active card means that the current player must respond to that card, i.e. by being skipped or by drawing.
     active_cards: Vec<Card>,
     pub is_clockwise: bool,
 }
@@ -41,6 +41,9 @@ impl Game {
         }
     }
 
+    /// Randomizes player order and start, clears positions from previous games, resets the deck and deals cards to players.
+    /// Returns ?
+    /// Returns Err is the game is already Running.
     pub fn start(&mut self) -> anyhow::Result<()> {
         if self.status == GameStatus::Running {
             anyhow::bail!("Attempted to start an already running game.")
@@ -101,10 +104,12 @@ impl Game {
         self.players.iter().find(|player| player.is_author)
     }
 
+    /// Convenience method for accessing the reference to the game's Players.
     pub fn players(&self) -> &Vec<Player> {
         &self.players
     }
 
+    /// Convenience method for accessing the reference to the game's Deck.
     pub fn deck(&self) -> &Deck {
         &self.deck
     }
@@ -166,6 +171,9 @@ impl Game {
         self.is_top_card_active() && self.active_cards.iter().all(|card| card.symbol == Skip)
     }
 
+    /// If there are any active cards, returns true only if the played_card's symbol matches:
+    /// e.g. playing a Blue Skip on a Red Skip.
+    /// If there are no active cards, returns true if the played_card's symbol OR color matches, or it is a Black card.
     pub fn can_play_card(&self, played_card: &Card) -> bool {
         let top_card = self.deck.top_discard_card();
 
@@ -178,6 +186,7 @@ impl Game {
         }
     }
 
+    /// Returns reference to a player matching the provided name, Err if they do not exist.
     fn does_player_exist(&self, player_name: String) -> anyhow::Result<&Player> {
         let player = self.find_player(player_name.clone());
 
@@ -188,6 +197,7 @@ impl Game {
         Ok(player.unwrap())
     }
 
+    /// Returns Err if the passed player is not the current player, or if there is somehow no player playing.
     fn is_player_at_turn(&self, player: &Player) -> anyhow::Result<()> {
         match self.get_current_player() {
             None => anyhow::bail!("No player is currently playing?!"),
@@ -201,7 +211,7 @@ impl Game {
         }
     }
 
-    // Performs immutable checks whether the player is eligible to draw a card.
+    /// Performs immutable checks whether the player is eligible to draw a card.
     fn can_player_draw(&self, player_name: String) -> anyhow::Result<()> {
         let player = self.does_player_exist(player_name.clone())?;
         self.is_player_at_turn(player)?;
@@ -252,7 +262,7 @@ impl Game {
         Ok(Game::draw_n_cards(player, &mut self.deck, draw_count))
     }
 
-    // Again, the function's signature is like this due to mutability borrow-checker issues
+    // The function's signature is like this due to mutability borrow-checker issues
     fn draw_n_cards(player: &mut Player, deck: &mut Deck, n: usize) -> Vec<Card> {
         let mut drawn_cards = vec![];
 
@@ -271,6 +281,7 @@ impl Game {
         drawn_cards
     }
 
+    /// Performs immutable checks whether the player is eligible to play a card.
     fn can_player_play(&self, player_name: String, card: &Card) -> anyhow::Result<()> {
         let player = self.does_player_exist(player_name.clone())?;
 
