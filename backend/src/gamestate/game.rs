@@ -231,12 +231,12 @@ impl Game {
         self.can_player_draw(player_name.clone())?;
 
         let top_symbol = &self.deck.top_discard_card().symbol;
-        let draw_count = if self.is_top_card_active() && top_symbol == &CardSymbol::Draw2 {
-            let count = self.sum_active_cards(2);
-            self.active_cards.clear();
-            count
-        } else if self.is_top_card_active() && top_symbol == &CardSymbol::Draw4 {
-            let count = self.sum_active_cards(4);
+        let draw_count = if self.is_top_card_active() {
+            let count = self.sum_active_cards(match top_symbol {
+                CardSymbol::Draw2 => 2,
+                CardSymbol::Draw4 => 4,
+                _ => anyhow::bail!("Impossible situation: player can draw, but there are active cards that are not Draw")
+            });
             self.active_cards.clear();
             count
         } else {
