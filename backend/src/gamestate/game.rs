@@ -259,28 +259,35 @@ impl Game {
         self.can_player_draw(player_name.clone())?;
 
         let draw_count = if self.active_cards.are_cards_active() {
-            let count = self.active_cards.sum_active_draw_cards().expect("Impossible situation: player can draw, but there are active cards that are not Draw");
+            let count = self.active_cards
+                .sum_active_draw_cards()
+                .expect("Impossible situation: player can draw, but there are active cards that are not Draw");
             self.active_cards.clear();
             count
         } else {
             1
         };
-        // Cannot be extracted to a method because the whole self will be borrowed mutably, not just self.players
-        let player = self
-            .players
+        let drawn_cards = self.draw_n_cards(
+            player_name.clone(),
+            draw_count,
+        );
+
+        Ok(drawn_cards)
+    }
+
+    fn draw_n_cards(
+        &mut self,
+        player_name: String,
+        n: usize,
+    ) -> Vec<Card> {
+        let player = self.players
             .iter_mut()
             .find(|player| player.name() == player_name)
             .unwrap(); // safe because of check_player_drawing()
-
-        Ok(Game::draw_n_cards(player, &mut self.deck, draw_count))
-    }
-
-    // The function's signature is like this due to mutability borrow-checker issues
-    fn draw_n_cards(player: &mut Player, deck: &mut Deck, n: usize) -> Vec<Card> {
         let mut drawn_cards = vec![];
 
         for _ in 0..n {
-            let drawn_card = deck.draw();
+            let drawn_card = self.deck.draw();
             if drawn_card.is_none() {
                 // there are no cards on the table at all
                 break;
