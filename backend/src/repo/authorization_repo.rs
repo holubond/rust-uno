@@ -18,7 +18,7 @@ impl AuthorizationRepo {
             player_name: player_name.clone(),
             game_id: game_id.clone(),
         };
-        let claims = Claims::with_custom_claims(jwt_data, Duration::from_hours(2));
+        let claims = Claims::with_custom_claims(jwt_data, Duration::from_days(7));
         self.key.authenticate(claims).unwrap()
     }
 
