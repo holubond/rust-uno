@@ -168,6 +168,7 @@ impl Component for Game {
                         <img class="h-full w-full" src="../resources/rotate_arrow-L.png" alt="turn"/>
                     </div>
                     <div class="rounded-lg bg-black shadow-md">
+                        // odhazovací deck
                         <img class="h-full w-full" src="../resources/deck/r1.png" alt="top_of_deck_card"/>
                     </div>
                 </div>
