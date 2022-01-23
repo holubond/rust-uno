@@ -1,6 +1,5 @@
 pub mod game;
 pub mod player;
-pub mod serialization;
 
 pub type WSMessage = String;
 

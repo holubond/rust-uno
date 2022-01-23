@@ -2,6 +2,7 @@ use crate::cards::deck::Deck;
 use crate::gamestate::player::Player;
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
+use crate::ws::ws_message::WSMsg;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum GameStatus {
@@ -62,5 +63,15 @@ impl Game {
 
     pub fn next_turn(&mut self) {
         self.turns_played += 1;
+    }
+
+    pub fn status(&self) -> GameStatus {
+        self.status
+    }
+
+    pub fn message_all(&self, msg: WSMsg) {
+        for player in self.players.iter() {
+            player.message(msg.clone());
+        }
     }
 }

@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
+use serde::ser::SerializeStruct;
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct Card {
@@ -24,6 +25,23 @@ impl Card {
         }
 
         Ok(Card { color, symbol })
+    }
+}
+
+impl Serialize for Card {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Card", 3)?;
+        state.serialize_field("color", &self.color)?;
+        state.serialize_field("type", &self.symbol)?;
+        match self.symbol {
+            CardSymbol::Value(number) => state.serialize_field("value", &number),
+            _ => state.serialize_field("value", &Option::<i8>::None),
+        }?;
+
+        state.end()
     }
 }
 

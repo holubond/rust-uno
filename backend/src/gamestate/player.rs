@@ -1,5 +1,6 @@
 use crate::cards::card::Card;
 use serde::{Deserialize, Serialize};
+use crate::ws::ws_message::WSMsg;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct Player {
@@ -74,5 +75,9 @@ impl Player {
     /// Clones the name of the player.
     pub fn name(&self) -> String {
         self.name.clone()
+    }
+
+    pub fn message(&self, msg: WSMsg) {
+        todo!("self.ws.send(msg);")
     }
 }
