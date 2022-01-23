@@ -57,7 +57,7 @@ impl Game {
         self.status = GameStatus::Running;
         self.deal_starting_cards()?; // must be called after clear_players(), of course
 
-        // todo!("Send STATUS WSMessages to all players, don't have the API yet");
+        self.status_message_all()?;
 
         Ok(())
     }
