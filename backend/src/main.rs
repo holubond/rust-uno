@@ -6,6 +6,7 @@ use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use handler::ws_connect::ws_connect;
 use std::sync::{Arc, Mutex};
+use crate::handler::join_game::join_game;
 use crate::repo::authorization_repo::AuthorizationRepo;
 
 mod cards;
@@ -37,6 +38,7 @@ async fn main() -> anyhow::Result<()> {
             .app_data(web::Data::new(authorization_repo.clone()))
             .service(create_game)
             .service(start_game)
+            .service(join_game)
             .service(ws_connect)
     })
     .bind(format!("127.0.0.1:{}", port))?
