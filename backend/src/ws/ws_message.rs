@@ -16,10 +16,8 @@ pub struct WSMsg {
     pub msg: String,
 }
 
-// TODO - implement all types of WS messages
 impl WSMsg {
-    // This is a sample function, delete after implementation of others
-    pub fn custom(msg: String) -> Self {
+    fn new(msg: String) -> Self {
         Self { msg: msg }
     }
 
@@ -34,12 +32,12 @@ impl WSMsg {
             }
         };
 
-        Self::custom(msg)
+        Self::new(msg)
     }
 
     pub fn draw(target_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
         let msg = DrawWSMessage::new(target_player_name, next_player_name, cards_drawn);
-        Self::custom(msg.ws_serialize())
+        Self::new(msg.ws_serialize())
     }
 
     pub fn play_card(
@@ -48,11 +46,11 @@ impl WSMsg {
         card_drawn: Card,
     ) -> Self {
         let msg = PlayCardWSMessage::new(target_player_name, next_player_name, card_drawn);
-        Self::custom(msg.ws_serialize())
+        Self::new(msg.ws_serialize())
     }
 
     pub fn finish(finished_player_name: String) -> Self {
         let msg = FinishWSMessage::new(finished_player_name);
-        Self::custom(msg.ws_serialize())
+        Self::new(msg.ws_serialize())
     }
 }
