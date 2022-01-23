@@ -1,5 +1,6 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
+use crate::gamestate::game::active_cards::ActiveCards;
 use crate::gamestate::player::Player;
 use crate::gamestate::{WSMessage, CARDS_DEALT_TO_PLAYERS};
 use crate::ws::ws_message::WSMsg;
@@ -24,7 +25,7 @@ pub struct Game {
     deck: Deck,
     current_player: usize,
     /// An active card means that the current player must respond to that card, i.e. by being skipped or by drawing.
-    active_cards: Vec<Card>,
+    active_cards: ActiveCards,
     pub is_clockwise: bool,
 }
 
@@ -36,7 +37,7 @@ impl Game {
             players: vec![Player::new(author_name.clone(), true)],
             deck: Deck::new(),
             current_player: 0,
-            active_cards: vec![],
+            active_cards: ActiveCards::new(),
             is_clockwise: true,
         }
     }
@@ -158,31 +159,18 @@ impl Game {
         }
     }
 
-    fn is_top_card_active(&self) -> bool {
-        !self.active_cards.is_empty()
-    }
-
-    fn sum_active_cards(&self, multiplicand: usize) -> usize {
-        self.active_cards.len() * multiplicand
-    }
-
-    fn are_active_cards_skips(&self) -> bool {
-        use CardSymbol::Skip;
-        self.is_top_card_active() && self.active_cards.iter().all(|card| card.symbol == Skip)
-    }
-
     /// If there are any active cards, returns true only if the played_card's symbol matches:
     /// e.g. playing a Blue Skip on a Red Skip.
     /// If there are no active cards, returns true if the played_card's symbol OR color matches, or it is a Black card.
     pub fn can_play_card(&self, played_card: &Card) -> bool {
         let top_card = self.deck.top_discard_card();
 
-        if self.active_cards.is_empty() {
+        if self.active_cards.are_cards_active() {
+            played_card.symbol == self.active_cards.active_symbol().unwrap()
+        } else {
             played_card.color == CardColor::Black
                 || played_card.color == top_card.color
                 || played_card.symbol == top_card.symbol
-        } else {
-            played_card.symbol == top_card.symbol
         }
     }
 
@@ -223,7 +211,9 @@ impl Game {
             )
         }
 
-        if self.are_active_cards_skips() {
+        if self.active_cards.are_cards_active()
+            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
+        {
             anyhow::bail!(
                 "Player {} cannot draw, they must respond to the {}",
                 player_name,
@@ -240,13 +230,8 @@ impl Game {
     pub fn draw_cards(&mut self, player_name: String) -> anyhow::Result<Vec<Card>> {
         self.can_player_draw(player_name.clone())?;
 
-        let top_symbol = &self.deck.top_discard_card().symbol;
-        let draw_count = if self.is_top_card_active() {
-            let count = self.sum_active_cards(match top_symbol {
-                CardSymbol::Draw2 => 2,
-                CardSymbol::Draw4 => 4,
-                _ => anyhow::bail!("Impossible situation: player can draw, but there are active cards that are not Draw")
-            });
+        let draw_count = if self.active_cards.are_cards_active() {
+            let count = self.active_cards.sum_active_draw_cards().expect("Impossible situation: player can draw, but there are active cards that are not Draw");
             self.active_cards.clear();
             count
         } else {
@@ -298,19 +283,6 @@ impl Game {
         Ok(())
     }
 
-    fn handle_played_card(&mut self, the_card: &Card) {
-        match the_card.symbol {
-            CardSymbol::Value(_) | CardSymbol::Wild => self.active_cards.clear(),
-            CardSymbol::Reverse => {
-                self.reverse();
-                self.active_cards.clear();
-            }
-            CardSymbol::Draw2 | CardSymbol::Draw4 | CardSymbol::Skip => {
-                self.active_cards.push(the_card.clone())
-            }
-        }
-    }
-
     pub fn play_card(
         &mut self,
         player_name: String,
@@ -320,28 +292,112 @@ impl Game {
         self.can_player_play(player_name.clone(), &card)?;
 
         let possible_position = self.get_finished_players().len();
-        let player = self
-            .players
-            .iter_mut()
-            .find(|player| player.name() == player_name)
-            .unwrap();
 
-        let mut played_card = player.play_card_by_eq(card)?;
-        if played_card.should_be_black() {
-            if let Some(color) = maybe_new_color {
-                played_card = played_card.morph_black_card(color).unwrap();
+        // scope where player needs to be mutable
+        let played_card = {
+            let player = self
+                .players
+                .iter_mut()
+                .find(|player| player.name() == player_name)
+                .unwrap();
+
+            let mut played_card = player.play_card_by_eq(card)?;
+            if played_card.should_be_black() {
+                if let Some(color) = maybe_new_color {
+                    played_card = played_card.morph_black_card(color).unwrap();
+                }
+            }
+
+            if player.cards().is_empty() {
+                player.set_position(possible_position);
+                // todo!("Send FinishWSMessage");
+            }
+            played_card
+        };
+
+        match played_card.symbol {
+            CardSymbol::Value(_) | CardSymbol::Wild => self.active_cards.clear(),
+            CardSymbol::Reverse => {
+                self.reverse();
+                self.active_cards.clear();
+            }
+            CardSymbol::Draw2 | CardSymbol::Draw4 | CardSymbol::Skip => {
+                self.active_cards.push(played_card.clone()).unwrap();
             }
         }
 
         self.deck.play(played_card);
         // todo!("Send PlayCardWSMessage");
 
-        if player.cards().is_empty() {
-            player.set_position(possible_position);
-            // todo!("Send FinishWSMessage");
+        Ok(())
+    }
+}
+
+pub(super) mod active_cards {
+    use crate::cards::card::{Card, CardSymbol};
+
+    static ALLOWED_ACTIVE_CARDS: [CardSymbol; 3] =
+        [CardSymbol::Skip, CardSymbol::Draw2, CardSymbol::Draw4];
+
+    #[derive(Clone)]
+    pub(super) struct ActiveCards {
+        active_cards: Vec<Card>,
+    }
+
+    impl ActiveCards {
+        pub(super) fn new() -> ActiveCards {
+            ActiveCards {
+                active_cards: vec![],
+            }
         }
 
-        Ok(())
+        pub(super) fn are_cards_active(&self) -> bool {
+            !self.active_cards.is_empty()
+        }
+
+        pub(super) fn sum_active_draw_cards(&self) -> Option<usize> {
+            if self.are_cards_active() {
+                match self.active_symbol_unchecked() {
+                    CardSymbol::Draw2 => Some(2 * self.active_cards.len()),
+                    CardSymbol::Draw4 => Some(4 * self.active_cards.len()),
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        }
+
+        pub(super) fn active_symbol(&self) -> Option<CardSymbol> {
+            if self.are_cards_active() {
+                Some(self.active_symbol_unchecked())
+            } else {
+                None
+            }
+        }
+
+        fn active_symbol_unchecked(&self) -> CardSymbol {
+            self.active_cards.get(0).unwrap().symbol.clone()
+        }
+
+        /// Ensures that only active cards can be of the same symbol by returning Err otherwise.
+        pub(super) fn push(&mut self, card: Card) -> anyhow::Result<()> {
+            if self.are_cards_active()
+                && self.active_cards.iter().any(|ac| ac.symbol != card.symbol)
+            {
+                anyhow::bail!("Cannot stack active cards of different symbols!")
+            }
+            if !ALLOWED_ACTIVE_CARDS.contains(&card.symbol) {
+                anyhow::bail!("Active card cannot have symbol {}!", &card.symbol)
+            }
+            // after here, all active cards are expected to have equal symbols
+
+            self.active_cards.push(card);
+            Ok(())
+        }
+
+        pub(super) fn clear(&mut self) {
+            self.active_cards.clear();
+        }
     }
 }
 
@@ -534,7 +590,7 @@ mod tests {
         assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
 
         game.deck.play(Card::new(Red, Draw2).unwrap());
-        assert!(!game.is_top_card_active());
+        assert!(!game.active_cards.are_cards_active());
         assert!(game.can_play_card(&Card::new(Red, Draw2).unwrap()));
         assert!(game.can_play_card(&Card::new(Blue, Draw2).unwrap()));
         assert!(game.can_play_card(&Card::new(Red, Value(5)).unwrap()));
@@ -557,7 +613,7 @@ mod tests {
             .morph_black_card(CardColor::Blue)
             .unwrap();
         game.deck.play(plus_4.clone());
-        game.active_cards.push(plus_4.clone());
+        game.active_cards.push(plus_4.clone()).unwrap();
 
         assert!(game.can_play_card(&plus_4.clone()));
         assert!(game.can_play_card(&Card::new(Black, Draw4).unwrap()));
@@ -570,7 +626,11 @@ mod tests {
         assert!(!game.can_play_card(&Card::new(Green, Draw2).unwrap()));
         assert!(!game.can_play_card(&Card::new(Yellow, Skip).unwrap()));
 
-        game.deck.play(Card::new(Red, Draw2).unwrap());
+        let plus_2 = Card::new(Red, Draw2).unwrap();
+        game.deck.play(plus_2.clone());
+        game.active_cards.clear();
+        game.active_cards.push(plus_2.clone()).unwrap();
+
         assert!(game.can_play_card(&Card::new(Red, Draw2).unwrap()));
         assert!(game.can_play_card(&Card::new(Blue, Draw2).unwrap()));
         assert!(game.can_play_card(&Card::new(Green, Draw2).unwrap()));
@@ -616,5 +676,55 @@ mod tests {
             let card = game.deck.draw().unwrap();
         }
         assert!(game.start().is_ok()); // game creates a completely new deck, does not rely on previous one
+    }
+
+    #[test]
+    fn test_active_cards() {
+        use CardColor::*;
+        use CardSymbol::*;
+
+        let mut game = Game::new("Andy".into());
+        assert_eq!(game.active_cards.active_symbol(), None);
+        assert_eq!(game.active_cards.sum_active_draw_cards(), None);
+
+        let red_plus_2 = Card::new(Red, Draw2).unwrap();
+        game.deck.play(red_plus_2.clone());
+        game.active_cards.clear();
+        game.active_cards.push(red_plus_2.clone()).unwrap();
+
+        assert!(game.active_cards.push(Card::new(Red, Skip).unwrap()).is_err());
+
+
+        let blu_plus_2 = Card::new(Blue, Draw2).unwrap();
+        let blu_skip = Card::new(Blue, Skip).unwrap();
+        let green_skip = Card::new(Green, Skip).unwrap();
+        {
+            let andy = game.players.get_mut(0).unwrap();
+            andy.give_card(blu_plus_2.clone());
+            andy.give_card(blu_skip.clone());
+            andy.give_card(green_skip.clone());
+        }
+        assert!(game.play_card("Andy".into(), blu_skip.clone(), None).is_err()); // must respond to draw2
+        assert!(game.play_card("Andy".into(), blu_plus_2.clone(), None).is_ok());
+        assert_eq!(game.active_cards.active_symbol().unwrap(), Draw2);
+        assert_eq!(game.active_cards.sum_active_draw_cards(), Some(4)); // 2 from before + 2 from Andy
+
+        let eight = Card::new(Blue, Value(8)).unwrap();
+        game.deck.play(eight.clone());
+        game.active_cards.clear();
+        assert!(game.active_cards.push(eight.clone()).is_err());
+        assert!(!game.active_cards.are_cards_active());
+
+        assert!(game.play_card("Andy".into(), blu_skip.clone(), None).is_ok());
+        {
+            let andy = game.players.get_mut(0).unwrap();
+            assert!(andy.play_card_by_eq(blu_skip.clone()).is_err()); // card is no longer in Andy's hand
+        }
+        assert_eq!(game.active_cards.active_symbol(), Some(Skip));
+        assert_eq!(game.active_cards.sum_active_draw_cards(), None);
+
+        assert!(game.play_card("Andy".into(), green_skip.clone(), None).is_ok());
+        assert_eq!(game.active_cards.active_symbol(), Some(Skip));
+        assert_eq!(game.active_cards.sum_active_draw_cards(), None);
     }
 }
