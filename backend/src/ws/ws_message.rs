@@ -10,7 +10,7 @@ use crate::ws::ws_structs::WsMessageWrapper;
 use actix::Message;
 
 /// WebSocket message that can be sent to a WebSocket connection
-#[derive(Message)]
+#[derive(Message, Clone)]
 #[rtype(result = "()")]
 pub struct WSMsg {
     pub msg: String,
