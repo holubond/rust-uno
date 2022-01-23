@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(
             finished
                 .into_iter()
-                .map(|p| p.name)
+                .map(|p| p.name.clone())
                 .collect::<Vec<String>>(),
             vec!["Bob".to_string(), "Andy".to_string()]
         );
