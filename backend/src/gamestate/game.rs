@@ -29,7 +29,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(author_name: &String) -> Game {
+    pub fn new(author_name: String) -> Game {
         Game {
             id: nanoid!(10),
             status: GameStatus::Lobby,

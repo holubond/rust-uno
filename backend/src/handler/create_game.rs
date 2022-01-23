@@ -33,7 +33,7 @@ pub async fn create_game(
         return HttpResponse::BadRequest().json("Name of the player cannot be empty");
     }
 
-    let game = Game::new(author_name);
+    let game = Game::new(author_name.clone());
     let game_id = game.id.clone();
     let jwt = generate_jwt(author_name, &game_id);
 
