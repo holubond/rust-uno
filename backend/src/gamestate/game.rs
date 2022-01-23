@@ -5,9 +5,9 @@ use crate::gamestate::player::Player;
 use crate::gamestate::{WSMessage, CARDS_DEALT_TO_PLAYERS};
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
-use serde::{Deserialize, Serialize};
-use rand::Rng;
 use rand::seq::SliceRandom;
+use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -172,6 +172,15 @@ impl Game {
         self.status
     }
 
+    /// Sends a personalized (==containing name) STATUS WSMessage to all players.
+    fn status_message_all(&self) -> anyhow::Result<()> {
+        for player in self.players.iter() {
+            player.message(WSMsg::status(&self, player.name())?);
+        }
+
+        Ok(())
+    }
+
     pub fn message_all(&self, msg: WSMsg) {
         for player in self.players.iter() {
             player.message(msg.clone());
@@ -310,10 +319,11 @@ impl Game {
     ) -> anyhow::Result<()> {
         self.can_player_play(player_name.clone(), &card)?;
 
+        // required to be borrowed before mutable section
         let possible_position = self.get_finished_players().len();
 
         // scope where player needs to be mutable
-        let played_card = {
+        let (played_card, player_finished) = {
             let player = self
                 .players
                 .iter_mut()
@@ -327,11 +337,12 @@ impl Game {
                 }
             }
 
-            if player.cards().is_empty() {
+            let player_finished = player.cards().is_empty();
+            if player_finished {
                 player.set_position(possible_position);
-                // todo!("Send FinishWSMessage");
             }
-            played_card
+
+            (played_card, player_finished)
         };
 
         match played_card.symbol {
@@ -345,8 +356,35 @@ impl Game {
             }
         }
 
-        self.deck.play(played_card);
-        // todo!("Send PlayCardWSMessage");
+        self.deck.play(played_card.clone());
+        self.end_turn();
+        self.play_card_messages(player_finished, player_name, played_card)?;
+
+        Ok(())
+    }
+
+    fn play_card_messages(
+        &mut self,
+        player_finished: bool,
+        player_name: String,
+        played_card: Card,
+    ) -> anyhow::Result<()> {
+        let new_player_name = self.get_current_player().unwrap().name();
+        self.message_all(WSMsg::play_card(
+            player_name.clone(),
+            new_player_name.clone(),
+            played_card,
+        ));
+
+        if player_finished {
+            self.message_all(WSMsg::finish(player_name.clone()));
+        }
+
+        if new_player_name == player_name {
+            // == after end_turn(), the same player got the turn
+            self.status = GameStatus::Finished;
+            self.status_message_all()?;
+        }
 
         Ok(())
     }
@@ -711,8 +749,10 @@ mod tests {
         game.active_cards.clear();
         game.active_cards.push(red_plus_2.clone()).unwrap();
 
-        assert!(game.active_cards.push(Card::new(Red, Skip).unwrap()).is_err());
-
+        assert!(game
+            .active_cards
+            .push(Card::new(Red, Skip).unwrap())
+            .is_err());
 
         let blu_plus_2 = Card::new(Blue, Draw2).unwrap();
         let blu_skip = Card::new(Blue, Skip).unwrap();
@@ -723,8 +763,12 @@ mod tests {
             andy.give_card(blu_skip.clone());
             andy.give_card(green_skip.clone());
         }
-        assert!(game.play_card("Andy".into(), blu_skip.clone(), None).is_err()); // must respond to draw2
-        assert!(game.play_card("Andy".into(), blu_plus_2.clone(), None).is_ok());
+        assert!(game
+            .play_card("Andy".into(), blu_skip.clone(), None)
+            .is_err()); // must respond to draw2
+        assert!(game
+            .play_card("Andy".into(), blu_plus_2.clone(), None)
+            .is_ok());
         assert_eq!(game.active_cards.active_symbol().unwrap(), Draw2);
         assert_eq!(game.active_cards.sum_active_draw_cards(), Some(4)); // 2 from before + 2 from Andy
 
@@ -734,7 +778,9 @@ mod tests {
         assert!(game.active_cards.push(eight.clone()).is_err());
         assert!(!game.active_cards.are_cards_active());
 
-        assert!(game.play_card("Andy".into(), blu_skip.clone(), None).is_ok());
+        assert!(game
+            .play_card("Andy".into(), blu_skip.clone(), None)
+            .is_ok());
         {
             let andy = game.players.get_mut(0).unwrap();
             assert!(andy.play_card_by_eq(blu_skip.clone()).is_err()); // card is no longer in Andy's hand
@@ -742,7 +788,9 @@ mod tests {
         assert_eq!(game.active_cards.active_symbol(), Some(Skip));
         assert_eq!(game.active_cards.sum_active_draw_cards(), None);
 
-        assert!(game.play_card("Andy".into(), green_skip.clone(), None).is_ok());
+        assert!(game
+            .play_card("Andy".into(), green_skip.clone(), None)
+            .is_ok());
         assert_eq!(game.active_cards.active_symbol(), Some(Skip));
         assert_eq!(game.active_cards.sum_active_draw_cards(), None);
     }
