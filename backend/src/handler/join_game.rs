@@ -46,9 +46,10 @@ pub async fn join_game(
     };
 
     let game = match game_repo.find_game_by_id(&game_id) {
+        None => return HttpResponse::NotFound().json(MessageResponse {message: "Game not found".to_string()}),
         Some(game) => game,
-        _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
     };
+
     if game.status() != GameStatus::Lobby
     {
         return HttpResponse::NotFound().json(MessageResponse {
