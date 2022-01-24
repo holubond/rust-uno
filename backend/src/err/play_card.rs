@@ -12,6 +12,7 @@ pub enum PlayCardError {
     CreateStatusError(CreateStatusError),
     PlayerHasNoSuchCard(Card),
     CardCannotBePlayed(Card, Card),
+    SaidUnoWhenShouldNotHave,
 }
 
 impl Error for PlayCardError {}
@@ -27,6 +28,9 @@ impl Display for PlayCardError {
             PlayerHasNoSuchCard(card) => write!(f, "Player does not have a {}", card),
             CardCannotBePlayed(played, top) => {
                 write!(f, "Cannot play a {} after a {}.", played, top)
+            }
+            SaidUnoWhenShouldNotHave => {
+                write!(f, "UNO! was said when it shouldn't have been possible")
             }
         }
     }

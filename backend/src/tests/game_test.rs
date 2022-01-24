@@ -421,3 +421,59 @@ fn test_end_turn() {
     game.players.get_mut(2).unwrap().set_position(6);
     assert!(!game.end_turn());
 }
+
+#[test]
+fn test_should_say_uno() {
+    let mut game = Game::new("Andy".into());
+    assert!(!game.find_player("Andy".into()).unwrap().should_say_uno()); // 0
+
+    game.draw_n_cards("Andy".into(), 1);
+    assert!(!game.find_player("Andy".into()).unwrap().should_say_uno()); // 1
+
+    game.draw_n_cards("Andy".into(), 1);
+    assert!(game.find_player("Andy".into()).unwrap().should_say_uno()); // 2
+
+    game.draw_n_cards("Andy".into(), 1);
+    assert!(!game.find_player("Andy".into()).unwrap().should_say_uno()); // 3...
+}
+
+#[test]
+fn test_say_uno() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new("Andy".into());
+    game.add_player("Bob".into());
+    game.add_player("Candace".into());
+    game.add_player("Danny".into());
+    let eight = Card::new(Blue, Value(8)).unwrap();
+    game.deck.play(eight.clone());
+
+    // didn't say uno and shouldn't have
+    game.players.get_mut(0).unwrap().give_card(eight.clone()); // should be playable
+    assert!(game.play_card("Andy".into(), eight.clone(), None, false).is_ok());
+    assert!(game.players.get(0).unwrap().is_finished());
+    assert_eq!(game.players.get(0).unwrap().get_card_count(), 0); // should not receive penalty cards
+
+    // didn't say uno and should have
+    game.players.get_mut(1).unwrap().give_card(eight.clone());
+    game.players.get_mut(1).unwrap().give_card(eight.clone());
+    assert!(game.play_card("Bob".into(), eight.clone(), None, false).is_ok());
+    assert!(!game.players.get(1).unwrap().is_finished());
+    assert_eq!(game.players.get(1).unwrap().get_card_count(), 3); // should receive penalty cards
+
+    // said uno and should have
+    game.players.get_mut(2).unwrap().give_card(eight.clone());
+    game.players.get_mut(2).unwrap().give_card(eight.clone());
+    assert!(game.play_card("Candace".into(), eight.clone(), None, true).is_ok());
+    assert!(!game.players.get(2).unwrap().is_finished());
+    assert_eq!(game.players.get(2).unwrap().get_card_count(), 1); // should not receive penalty cards
+
+    // said uno and should have
+    game.players.get_mut(3).unwrap().give_card(eight.clone());
+    game.players.get_mut(3).unwrap().give_card(eight.clone());
+    game.players.get_mut(3).unwrap().give_card(eight.clone());
+    assert!(game.play_card("Danny".into(), eight.clone(), None, true).is_err());
+    assert!(!game.players.get(3).unwrap().is_finished());
+    assert_eq!(game.players.get(3).unwrap().get_card_count(), 3); // cards should not change
+}
