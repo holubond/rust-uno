@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::err::game_start::GameStartError;
 use crate::err::status::CreateStatusError;
 use crate::err::player_turn::PlayerTurnError;
+use crate::err::player_exist::PlayerExistError;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -203,14 +204,14 @@ impl Game {
     }
 
     /// Returns reference to a player matching the provided name, Err if they do not exist.
-    fn does_player_exist(&self, player_name: String) -> anyhow::Result<&Player> {
+    fn does_player_exist(&self, player_name: String) -> Result<&Player, PlayerExistError> {
         let player = self.find_player(player_name.clone());
 
         if player.is_none() {
-            anyhow::bail!("Player of name {} does not exist!", player_name)
+            Err(PlayerExistError::NoSuchPlayer(player_name))
+        } else {
+            Ok(player.unwrap())
         }
-
-        Ok(player.unwrap())
     }
 
     /// Returns Err if the passed player is not the current player, or if there is somehow no player playing.
