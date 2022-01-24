@@ -7,6 +7,7 @@ use handler::ws_connect::ws_connect;
 use std::sync::{Arc, Mutex};
 
 mod cards;
+mod err;
 mod gamestate;
 mod handler;
 mod jwt;
