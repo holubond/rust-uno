@@ -1,9 +1,9 @@
-use std::fmt;
 use gloo_console::log;
+use serde::{Deserialize, Serialize};
+use std::fmt;
+use yew::html::Scope;
 use yew::prelude::*;
 use yew::{function_component, html};
-use serde::{Deserialize, Serialize};
-use yew::html::Scope;
 
 pub struct Card;
 #[derive(Clone, PartialEq, Properties)]
@@ -16,7 +16,7 @@ pub enum Msg {
     PlayWild(Color),
 }
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
- pub enum Color {
+pub enum Color {
     Red,
     Yellow,
     Green,
@@ -52,7 +52,7 @@ impl CardType {
             CardType::Draw2 => "+2".to_string(),
             CardType::Draw4 => "+4".to_string(),
             CardType::Wild => "Wild".to_string(),
-            CardType::Value => "".to_string()
+            CardType::Value => "".to_string(),
         }
     }
 }
@@ -74,12 +74,12 @@ impl Component for Card {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::PlayCard => {
-                log!{"msg fired"};
+                log! {"msg fired"};
                 let props = ctx.props().clone();
                 props.card_on_click.emit(props.card_info);
             }
             Msg::PlayWild(chosen_color) => {
-                log!{"wild card clicked"};
+                log! {"wild card clicked"};
                 let mut props = ctx.props().clone();
                 props.card_info.color = chosen_color;
                 props.card_on_click.emit(props.card_info);
@@ -92,20 +92,20 @@ impl Component for Card {
         if props.card_info._type.clone() == CardType::Wild {
             return html! {
                 {print_wild_card(props.card_info.color.clone(),props.card_info._type.card_type_text().clone(),ctx.link().clone())}
-            }
+            };
         }
-        if props.card_info._type.clone() != CardType::Value{
-            return html!{
+        if props.card_info._type.clone() != CardType::Value {
+            return html! {
                 {print_card(props.card_info.color.clone(),props.card_info._type.card_type_text().clone(),ctx.link().clone())}
-            }
+            };
         }
-        return html!{
+        return html! {
             {print_card(props.card_info.color.clone(),props.card_info.value.unwrap().to_string().clone(),ctx.link().clone())}
         };
     }
 }
-fn print_card(color: Color, value: String, link: Scope<Card>) -> Html{
-    return html!{
+fn print_card(color: Color, value: String, link: Scope<Card>) -> Html {
+    return html! {
         <div class="w-full h-full flex flex-col rounded-lg shadow-md"
         style={format!("background-color: {}", color.use_color().clone())}
         onclick={link.callback(|e: MouseEvent| { Msg::PlayCard })}
@@ -122,9 +122,9 @@ fn print_card(color: Color, value: String, link: Scope<Card>) -> Html{
             </div>
     };
 }
-fn print_wild_card(color: Color, value: String, link: Scope<Card>) -> Html{
+fn print_wild_card(color: Color, value: String, link: Scope<Card>) -> Html {
     let r = Color::Red.use_color();
-    return html!{
+    return html! {
         <div class="w-full h-full flex flex-col bg-black rounded-lg shadow-md">
             <div class="h-1/3 w-full flex flex-row rounded-lg">
                 <div class="h-full w-1/2 rounded-lg" style="background-color: red" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Red) })}>

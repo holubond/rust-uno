@@ -1,4 +1,4 @@
-pub mod home;
 pub mod game;
-pub use home::Home;
+pub mod home;
 pub use game::Game;
+pub use home::Home;

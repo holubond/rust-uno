@@ -1,6 +1,6 @@
+use crate::pages::game::Player;
 use yew::prelude::*;
 use yew::{function_component, html};
-use crate::pages::game::Player;
 
 pub struct Oponent;
 #[derive(Clone, PartialEq, Properties)]
@@ -18,7 +18,7 @@ impl Component for Oponent {
     }
     fn view(&self, ctx: &Context<Self>) -> Html {
         if ctx.props().current {
-            return html!{
+            return html! {
                 <div class="w-1/5 h-full flex flex-col rounded-lg bg-yellow-300 shadow-md">
                     <div>
                         <p class="text-2xl text-center text-Black-500 font-bold">{format!("{}",ctx.props().name)}</p>
@@ -32,7 +32,7 @@ impl Component for Oponent {
                 </div>
             };
         }
-        return html!{
+        return html! {
             <div class="w-1/5 h-full flex flex-col rounded-lg bg-red-100 shadow-md">
                 <div>
                     <p class="text-2xl text-center text-Black-500 font-bold">{format!("{}",ctx.props().name)}</p>
@@ -63,7 +63,7 @@ impl Component for Oponents {
     }
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
-        return html!{
+        return html! {
             props.players.iter().filter(|p| p.name!=props.you).map(|player| {
                 if player.name == ctx.props().current.clone().unwrap() {
                     html!{

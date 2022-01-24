@@ -1,13 +1,13 @@
-use std::collections::HashMap;
-use yew::prelude::*;
-use reqwest::{Client, StatusCode};
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use web_sys::{Window, HtmlInputElement};
-use yew_router::prelude::*;
+use crate::Route;
 use gloo_console::log;
 use gloo_storage::{LocalStorage, Storage};
-use crate::Route;
+use reqwest::{Client, StatusCode};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use web_sys::{HtmlInputElement, Window};
+use yew::prelude::*;
+use yew_router::prelude::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateResponse {
@@ -52,8 +52,7 @@ impl Component for Home {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::InputChanged => {
-            }
+            Msg::InputChanged => {}
             Msg::SubmitCreate => {
                 if let Some(input) = self.name_create.cast::<HtmlInputElement>() {
                     let name_create = input.value();
@@ -69,7 +68,7 @@ impl Component for Home {
                 }
             }
             Msg::SubmitJoin => {
-                if let Some(name) = self.name_join.cast::<HtmlInputElement>(){
+                if let Some(name) = self.name_join.cast::<HtmlInputElement>() {
                     if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
                         let name_join = name.value();
                         let game_id = game.value();
@@ -87,14 +86,17 @@ impl Component for Home {
 
             Msg::SubmitCreateSuccess(result) => {
                 let id = result.gameID.clone();
-                match gloo_storage::LocalStorage::set("timestampPH",result) {
+                match gloo_storage::LocalStorage::set("timestampPH", result) {
                     Ok(_) => (),
-                    _ => match web_sys::window().unwrap().alert_with_message("Local storage Error") {
+                    _ => match web_sys::window()
+                        .unwrap()
+                        .alert_with_message("Local storage Error")
+                    {
                         Ok(_) => (),
                         _ => log!("Alert failed to pop up!"),
-                    }
+                    },
                 }
-                ctx.link().history().unwrap().push(Route::Lobby {id});
+                ctx.link().history().unwrap().push(Route::Lobby { id });
             }
             Msg::SubmitJoinSuccess(result) => {
                 if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
@@ -104,18 +106,27 @@ impl Component for Home {
                         token: result.token,
                         server: result.server,
                     };
-                    match gloo_storage::LocalStorage::set("timestampPH",game_data) {
+                    match gloo_storage::LocalStorage::set("timestampPH", game_data) {
                         Ok(_) => (),
-                        _ => match web_sys::window().unwrap().alert_with_message("Local storage Error") {
+                        _ => match web_sys::window()
+                            .unwrap()
+                            .alert_with_message("Local storage Error")
+                        {
                             Ok(_) => (),
                             _ => log!("Alert failed to pop up!"),
-                        }
+                        },
                     }
-                    ctx.link().history().unwrap().push(Route::Lobby { id: game_id});
+                    ctx.link()
+                        .history()
+                        .unwrap()
+                        .push(Route::Lobby { id: game_id });
                 }
             }
             Msg::SubmitFailure => {
-                match web_sys::window().unwrap().alert_with_message("Error occured during sending data") {
+                match web_sys::window()
+                    .unwrap()
+                    .alert_with_message("Error occured during sending data")
+                {
                     Ok(_) => (),
                     _ => log!("Alert failed to pop up!"),
                 };
@@ -208,40 +219,47 @@ impl Component for Home {
         };
     }
 }
-async fn send_create_game_request(client: Arc<Client>, name: String) -> Result<CreateResponse, &'static str> {
+async fn send_create_game_request(
+    client: Arc<Client>,
+    name: String,
+) -> Result<CreateResponse, &'static str> {
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
-    let response = client.post("http://localhost:9000/game").json(&request_body).send().await;
+    let response = client
+        .post("http://localhost:9000/game")
+        .json(&request_body)
+        .send()
+        .await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error.")
+        _ => return Err("Internal comunication error."),
     };
     match response.status() {
-        StatusCode::CREATED => {
-            match response.json::<CreateResponse>().await {
-                Ok(x) => return Ok(x),
-                _ => return Err("Error: msg prom server has bad struct.")
-            }
+        StatusCode::CREATED => match response.json::<CreateResponse>().await {
+            Ok(x) => return Ok(x),
+            _ => return Err("Error: msg prom server has bad struct."),
         },
-        _ => return Err("Error")
+        _ => return Err("Error"),
     }
 }
-async fn send_join_game_request(client: Arc<Client>, name: String, game_id: String) -> Result<JoinResponse, &'static str> {
+async fn send_join_game_request(
+    client: Arc<Client>,
+    name: String,
+    game_id: String,
+) -> Result<JoinResponse, &'static str> {
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
-    let url = format!("http://localhost:9000/game/{}/player",game_id);
+    let url = format!("http://localhost:9000/game/{}/player", game_id);
     let response = client.post(url).json(&request_body).send().await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error.")
+        _ => return Err("Internal comunication error."),
     };
     match response.status() {
-        StatusCode::CREATED => {
-            match response.json::<JoinResponse>().await {
-                Ok(x) => return Ok(x),
-                _ => return Err("Error: msg prom server has bad struct.")
-            }
+        StatusCode::CREATED => match response.json::<JoinResponse>().await {
+            Ok(x) => return Ok(x),
+            _ => return Err("Error: msg prom server has bad struct."),
         },
-        _ => return Err("Error")
+        _ => return Err("Error"),
     }
 }

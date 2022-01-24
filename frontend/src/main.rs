@@ -1,10 +1,10 @@
-#![recursion_limit="500"]
+#![recursion_limit = "500"]
 use yew::prelude::*;
 use yew_router::prelude::*;
-mod pages;
 mod components;
-use crate::pages::home::Home;
+mod pages;
 use crate::pages::game::Game;
+use crate::pages::home::Home;
 
 struct App;
 
@@ -30,7 +30,7 @@ impl Component for App {
 }
 
 #[derive(Debug, Clone, PartialEq, Routable)]
-pub enum Route  {
+pub enum Route {
     #[at("/game/:id")]
     Lobby { id: String },
     #[not_found]

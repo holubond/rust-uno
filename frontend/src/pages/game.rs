@@ -1,20 +1,20 @@
-use std::collections::HashMap;
-use yew::prelude::*;
-use yew::{function_component, html};
+use crate::components::card::{Card, CardInfo, CardType, Color};
+use crate::components::myuser::MyUser;
+use crate::components::oponent::{Oponent, Oponents};
+use crate::pages::game::GameState::Lobby;
+use futures::{SinkExt, StreamExt};
+use gloo_console::log;
+use gloo_storage::Storage;
+use reqwasm::websocket::{futures::WebSocket, Message};
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::thread::current;
-use gloo_console::log;
-use reqwasm::websocket::{Message, futures::WebSocket};
 use wasm_bindgen_futures::spawn_local;
-use futures::{SinkExt, StreamExt};
-use gloo_storage::Storage;
-use web_sys::{ HtmlInputElement};
-use crate::components::card::{Card, CardInfo, CardType, Color};
-use crate::pages::game::GameState::Lobby;
-use crate::components::myuser::MyUser;
-use crate::components::oponent::{Oponents, Oponent};
+use web_sys::HtmlInputElement;
+use yew::prelude::*;
+use yew::{function_component, html};
 
 pub enum Msg {
     UnoChanged,
@@ -38,9 +38,7 @@ pub struct Game {
     finished_players: Option<Vec<String>>,
     clockwise: bool,
     uno_bool: bool,
-    discarted_card: CardInfo
-    //todo discarted card
-
+    discarted_card: CardInfo, //todo discarted card
 }
 #[derive(Debug, Deserialize)]
 struct GameStore {
@@ -75,7 +73,7 @@ impl Component for Game {
     fn create(ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("timestampPH").unwrap();
         let mut ws = WebSocket::open("wss://echo.websocket.org").unwrap();
-        let (mut _write,mut read) = ws.split();
+        let (mut _write, mut read) = ws.split();
         spawn_local(async move {
             while let Some(msg) = read.next().await {
                 log!(format!("1. {:?}", msg))
@@ -83,57 +81,57 @@ impl Component for Game {
             log!("WebSocket Closed")
         });
         //todo delete test data
-        let test1= Player{
+        let test1 = Player {
             name: "Kája".to_string(),
-            cards: 8
+            cards: 8,
         };
-        let test2= Player{
+        let test2 = Player {
             name: "Grolig".to_string(),
-            cards: 5
+            cards: 5,
         };
-        let test3= Player{
+        let test3 = Player {
             name: "Holy".to_string(),
-            cards: 0
+            cards: 0,
         };
-        let test4= Player{
+        let test4 = Player {
             name: "End".to_string(),
-            cards: 4
+            cards: 4,
         };
-        let test5= Player{
+        let test5 = Player {
             name: "Were".to_string(),
-            cards: 4
+            cards: 4,
         };
-        let card1 = CardInfo{
+        let card1 = CardInfo {
             color: Color::Blue,
             _type: CardType::Value,
             value: Some(1),
         };
-        let card2 = CardInfo{
+        let card2 = CardInfo {
             color: Color::Green,
             _type: CardType::Value,
             value: Some(3),
         };
-        let card3 = CardInfo{
+        let card3 = CardInfo {
             color: Color::Red,
             _type: CardType::Value,
             value: Some(3),
         };
-        let card4 = CardInfo{
+        let card4 = CardInfo {
             color: Color::Black,
             _type: CardType::Wild,
             value: None,
         };
-        let card5 = CardInfo{
+        let card5 = CardInfo {
             color: Color::Green,
             _type: CardType::Value,
             value: Some(3),
         };
-        let card6 = CardInfo{
+        let card6 = CardInfo {
             color: Color::Red,
             _type: CardType::Draw2,
             value: Some(3),
         };
-        let card7 = CardInfo{
+        let card7 = CardInfo {
             color: Color::Red,
             _type: CardType::Value,
             value: Some(3),
@@ -146,21 +144,21 @@ impl Component for Game {
             author: "Were".to_string(),
             you: "Were".to_string(),
             //you: String::new(),
-            cards: vec![card1,card2,card3,card4,card5,card6],
+            cards: vec![card1, card2, card3, card4, card5, card6],
             players: vec![test1, test2, test3, test4, test5],
             current_player: Some("Holy".to_string()),
             finished_players: None,
             clockwise: true,
             uno_bool: false,
-            discarted_card: card7
+            discarted_card: card7,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg:: UnoChanged => {
+            Msg::UnoChanged => {
                 self.uno_bool = !self.uno_bool;
-                let card1 = CardInfo{
+                let card1 = CardInfo {
                     color: Color::Blue,
                     _type: CardType::Value,
                     value: Some(1),
@@ -184,7 +182,7 @@ impl Component for Game {
                 let token = self.game.token.clone();
                 log!("Start game sending");
                 _ctx.link().send_future(async {
-                    match submit_start_game(client,id, token).await {
+                    match submit_start_game(client, id, token).await {
                         Ok(result) => Msg::SubmitSuccess,
                         _ => Msg::SubmitFailure,
                     }
@@ -198,8 +196,8 @@ impl Component for Game {
                 let token = self.game.token.clone();
                 let said_uno = self.uno_bool.clone();
                 log!("Start game sending");
-                _ctx.link().send_future(async move{
-                    match play_card_request(client,id,token,card,None, said_uno.clone()).await {
+                _ctx.link().send_future(async move {
+                    match play_card_request(client, id, token, card, None, said_uno.clone()).await {
                         Ok(_) => Msg::SubmitSuccess,
                         _ => Msg::SubmitFailure,
                     }
@@ -212,14 +210,14 @@ impl Component for Game {
                 let token = self.game.token.clone();
                 log!("Start sending draw card");
                 _ctx.link().send_future(async {
-                    match draw_card_request(client,id, token).await {
+                    match draw_card_request(client, id, token).await {
                         Ok(result) => Msg::DrawSuccess(result),
                         _ => Msg::SubmitFailure,
                     }
                 });
             }
             Msg::DrawSuccess(response) => {
-                response.cards.iter().for_each(|card|{
+                response.cards.iter().for_each(|card| {
                     self.cards.push(card.clone());
                 });
                 self.current_player = Some(response.next);
@@ -228,7 +226,9 @@ impl Component for Game {
                 //todo start game
             }
             Msg::SubmitFailure => {
-                web_sys::window().unwrap().alert_with_message("Error occured during starting game.");
+                web_sys::window()
+                    .unwrap()
+                    .alert_with_message("Error occured during starting game.");
             }
         }
         true
@@ -240,9 +240,7 @@ impl Component for Game {
             log!("parent callback.");
             Msg::PlayCard(card)
         });
-        let draw_pile_on_click = ctx.link().callback(|e: MouseEvent| {
-            Msg::DrawCard
-        });
+        let draw_pile_on_click = ctx.link().callback(|e: MouseEvent| Msg::DrawCard);
         /*
         // loby screen
         if self.status.eq(&GameState::Lobby) {
@@ -326,15 +324,15 @@ impl Component for Game {
         };
     }
 }
-fn print_discarted_card(card: CardInfo) -> Html{
+fn print_discarted_card(card: CardInfo) -> Html {
     let use_color = card.color.use_color();
     let mut print_value = String::new();
-    if card._type != CardType::Value{
+    if card._type != CardType::Value {
         print_value = card._type.card_type_text();
     } else {
         print_value = card.value.unwrap().to_string();
     }
-    return html!{
+    return html! {
         <div class="w-full h-full flex flex-col rounded-lg shadow-md"
         style={format!("background-color: {}", use_color)}
         >
@@ -350,59 +348,68 @@ fn print_discarted_card(card: CardInfo) -> Html{
             </div>
     };
 }
-async fn submit_start_game(client: Arc<Client>, game_id: String, token: String) -> Result<(), &'static str> {
-    let url = format!("http://localhost:9000/game/{}/statusRunning",game_id);
+async fn submit_start_game(
+    client: Arc<Client>,
+    game_id: String,
+    token: String,
+) -> Result<(), &'static str> {
+    let url = format!("http://localhost:9000/game/{}/statusRunning", game_id);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error")
+        _ => return Err("Internal comunication error"),
     };
     match response.status() {
-        StatusCode::NO_CONTENT => {
-            Ok(())
-        },
-        _ => return Err("Error")
+        StatusCode::NO_CONTENT => Ok(()),
+        _ => return Err("Error"),
     }
 }
-async fn draw_card_request(client: Arc<Client>, game_id: String, token: String) -> Result<DrawResponse, &'static str> {
-    let url = format!("http://localhost:9000/game/{}/drawnCards",game_id);
+async fn draw_card_request(
+    client: Arc<Client>,
+    game_id: String,
+    token: String,
+) -> Result<DrawResponse, &'static str> {
+    let url = format!("http://localhost:9000/game/{}/drawnCards", game_id);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error")
+        _ => return Err("Internal comunication error"),
     };
     match response.status() {
-        StatusCode::OK => {
-            match response.json::<DrawResponse>().await {
-                Ok(x) => return Ok(x),
-                _ => return Err("Error: msg prom server has bad struct.")
-            }
+        StatusCode::OK => match response.json::<DrawResponse>().await {
+            Ok(x) => return Ok(x),
+            _ => return Err("Error: msg prom server has bad struct."),
         },
-        _ => return Err("Error")
+        _ => return Err("Error"),
     }
 }
-async fn play_card_request(client: Arc<Client>,
-                           game_id: String,
-                           token: String,
-                           card: CardInfo,
-                           new_color: Option<Color>,
-                           said_uno: bool) -> Result<(), &'static str> {
+async fn play_card_request(
+    client: Arc<Client>,
+    game_id: String,
+    token: String,
+    card: CardInfo,
+    new_color: Option<Color>,
+    said_uno: bool,
+) -> Result<(), &'static str> {
     let mut request_body = HashMap::new();
     request_body.insert("card", serde_json::to_string(&card).unwrap());
     if new_color.is_some() {
-        request_body.insert("newColor",new_color.unwrap().use_color().to_uppercase());
+        request_body.insert("newColor", new_color.unwrap().use_color().to_uppercase());
     }
     request_body.insert("saidUno", said_uno.clone().to_string());
-    let url = format!("http://localhost:9000/game/{}/playCard",game_id);
-    let response = client.post(url).json(&request_body).bearer_auth(token).send().await;
+    let url = format!("http://localhost:9000/game/{}/playCard", game_id);
+    let response = client
+        .post(url)
+        .json(&request_body)
+        .bearer_auth(token)
+        .send()
+        .await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error")
+        _ => return Err("Internal comunication error"),
     };
     match response.status() {
-        StatusCode::NO_CONTENT => {
-            Ok(())
-        },
-        _ => return Err("Error")
+        StatusCode::NO_CONTENT => Ok(()),
+        _ => return Err("Error"),
     }
 }
