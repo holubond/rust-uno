@@ -95,19 +95,26 @@ impl Component for Card {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
-        if props.card_info._type.clone() == CardType::Wild {
-            return html! {
-                {print_wild_card(props.card_info.color.clone(),props.card_info._type.card_type_text().clone(),ctx.link().clone())}
-            };
+
+        match props.card_info._type {
+            CardType::Wild => {
+                return html! {
+                    {print_wild_card(props.card_info.color.clone(),props.card_info._type.card_type_text().clone(),ctx.link().clone())}
+                }
+            }
+
+            CardType::Value => {
+                return html! {
+                    {print_card(props.card_info.color.clone(),props.card_info.value.unwrap().to_string().clone(),ctx.link().clone())}
+                }
+            }
+
+            _ => {
+                return html! {
+                    {print_card(props.card_info.color.clone(),props.card_info._type.card_type_text().clone(),ctx.link().clone())}
+                }
+            }
         }
-        if props.card_info._type.clone() != CardType::Value {
-            return html! {
-                {print_card(props.card_info.color.clone(),props.card_info._type.card_type_text().clone(),ctx.link().clone())}
-            };
-        }
-        return html! {
-            {print_card(props.card_info.color.clone(),props.card_info.value.unwrap().to_string().clone(),ctx.link().clone())}
-        };
     }
 }
 fn print_card(color: Color, value: String, link: Scope<Card>) -> Html {
