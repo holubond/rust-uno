@@ -276,11 +276,14 @@ impl Game {
         let drawn_cards = self.draw_n_cards(player_name.clone(), draw_count);
 
         self.end_turn();
-        self.message_all(WSMsg::draw(
-            player_name,
-            self.get_current_player().unwrap().name(),
-            draw_count,
-        ));
+        self.message_all_but(
+            player_name.clone(),
+            WSMsg::draw(
+                player_name,
+                self.get_current_player().unwrap().name(),
+                draw_count,
+            ),
+        );
 
         Ok(drawn_cards)
     }
