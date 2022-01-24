@@ -1,15 +1,17 @@
 use crate::handler::create_game::create_game;
+use crate::handler::restart_game::start_game;
 use crate::repo::address_repo::AddressRepo;
 use crate::repo::game_repo::InMemoryGameRepo;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use handler::ws_connect::ws_connect;
 use std::sync::{Arc, Mutex};
+use crate::repo::authorization_repo::AuthorizationRepo;
 
 mod cards;
+mod err;
 mod gamestate;
 mod handler;
-mod jwt;
 mod repo;
 mod ws;
 
@@ -27,17 +29,20 @@ async fn main() -> anyhow::Result<()> {
 
     let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new()));
     let address_repo = Arc::new(AddressRepo::new(port.clone()));
+    let authorization_repo = Arc::new(AuthorizationRepo::new());
 
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(game_repo.clone()))
             .app_data(web::Data::new(address_repo.clone()))
+            .app_data(web::Data::new(authorization_repo.clone()))
             .service(create_game)
+            .service(start_game)
             .service(ws_connect)
     })
-    .bind(format!("127.0.0.1:{}", port))?
-    .run()
-    .await?;
+        .bind(format!("127.0.0.1:{}", port))?
+        .run()
+        .await?;
 
     Ok(())
 }
