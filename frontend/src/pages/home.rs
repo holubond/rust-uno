@@ -1,4 +1,5 @@
 use crate::Route;
+use futures::future::err;
 use gloo_console::log;
 use gloo_storage::{LocalStorage, Storage};
 use reqwest::{Client, StatusCode};
@@ -20,14 +21,17 @@ pub struct JoinResponse {
     server: String,
     token: String,
 }
-
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct MessageResponse {
+    message: String,
+}
 pub enum Msg {
     InputChanged,
     SubmitCreate,
     SubmitJoin,
     SubmitCreateSuccess(CreateResponse),
     SubmitJoinSuccess(JoinResponse),
-    SubmitFailure,
+    SubmitFailure(String),
 }
 
 pub struct Home {
@@ -60,7 +64,7 @@ impl Component for Home {
                     ctx.link().send_future(async {
                         match send_create_game_request(client, name_create).await {
                             Ok(result) => Msg::SubmitCreateSuccess(result),
-                            _ => Msg::SubmitFailure,
+                            Err(err) => Msg::SubmitFailure(err),
                         }
                     });
                 } else {
@@ -76,7 +80,7 @@ impl Component for Home {
                         ctx.link().send_future(async {
                             match send_join_game_request(client, name_join, game_id).await {
                                 Ok(result) => Msg::SubmitJoinSuccess(result),
-                                _ => Msg::SubmitFailure,
+                                Err(err) => Msg::SubmitFailure(err),
                             }
                         });
                     }
@@ -122,11 +126,8 @@ impl Component for Home {
                         .push(Route::Lobby { id: game_id });
                 }
             }
-            Msg::SubmitFailure => {
-                match web_sys::window()
-                    .unwrap()
-                    .alert_with_message("Error occured during sending data")
-                {
+            Msg::SubmitFailure(err_msg) => {
+                match web_sys::window().unwrap().alert_with_message(&err_msg) {
                     Ok(_) => (),
                     _ => log!("Alert failed to pop up!"),
                 };
@@ -222,7 +223,7 @@ impl Component for Home {
 async fn send_create_game_request(
     client: Arc<Client>,
     name: String,
-) -> Result<CreateResponse, &'static str> {
+) -> Result<CreateResponse, String> {
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
     let response = client
@@ -232,34 +233,40 @@ async fn send_create_game_request(
         .await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error."),
+        _ => return Err("Internal communication error.".to_string()),
     };
-    match response.status() {
+    return match response.status() {
         StatusCode::CREATED => match response.json::<CreateResponse>().await {
-            Ok(x) => return Ok(x),
-            _ => return Err("Error: msg prom server has bad struct."),
+            Ok(x) => Ok(x),
+            _ => Err("Error: message from server had bad struct.".to_string()),
         },
-        _ => return Err("Error"),
-    }
+        _ => Err("Undefined error occurred.".to_string()),
+    };
 }
 async fn send_join_game_request(
     client: Arc<Client>,
     name: String,
     game_id: String,
-) -> Result<JoinResponse, &'static str> {
+) -> Result<JoinResponse, String> {
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
     let url = format!("http://localhost:9000/game/{}/player", game_id);
     let response = client.post(url).json(&request_body).send().await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error."),
+        _ => return Err("Internal communication error.".to_string()),
     };
-    match response.status() {
+    return match response.status() {
         StatusCode::CREATED => match response.json::<JoinResponse>().await {
-            Ok(x) => return Ok(x),
-            _ => return Err("Error: msg prom server has bad struct."),
+            Ok(x) => Ok(x),
+            _ => Err("Error: message from server had bad struct.".to_string()),
         },
-        _ => return Err("Error"),
-    }
+        StatusCode::BAD_REQUEST | StatusCode::NOT_FOUND | StatusCode::GONE => {
+            match response.json::<MessageResponse>().await {
+                Ok(x) => Err(x.message.clone()),
+                _ => Err("Error: message from server had bad struct.".to_string()),
+            }
+        }
+        _ => Err("Undefined error occurred.".to_string()),
+    };
 }
