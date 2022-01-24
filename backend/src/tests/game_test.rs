@@ -304,10 +304,10 @@ fn test_active_cards() {
         andy.give_card(green_skip.clone());
     }
     assert!(game
-        .play_card("Andy".into(), blu_skip.clone(), None)
+        .play_card("Andy".into(), blu_skip.clone(), None, false)
         .is_err()); // must respond to draw2
     assert!(game
-        .play_card("Andy".into(), blu_plus_2.clone(), None)
+        .play_card("Andy".into(), blu_plus_2.clone(), None, false)
         .is_ok());
     assert_eq!(game.active_cards.active_symbol().unwrap(), Draw2);
     assert_eq!(game.active_cards.sum_active_draw_cards(), Some(4)); // 2 from before + 2 from Andy
@@ -319,7 +319,7 @@ fn test_active_cards() {
     assert!(!game.active_cards.are_cards_active());
 
     assert!(game
-        .play_card("Andy".into(), blu_skip.clone(), None)
+        .play_card("Andy".into(), blu_skip.clone(), None, false)
         .is_ok());
     {
         let andy = game.players.get_mut(0).unwrap();
@@ -329,7 +329,7 @@ fn test_active_cards() {
     assert_eq!(game.active_cards.sum_active_draw_cards(), None);
 
     assert!(game
-        .play_card("Andy".into(), green_skip.clone(), None)
+        .play_card("Andy".into(), green_skip.clone(), None, false)
         .is_ok());
     assert_eq!(game.active_cards.active_symbol(), Some(Skip));
     assert_eq!(game.active_cards.sum_active_draw_cards(), None);

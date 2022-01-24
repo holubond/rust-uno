@@ -321,6 +321,7 @@ impl Game {
         player_name: String,
         card: Card,
         maybe_new_color: Option<CardColor>,
+        said_uno: bool
     ) -> Result<(), PlayCardError> {
         self.can_player_play(player_name.clone(), &card)?;
 
