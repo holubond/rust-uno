@@ -1,9 +1,8 @@
 use gloo_console::log;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use yew::html::Scope;
 use yew::prelude::*;
-use yew::{function_component, html};
+use yew::html;
 
 pub struct Card;
 #[derive(Clone, PartialEq, Properties)]
