@@ -8,10 +8,13 @@ pub struct MessageResponse {
     message: String,
 }
 
-pub enum str
+pub enum TypeOfError {
+    GAME_NOT_RUNNING,
+    CANNOT_DRAW
+}
 
 pub struct MessageResponseType {
-    type:
+    type_of_error: TypeOfError,
     message: String,
 }
 
@@ -41,7 +44,11 @@ pub async fn create_game(
     }
 
     if game.status() != GameStatus::Running {
-        return HttpResponse::Conflict().json(MessageResponse {message:"Game is not running ".to_string()});
+        return HttpResponse::Conflict().json(MessageResponseType { type_of_error: TypeOfError::GAME_NOT_RUNNING, message:"Game is not running ".to_string()});
     }
+
+    //TODO draw card
+
+    HttpResponse::NoContent().finish()
 
 }
