@@ -40,8 +40,8 @@ pub async fn join_game(
 
     let mut game_repo = match game_repo.lock() {
         Err(_) => {
-            return HttpResponse::BadRequest().json(MessageResponse {
-                message: "Name of the player cannot be empty.".to_string(),
+            return HttpResponse::InternalServerError().json(MessageResponse {
+                message: "Cannot acquire lock on the game repo".to_string(),
             })
         }
         Ok(game_repo) => game_repo,
@@ -57,7 +57,7 @@ pub async fn join_game(
     };
 
     if game.status() != GameStatus::Lobby {
-        return HttpResponse::NotFound().json(MessageResponse {
+        return HttpResponse::Gone().json(MessageResponse {
             message: "Game does not accept any new players.".to_string(),
         });
     }
