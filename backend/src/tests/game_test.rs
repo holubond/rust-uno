@@ -108,7 +108,7 @@ fn test_draw_cards_draws() {
     let mut game = Game::new("Andy".into());
     game.deck
         .play(Card::new(CardColor::Blue, CardSymbol::Draw2).unwrap());
-    game.active_cards.push(game.deck.top_discard_card().clone());
+    assert!(game.active_cards.push(game.deck.top_discard_card().clone()).is_ok());
 
     assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 2);
 
