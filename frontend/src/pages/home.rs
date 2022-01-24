@@ -16,7 +16,7 @@ pub struct CreateResponse {
     token: String,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct JoinRespons {
+pub struct JoinResponse {
     server: String,
     token: String,
 }
@@ -26,7 +26,7 @@ pub enum Msg {
     SubmitCreate,
     SubmitJoin,
     SubmitCreateSuccess(CreateResponse),
-    SubmitJoinSuccess(JoinRespons),
+    SubmitJoinSuccess(JoinResponse),
     SubmitFailure,
 }
 
@@ -212,34 +212,34 @@ async fn send_create_game_request(client: Arc<Client>, name: String) -> Result<C
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
     let response = client.post("http://localhost:9000/game").json(&request_body).send().await;
-    if response.is_err() {
-        return Err("Error");
-    }
-    let response = response.unwrap();
+    let response = match response {
+        Ok(x) => x,
+        _ => return Err("Internal comunication error.")
+    };
     match response.status() {
         StatusCode::CREATED => {
             match response.json::<CreateResponse>().await {
                 Ok(x) => return Ok(x),
-                _ => return Err("Error")
+                _ => return Err("Error: msg prom server has bad struct.")
             }
         },
         _ => return Err("Error")
     }
 }
-async fn send_join_game_request(client: Arc<Client>, name: String, game_id: String) -> Result<JoinRespons, &'static str> {
+async fn send_join_game_request(client: Arc<Client>, name: String, game_id: String) -> Result<JoinResponse, &'static str> {
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
     let url = format!("http://localhost:9000/game/{}/player",game_id);
     let response = client.post(url).json(&request_body).send().await;
-    if response.is_err() {
-        return Err("Error");
-    }
-    let response = response.unwrap();
+    let response = match response {
+        Ok(x) => x,
+        _ => return Err("Internal comunication error.")
+    };
     match response.status() {
         StatusCode::CREATED => {
-            match response.json::<JoinRespons>().await {
+            match response.json::<JoinResponse>().await {
                 Ok(x) => return Ok(x),
-                _ => return Err("Error")
+                _ => return Err("Error: msg prom server has bad struct.")
             }
         },
         _ => return Err("Error")

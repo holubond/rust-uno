@@ -51,6 +51,7 @@ pub struct Oponents;
 #[derive(Clone, PartialEq, Properties)]
 pub struct OponentsProps {
     pub players: Vec<Player>,
+    pub you: String,
     pub current: Option<String>,
 }
 impl Component for Oponents {
@@ -61,17 +62,9 @@ impl Component for Oponents {
         Self
     }
     fn view(&self, ctx: &Context<Self>) -> Html {
-        if ctx.props().current.is_none() {
-            return html! {
-                ctx.props().players.iter().map(|player| {
-                    html!{
-                        <Oponent name ={player.name.clone()} num ={player.cards} current={false} />
-                    }
-                }).collect::<Html>()
-            }
-        }
+        let props = ctx.props();
         return html!{
-            ctx.props().players.iter().map(|player| {
+            props.players.iter().filter(|p| p.name!=props.you).map(|player| {
                 if player.name == ctx.props().current.clone().unwrap() {
                     html!{
                         <Oponent name ={player.name.clone()} num ={player.cards} current={true} />

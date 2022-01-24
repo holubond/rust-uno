@@ -1,15 +1,21 @@
 use std::fmt;
+use gloo_console::log;
 use yew::prelude::*;
 use yew::{function_component, html};
+use serde::{Deserialize, Serialize};
+use yew::html::Scope;
 
 pub struct Card;
 #[derive(Clone, PartialEq, Properties)]
 pub struct CardProps {
-    pub color: Color,
-    pub _type: CardType,
-    pub value: Option<u32>,
+    pub card_info: CardInfo,
+    pub card_on_click: Callback<CardInfo>,
 }
-#[derive(PartialEq, Clone)]
+pub enum Msg {
+    PlayCard,
+    PlayWild(Color),
+}
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
  pub enum Color {
     Red,
     Yellow,
@@ -17,18 +23,19 @@ pub struct CardProps {
     Blue,
     Black,
 }
-impl fmt::Debug for Color {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Color::Red => write!(f, "red"),
-            Color::Yellow => write!(f, "yellow"),
-            Color::Green => write!(f, "green"),
-            Color::Blue => write!(f, "blue"),
-            Color::Black => write!(f, "black"),
+impl Color {
+    pub fn use_color(&self) -> String {
+        match self {
+            Color::Red => "red".to_string(),
+            Color::Yellow => "yellow".to_string(),
+            Color::Green => "green".to_string(),
+            Color::Blue => "blue".to_string(),
+            Color::Black => "black".to_string(),
         }
     }
 }
-#[derive(PartialEq, Clone)]
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum CardType {
     Value,
     Skip,
@@ -37,53 +44,103 @@ pub enum CardType {
     Draw4,
     Wild,
 }
-impl fmt::Debug for CardType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            CardType::Skip => write!(f, "Skip"),
-            CardType::Reverse => write!(f, "Reverse"),
-            CardType::Draw2 => write!(f, "+2"),
-            CardType::Draw4 => write!(f, "+4"),
-            CardType::Wild => write!(f, "Wild"),
-            _ => write!(f,"value"),
+impl CardType {
+    pub fn card_type_text(&self) -> String {
+        match self {
+            CardType::Skip => "Skip".to_string(),
+            CardType::Reverse => "Reverse".to_string(),
+            CardType::Draw2 => "+2".to_string(),
+            CardType::Draw4 => "+4".to_string(),
+            CardType::Wild => "Wild".to_string(),
+            CardType::Value => "".to_string()
         }
     }
 }
+
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+pub struct CardInfo {
+    pub color: Color,
+    pub _type: CardType,
+    pub value: Option<u32>,
+}
+
 impl Component for Card {
-    type Message = ();
+    type Message = Msg;
     type Properties = CardProps;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        match msg {
+            Msg::PlayCard => {
+                log!{"msg fired"};
+                let props = ctx.props().clone();
+                props.card_on_click.emit(props.card_info);
+            }
+            Msg::PlayWild(chosen_color) => {
+                log!{"wild card clicked"};
+                let mut props = ctx.props().clone();
+                props.card_info.color = chosen_color;
+                props.card_on_click.emit(props.card_info);
+            }
+        }
+        true
+    }
     fn view(&self, ctx: &Context<Self>) -> Html {
-        if ctx.props()._type.clone() != CardType::Value{
+        let props = ctx.props().clone();
+        if props.card_info._type.clone() == CardType::Wild {
+            return html! {
+                {print_wild_card(props.card_info.color.clone(),props.card_info._type.card_type_text().clone(),ctx.link().clone())}
+            }
+        }
+        if props.card_info._type.clone() != CardType::Value{
             return html!{
-                <div class="w-full h-full flex flex-col rounded-lg bg-red-100 shadow-md" style={format!("background-color: {:?}", ctx.props().color.clone())}>
-                    <div class="h-1/3">
-                        <p class="text-5xl text-left text-White-500 font-bold">{format!("{:?}",ctx.props()._type.clone())}</p>
-                    </div>
-                    <div class="h-1/3 flex justify-center">
-                        <p class="text-5xl text-center align-bottom bg-gray-300 text-Black-500 font-bold">{format!("{:?}",ctx.props()._type.clone())}</p>
-                    </div>
-                    <div class="h-1/3">
-                        <p class="text-5xl text-right text-White-500 font-bold">{format!("{:?}",ctx.props()._type.clone())}</p>
-                    </div>
-                </div>
+                {print_card(props.card_info.color.clone(),props.card_info._type.card_type_text().clone(),ctx.link().clone())}
             }
         }
         return html!{
-            <div class="w-full h-full flex flex-col rounded-lg bg-red-100 shadow-md" style={format!("background-color: {:?}", ctx.props().color.clone())}>
-                <div class="h-1/3">
-                    <p class="text-8xl text-left text-White-500 font-bold">{format!("{}",ctx.props().value.unwrap())}</p>
-                </div>
-                <div class="h-1/3 flex justify-center">
-                    <p class="text-8xl text-center bg-gray-300 text-Black-500 font-bold">{format!("{}",ctx.props().value.unwrap())}</p>
-                </div>
-                <div class="h-1/3">
-                    <p class="text-8xl text-right text-White-500 font-bold">{format!{"{}",ctx.props().value.unwrap()}}</p>
-                </div>
-            </div>
+            {print_card(props.card_info.color.clone(),props.card_info.value.unwrap().to_string().clone(),ctx.link().clone())}
         };
     }
+}
+fn print_card(color: Color, value: String, link: Scope<Card>) -> Html{
+    return html!{
+        <div class="w-full h-full flex flex-col rounded-lg shadow-md"
+        style={format!("background-color: {}", color.use_color().clone())}
+        onclick={link.callback(|e: MouseEvent| { Msg::PlayCard })}
+        >
+                <div class="h-1/3">
+                    <p class="text-6xl text-left text-White-500 font-bold">{format!("{}",value)}</p>
+                </div>
+                <div class="h-1/3 flex justify-center">
+                    <p class="text-6xl text-center bg-gray-300 text-Black-500 font-bold">{format!("{}",value)}</p>
+                </div>
+                <div class="h-1/3">
+                    <p class="text-6xl text-right text-White-500 font-bold">{format!{"{}",value}}</p>
+                </div>
+            </div>
+    };
+}
+fn print_wild_card(color: Color, value: String, link: Scope<Card>) -> Html{
+    let r = Color::Red.use_color();
+    return html!{
+        <div class="w-full h-full flex flex-col bg-black rounded-lg shadow-md">
+            <div class="h-1/3 w-full flex flex-row rounded-lg">
+                <div class="h-full w-1/2 rounded-lg" style="background-color: red" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Red) })}>
+                </div>
+                <div class="h-full w-1/2 rounded-lg" style="background-color: blue" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Blue) })}>
+                </div>
+            </div>
+            <div class="h-1/3 flex justify-center">
+                <p class="text-5xl text-center bg-gray-300 text-Black-500 font-bold">{format!("{}",value)}</p>
+            </div>
+            <div class="h-1/3 w-full flex flex-row rounded-lg">
+                <div class="h-full w-1/2 rounded-lg" style="background-color: yellow" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Yellow) })}>
+                </div>
+                <div class="h-full w-1/2 rounded-lg" style="background-color: green" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Green) })}>
+                </div>
+            </div>
+        </div>
+    };
 }

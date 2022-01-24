@@ -1,7 +1,7 @@
 use futures::SinkExt;
 use yew::prelude::*;
 use yew::{function_component, html};
-use crate::components::card::{Card, CardProps};
+use crate::components::card::{Card, CardInfo, CardProps};
 use crate::Game;
 use crate::pages::game::Msg;
 
@@ -9,53 +9,55 @@ use crate::pages::game::Msg;
 pub struct MyUser;
 #[derive(Clone, PartialEq, Properties)]
 pub struct MyUserProps {
-    pub name: String,
-    pub current: Option<String>,
-    pub cards: Vec<CardProps>,
+    pub username: String,
+    pub current_username: Option<String>,
+    pub cards: Vec<CardInfo>,
+    pub card_on_click: Callback<CardInfo>
 }
 impl Component for MyUser {
     type Message = ();
     type Properties = MyUserProps;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let cur = ctx.props().current.clone().unwrap();
-        let card = ctx.props().cards.first().unwrap();
-        if cur==ctx.props().name.clone() {
+        let props = ctx.props().clone();
+
+        let current_username = props.current_username.clone().unwrap();
+        if current_username==props.username.clone() {
             return html!{
                 <div class="flex flex-col w-80 h-96 rounded-lg bg-yellow-300 shadow-md justify-center">
-                    <div class="h-80 w-72">
-                        {
-                            ctx.props().cards.iter().map(|card| {
-                                html!{
-                                    <Card color={card.color.clone()} _type={card._type.clone()} value={card.value.clone()} />
-                                }
-                            }).collect::<Html>()
-                        }
-                    </div>
-                    <div>
-                        <p class="text-2xl text-center text-Black-500 font-bold">{format!("{}",ctx.props().name)}</p>
-                    </div>
+                    {player_board(props.username.clone(), props.cards.clone(), props.card_on_click.clone())}
                 </div>
             };
         }
         return html!{
             <div class="flex flex-col w-2/3 h-96 rounded-lg bg-white shadow-md justify-center">
-                <div class="h-80 w-full flex flex-row">
+                {player_board(props.username.clone(), props.cards.clone(), props.card_on_click.clone())}
+            </div>
+        };
+    }
+}
+fn player_board(username: String, cards: Vec<CardInfo>, card_on_click: Callback<CardInfo>) -> Html {
+    /*
+    let card_on_click = move |card:CardInfo|{
+        card_on_click.emit(card.clone());
+    };*/
+    return html!{
+            <>
+                <div class="h-80 flex flex-row overflow-auto">
                     {
-                        ctx.props().cards.iter().map(|card| {
+                        cards.iter().map(|card| {
                             html!{
-                                <Card color={card.color.clone()} _type={card._type.clone()} value={card.value.clone()} />
+                                <Card card_info={card.clone()} card_on_click={card_on_click.clone()} />
                             }
                         }).collect::<Html>()
                     }
                 </div>
                 <div>
-                    <p class="text-2xl text-center text-Black-500 font-bold">{format!("{}",ctx.props().name)}</p>
+                    <p class="text-2xl text-center text-Black-500 font-bold">{format!("{}",username)}</p>
                 </div>
-            </div>
-        };
-    }
+            </>
+        }
 }
