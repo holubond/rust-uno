@@ -6,7 +6,7 @@ pub trait GameRepo {
 
 #[derive(Clone)]
 pub struct InMemoryGameRepo {
-    games: Vec<Game>,
+    pub(crate) games: Vec<Game>,
 }
 
 impl InMemoryGameRepo {
