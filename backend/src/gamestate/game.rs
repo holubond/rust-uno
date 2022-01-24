@@ -10,6 +10,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use crate::err::game_start::GameStartError;
 use crate::err::status::CreateStatusError;
+use crate::err::player_turn::PlayerTurnError;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -213,12 +214,12 @@ impl Game {
     }
 
     /// Returns Err if the passed player is not the current player, or if there is somehow no player playing.
-    fn is_player_at_turn(&self, player: &Player) -> anyhow::Result<()> {
+    fn is_player_at_turn(&self, player: &Player) -> Result<(), PlayerTurnError> {
         match self.get_current_player() {
-            None => anyhow::bail!("No player is currently playing?!"),
+            None => Err(PlayerTurnError::NoOneIsPlaying),
             Some(current_player) => {
                 if player != current_player {
-                    anyhow::bail!("It is not player {}'s turn right now!", player.name())
+                    Err(PlayerTurnError::PlayerOutOfTurn(player.name()))
                 } else {
                     Ok(())
                 }
