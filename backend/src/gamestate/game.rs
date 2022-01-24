@@ -55,7 +55,7 @@ impl Game {
         self.clear_player_positions();
 
         self.status = GameStatus::Running;
-        self.deal_starting_cards()?; // must be called after clear_players(), of course
+        self.deal_starting_cards()?;
 
         self.status_message_all()?;
 
