@@ -3,6 +3,8 @@ use serde::Serialize;
 
 pub(super) mod draw;
 pub(super) mod finish;
+pub(super) mod gained_cards;
+pub(super) mod penalty;
 pub(super) mod play_card;
 pub(super) mod status;
 
