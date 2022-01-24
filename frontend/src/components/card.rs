@@ -5,15 +5,18 @@ use yew::prelude::*;
 use yew::html;
 
 pub struct Card;
+
 #[derive(Clone, PartialEq, Properties)]
 pub struct CardProps {
     pub card_info: CardInfo,
     pub card_on_click: Callback<CardInfo>,
 }
+
 pub enum Msg {
     PlayCard,
     PlayWild(Color),
 }
+
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum Color {
     Red,
@@ -22,6 +25,7 @@ pub enum Color {
     Blue,
     Black,
 }
+
 impl Color {
     pub fn use_color(&self) -> String {
         match self {
@@ -43,6 +47,7 @@ pub enum CardType {
     Draw4,
     Wild,
 }
+
 impl CardType {
     pub fn card_type_text(&self) -> String {
         match self {
@@ -70,6 +75,7 @@ impl Component for Card {
     fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
+
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::PlayCard => {
@@ -86,6 +92,7 @@ impl Component for Card {
         }
         true
     }
+    
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
         if props.card_info._type.clone() == CardType::Wild {
