@@ -1,10 +1,8 @@
 use crate::cards::card::Card;
-use crate::gamestate::game::{Game, GameStatus};
-use crate::ws::ws_structs::{
-    find_author_name, get_current_player_name, get_finished_player_names, WsMessageWrapper,
-};
-use ::serde::{Deserialize, Serialize};
 use crate::err::status::CreateStatusError;
+use crate::gamestate::game::{Game, GameStatus};
+use crate::ws::ws_structs::WsMessageWrapper;
+use ::serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct LobbyStatusWSMessage {
@@ -106,3 +104,24 @@ impl WsMessageWrapper for LobbyStatusWSMessage {}
 impl WsMessageWrapper for RunningStatusWSMessage {}
 
 impl WsMessageWrapper for FinishedStatusWSMessage {}
+
+fn get_finished_player_names(game: &Game) -> Vec<String> {
+    game.get_finished_players()
+        .iter()
+        .map(|p| p.name())
+        .collect()
+}
+
+fn find_author_name(game: &Game) -> Result<String, CreateStatusError> {
+    match game.find_author() {
+        None => Err(CreateStatusError::AuthorNotFound),
+        Some(author) => Ok(author.name()),
+    }
+}
+
+fn get_current_player_name(game: &Game) -> Result<String, CreateStatusError> {
+    match game.get_current_player() {
+        None => Err(CreateStatusError::CurrentPlayerNotFound),
+        Some(player) => Ok(player.name()),
+    }
+}
