@@ -154,7 +154,7 @@ impl Component for Game {
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::UnoChanged => {
                 self.uno_bool = !self.uno_bool;
@@ -181,7 +181,7 @@ impl Component for Game {
                 let id = self.game.gameID.clone();
                 let token = self.game.token.clone();
                 log!("Start game sending");
-                _ctx.link().send_future(async {
+                ctx.link().send_future(async {
                     match submit_start_game(client, id, token).await {
                         Ok(result) => Msg::SubmitSuccess,
                         _ => Msg::SubmitFailure,
@@ -196,7 +196,7 @@ impl Component for Game {
                 let token = self.game.token.clone();
                 let said_uno = self.uno_bool.clone();
                 log!("Start game sending");
-                _ctx.link().send_future(async move {
+                ctx.link().send_future(async move {
                     match play_card_request(client, id, token, card, None, said_uno.clone()).await {
                         Ok(_) => Msg::SubmitSuccess,
                         _ => Msg::SubmitFailure,
@@ -209,7 +209,7 @@ impl Component for Game {
                 let id = self.game.gameID.clone();
                 let token = self.game.token.clone();
                 log!("Start sending draw card");
-                _ctx.link().send_future(async {
+                ctx.link().send_future(async {
                     match draw_card_request(client, id, token).await {
                         Ok(result) => Msg::DrawSuccess(result),
                         _ => Msg::SubmitFailure,
