@@ -15,7 +15,7 @@ impl Display for PlayerTurnError {
 
         match self {
             NoOneIsPlaying => write!(f, "{}", "Impossible: no player is currently playing!"),
-            PlayerOutOfTurn(name) => write!(f, "It is not player {}'s turn right now!", name)
+            PlayerOutOfTurn(name) => write!(f, "It is not player {}'s turn right now!", name),
         }
     }
 }

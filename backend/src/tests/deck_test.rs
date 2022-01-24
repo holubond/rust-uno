@@ -1,6 +1,5 @@
-use crate::cards::card::{Card, CardColor, CardSymbol};
+use crate::cards::card::CardColor;
 use crate::cards::deck::{random_color, Deck};
-use rand::Rng;
 
 #[test]
 fn test_card_symbol_eq() {

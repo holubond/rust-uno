@@ -1,6 +1,6 @@
-use std::fmt::{Display, Formatter};
-use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize, Serializer};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
 pub struct Card {

@@ -1,7 +1,7 @@
 use crate::cards::card::Card;
-use serde::{Deserialize, Serialize};
-use crate::ws::ws_message::WSMsg;
 use crate::err::play_card::PlayCardError;
+use crate::ws::ws_message::WSMsg;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct Player {

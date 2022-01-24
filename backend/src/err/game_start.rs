@@ -16,7 +16,9 @@ impl Display for GameStartError {
         use GameStartError::*;
 
         match self {
-            DeckEmptyWhenStartingGame => write!(f, "{}", "Impossible: deck empty when starting game"),
+            DeckEmptyWhenStartingGame => {
+                write!(f, "{}", "Impossible: deck empty when starting game")
+            }
             GameAlreadyStarted => write!(f, "{}", "Cannot start an already running game"),
             CreateStatusError(err) => write!(f, "{}", err),
         }

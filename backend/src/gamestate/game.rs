@@ -1,5 +1,11 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
+use crate::err::draw_cards::DrawCardsError;
+use crate::err::game_start::GameStartError;
+use crate::err::play_card::PlayCardError;
+use crate::err::player_exist::PlayerExistError;
+use crate::err::player_turn::PlayerTurnError;
+use crate::err::status::CreateStatusError;
 use crate::gamestate::active_cards::ActiveCards;
 use crate::gamestate::player::Player;
 use crate::gamestate::CARDS_DEALT_TO_PLAYERS;
@@ -8,12 +14,6 @@ use nanoid::nanoid;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use crate::err::game_start::GameStartError;
-use crate::err::status::CreateStatusError;
-use crate::err::player_turn::PlayerTurnError;
-use crate::err::player_exist::PlayerExistError;
-use crate::err::play_card::PlayCardError;
-use crate::err::draw_cards::DrawCardsError;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -236,16 +236,18 @@ impl Game {
         self.is_player_at_turn(player)?;
 
         if player.cards().iter().any(|card| self.can_play_card(card)) {
-            return Err(DrawCardsError::PlayerCanPlayInstead)
+            return Err(DrawCardsError::PlayerCanPlayInstead);
         }
 
         if self.active_cards.are_cards_active()
             && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
         {
-            Err(DrawCardsError::PlayerMustPlayInstead(self.deck.top_discard_card().clone()))
-        } else {
-            Ok(())
+            return Err(DrawCardsError::PlayerMustPlayInstead(
+                self.deck.top_discard_card().clone(),
+            ));
         }
+
+        Ok(())
     }
 
     /// Returns a cloned vector of what the player received as drawn cards.
@@ -255,18 +257,15 @@ impl Game {
         self.can_player_draw(player_name.clone())?;
 
         let draw_count = if self.active_cards.are_cards_active() {
-            let count = self.active_cards
-                .sum_active_draw_cards()
-                .expect("Impossible: player can draw, but there are active cards that are not Draw");
+            let count = self.active_cards.sum_active_draw_cards().expect(
+                "Impossible: player can draw, but there are active cards that are not Draw",
+            );
             self.active_cards.clear();
             count
         } else {
             1
         };
-        let drawn_cards = self.draw_n_cards(
-            player_name.clone(),
-            draw_count,
-        );
+        let drawn_cards = self.draw_n_cards(player_name.clone(), draw_count);
 
         self.end_turn();
         self.message_all(WSMsg::draw(
@@ -278,12 +277,9 @@ impl Game {
         Ok(drawn_cards)
     }
 
-    fn draw_n_cards(
-        &mut self,
-        player_name: String,
-        n: usize,
-    ) -> Vec<Card> {
-        let player = self.players
+    fn draw_n_cards(&mut self, player_name: String, n: usize) -> Vec<Card> {
+        let player = self
+            .players
             .iter_mut()
             .find(|player| player.name() == player_name)
             .unwrap(); // safe because of check_player_drawing()
@@ -311,7 +307,10 @@ impl Game {
         self.is_player_at_turn(player)?;
 
         if !self.can_play_card(card) {
-            Err(PlayCardError::CardCannotBePlayed(card.clone(), self.deck.top_discard_card().clone()))
+            Err(PlayCardError::CardCannotBePlayed(
+                card.clone(),
+                self.deck.top_discard_card().clone(),
+            ))
         } else {
             Ok(())
         }

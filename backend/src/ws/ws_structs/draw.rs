@@ -11,7 +11,11 @@ pub struct DrawWSMessage {
 }
 
 impl DrawWSMessage {
-    pub fn new(drawing_player_name: String, next_player_name: String, cards_drawn: usize) -> DrawWSMessage {
+    pub fn new(
+        drawing_player_name: String,
+        next_player_name: String,
+        cards_drawn: usize,
+    ) -> DrawWSMessage {
         DrawWSMessage {
             typee: "DRAW".into(),
             who: drawing_player_name,

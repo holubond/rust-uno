@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum PlayerExistError {
-    NoSuchPlayer(String)
+    NoSuchPlayer(String),
 }
 
 impl Error for PlayerExistError {}

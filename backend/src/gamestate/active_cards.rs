@@ -45,9 +45,7 @@ impl ActiveCards {
 
     /// Ensures that only active cards can be of the same symbol by returning Err otherwise.
     pub(super) fn push(&mut self, card: Card) -> anyhow::Result<()> {
-        if self.are_cards_active()
-            && self.active_cards.iter().any(|ac| ac.symbol != card.symbol)
-        {
+        if self.are_cards_active() && self.active_cards.iter().any(|ac| ac.symbol != card.symbol) {
             anyhow::bail!("Cannot stack active cards of different symbols!")
         }
         if !ALLOWED_ACTIVE_CARDS.contains(&card.symbol) {

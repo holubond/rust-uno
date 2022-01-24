@@ -117,7 +117,6 @@ fn insert_black_symbol_cards(card_stack: &mut Vec<Card>) {
     }
 }
 
-
 #[cfg(test)]
 #[path = "../tests/deck_test.rs"]
 mod tests;

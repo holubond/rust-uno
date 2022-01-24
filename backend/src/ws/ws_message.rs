@@ -1,4 +1,5 @@
 use crate::cards::card::Card;
+use crate::err::status::CreateStatusError;
 use crate::gamestate::game::{Game, GameStatus};
 use crate::ws::ws_structs::draw::DrawWSMessage;
 use crate::ws::ws_structs::finish::FinishWSMessage;
@@ -8,7 +9,6 @@ use crate::ws::ws_structs::status::{
 };
 use crate::ws::ws_structs::WsMessageWrapper;
 use actix::Message;
-use crate::err::status::CreateStatusError;
 
 /// WebSocket message that can be sent to a WebSocket connection
 #[derive(Message, Clone)]

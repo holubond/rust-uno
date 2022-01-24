@@ -15,7 +15,10 @@ pub struct LobbyStatusWSMessage {
 }
 
 impl LobbyStatusWSMessage {
-    pub fn new(game: &Game, target_player_name: String) -> Result<LobbyStatusWSMessage, CreateStatusError> {
+    pub fn new(
+        game: &Game,
+        target_player_name: String,
+    ) -> Result<LobbyStatusWSMessage, CreateStatusError> {
         Ok(LobbyStatusWSMessage {
             typee: "STATUS".to_string(),
             status: GameStatus::Lobby,
@@ -47,7 +50,10 @@ pub struct RunningStatusWSMessage {
 }
 
 impl RunningStatusWSMessage {
-    pub fn new(game: &Game, target_player_name: String) -> Result<RunningStatusWSMessage, CreateStatusError> {
+    pub fn new(
+        game: &Game,
+        target_player_name: String,
+    ) -> Result<RunningStatusWSMessage, CreateStatusError> {
         Ok(RunningStatusWSMessage {
             typee: "STATUS".to_string(),
             status: GameStatus::Running,
@@ -88,7 +94,10 @@ pub struct FinishedStatusWSMessage {
 }
 
 impl FinishedStatusWSMessage {
-    pub fn new(game: &Game, target_player_name: String) -> Result<FinishedStatusWSMessage, CreateStatusError> {
+    pub fn new(
+        game: &Game,
+        target_player_name: String,
+    ) -> Result<FinishedStatusWSMessage, CreateStatusError> {
         Ok(FinishedStatusWSMessage {
             typee: "STATUS".into(),
             status: GameStatus::Finished,

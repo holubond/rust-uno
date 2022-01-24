@@ -12,7 +12,11 @@ pub struct PlayCardWSMessage {
 }
 
 impl PlayCardWSMessage {
-    pub fn new(playing_player_name: String, next_player_name: String, card_drawn: Card) -> PlayCardWSMessage {
+    pub fn new(
+        playing_player_name: String,
+        next_player_name: String,
+        card_drawn: Card,
+    ) -> PlayCardWSMessage {
         PlayCardWSMessage {
             typee: "PLAY CARD".into(),
             who: playing_player_name,
