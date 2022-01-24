@@ -13,6 +13,7 @@ use crate::err::status::CreateStatusError;
 use crate::err::player_turn::PlayerTurnError;
 use crate::err::player_exist::PlayerExistError;
 use crate::err::play_card::PlayCardError;
+use crate::err::draw_cards::DrawCardsError;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -230,40 +231,33 @@ impl Game {
     }
 
     /// Performs immutable checks whether the player is eligible to draw a card.
-    fn can_player_draw(&self, player_name: String) -> anyhow::Result<()> {
+    fn can_player_draw(&self, player_name: String) -> Result<(), DrawCardsError> {
         let player = self.does_player_exist(player_name.clone())?;
         self.is_player_at_turn(player)?;
 
         if player.cards().iter().any(|card| self.can_play_card(card)) {
-            anyhow::bail!(
-                "Player of name {} can play a card, no need to draw!",
-                player_name
-            )
+            return Err(DrawCardsError::PlayerCanPlayInstead)
         }
 
         if self.active_cards.are_cards_active()
             && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
         {
-            anyhow::bail!(
-                "Player {} cannot draw, they must respond to the {}",
-                player_name,
-                self.deck.top_discard_card()
-            )
+            Err(DrawCardsError::PlayerMustPlayInstead(self.deck.top_discard_card().clone()))
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     /// Returns a cloned vector of what the player received as drawn cards.
     /// Returns an error if the player does not exist, is not the current player, or has a valid card to play.
     /// Should get called whenever a player clicks the draw card pile.
-    pub fn draw_cards(&mut self, player_name: String) -> anyhow::Result<Vec<Card>> {
+    pub fn draw_cards(&mut self, player_name: String) -> Result<Vec<Card>, DrawCardsError> {
         self.can_player_draw(player_name.clone())?;
 
         let draw_count = if self.active_cards.are_cards_active() {
             let count = self.active_cards
                 .sum_active_draw_cards()
-                .expect("Impossible situation: player can draw, but there are active cards that are not Draw");
+                .expect("Impossible: player can draw, but there are active cards that are not Draw");
             self.active_cards.clear();
             count
         } else {
