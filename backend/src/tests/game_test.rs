@@ -477,3 +477,49 @@ fn test_say_uno() {
     assert!(!game.players.get(3).unwrap().is_finished());
     assert_eq!(game.players.get(3).unwrap().get_card_count(), 3); // cards should not change
 }
+
+#[test]
+fn test_skip() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new("Andy".into());
+    game.add_player("Bob".into());
+    game.add_player("Candace".into());
+
+    // give some starting cards to players to not trigger endgame
+    for player in game.players.iter_mut() {
+        player.give_card(Card::new(Blue, Value(1)).unwrap());
+        player.give_card(Card::new(Blue, Value(2)).unwrap());
+        player.give_card(Card::new(Blue, Value(3)).unwrap());
+    }
+
+    assert_eq!(game.players.get(0).unwrap().get_card_count(), 3);
+    assert_eq!(game.players.get(1).unwrap().get_card_count(), 3);
+
+    let skip = Card::new(Blue, Skip).unwrap();
+    game.deck.play(skip.clone());
+
+    // give skips that will be used
+    game.players.get_mut(0).unwrap().give_card(skip.clone());
+    game.players.get_mut(1).unwrap().give_card(skip.clone());
+    assert_eq!(game.players.get(0).unwrap().get_card_count(), 3 + 1);
+    assert_eq!(game.players.get(1).unwrap().get_card_count(), 3 + 1);
+
+    assert!(game.play_card("Andy".into(), skip.clone(), None, false).is_ok());
+    assert_eq!(game.players.get(0).unwrap().get_card_count(), 3); // playing actually happened
+    assert!(game.active_cards.are_cards_active());
+    assert_eq!(game.active_cards.active_symbol().unwrap(), Skip);
+    assert_eq!(game.get_current_player().unwrap().name(), "Bob");
+
+    assert!(game.play_card("Bob".into(), skip.clone(), None, false).is_ok());
+    assert!(game.active_cards.are_cards_active());
+    assert_eq!(game.active_cards.active_symbol().unwrap(), Skip);
+    assert_eq!(game.get_current_player().unwrap().name(), "Candace");
+
+    assert!(game.draw_cards("Candace".into()).is_ok());
+    assert_eq!(game.players.get(2).unwrap().get_card_count(), 3); // no drawing happened
+    assert!(game.active_cards.active_symbol().is_none());
+    assert!(!game.active_cards.are_cards_active());
+    assert_eq!(game.get_current_player().unwrap().name(), "Andy"); // candice gets skipped
+}

@@ -247,14 +247,6 @@ impl Game {
             return Err(DrawCardsError::PlayerCanPlayInstead);
         }
 
-        if self.active_cards.are_cards_active()
-            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
-        {
-            return Err(DrawCardsError::PlayerMustPlayInstead(
-                self.deck.top_discard_card().clone(),
-            ));
-        }
-
         Ok(())
     }
 
@@ -263,6 +255,15 @@ impl Game {
     /// Should get called whenever a player clicks the draw card pile.
     pub fn draw_cards(&mut self, player_name: String) -> Result<Vec<Card>, DrawCardsError> {
         self.can_player_draw(player_name.clone())?;
+
+        // Skip turn
+        if self.active_cards.are_cards_active()
+            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
+        {
+            self.end_turn();
+            self.active_cards.clear();
+            return Ok(vec![]);
+        }
 
         let draw_count = if self.active_cards.are_cards_active() {
             let count = self.active_cards.sum_active_draw_cards().expect(
