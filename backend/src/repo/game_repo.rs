@@ -1,11 +1,5 @@
 use crate::gamestate::game::Game;
 
-pub trait GameRepo {
-    fn add_game(&mut self, name: Game);
-    fn games(&mut self) -> &Vec<Game>;
-    fn find_game_by_id(&self, game_id: String) -> Option<&Game>;
-}
-
 #[derive(Clone)]
 pub struct InMemoryGameRepo {
     games: Vec<Game>,
@@ -19,16 +13,12 @@ impl InMemoryGameRepo {
     }
 }
 
-impl GameRepo for InMemoryGameRepo {
-    fn add_game(&mut self, game: Game){
+impl InMemoryGameRepo {
+    pub fn add_game(&mut self, game: Game){
         self.games.push(game);
     }
 
-    fn games(&mut self) -> &Vec<Game>{
-        &self.games
-    }
-
-    fn find_game_by_id(&self, game_id: String) -> Option<&Game>{
-        self.games.iter().find(|game| game.id == game_id)
+    pub fn find_game_by_id(&mut self, game_id: &String) -> Option<&mut Game>{
+        self.games.iter_mut().find(|game| game.id == game_id)
     }
 }

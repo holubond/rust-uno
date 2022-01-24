@@ -6,7 +6,6 @@ use std::sync::{Arc, Mutex};
 use actix_web::http::header::Header;
 use serde::Deserialize;
 use serde::Serialize;
-use crate::repo::game_repo::GameRepo;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
@@ -22,8 +21,10 @@ pub async fn start_game(
 ) -> impl Responder {
     let gameID = params.into_inner();
 
-    let game = match game_repo.lock().unwrap().find_game_by_id(gameID.clone()).clone() {
-        Some(game) => game.clone(),
+    let mut game_repo = game_repo.lock().unwrap();
+
+    let game = match game_repo.find_game_by_id(&gameID) {
+        Some(game) => game,
         _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
     };
 
@@ -34,7 +35,10 @@ pub async fn start_game(
         _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"No auth token provided by the client".to_string()})
     };
 
-    let author_name = game.find_author().unwrap().clone().name();
+    let author_name = match game.find_author() {
+        Some(player) => player.name(),
+        _ => return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
+    };
     if !authorization_repo.verify_jwt(author_name,gameID, jwt) {
         return HttpResponse::Forbidden().json(MessageResponse {message:"Token does not prove client is the Author".to_string()});
     }
