@@ -50,12 +50,12 @@ pub async fn join_game(
         Some(game) => game,
     };
 
-    if game.status() != GameStatus::Lobby
-    {
+    if game.status() != GameStatus::Lobby {
         return HttpResponse::NotFound().json(MessageResponse {
             message: "Game does not accept any new players.".to_string(),
         });
     }
+    
     game.add_player(player_name.clone());
 
     let jwt = authorization_repo.generate_jwt(player_name, &game_id);
