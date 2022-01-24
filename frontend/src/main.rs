@@ -44,7 +44,6 @@ fn switch(routes: &Route) -> Html {
     match routes {
         Route::HomePage => html! { <Home /> },
         Route::Lobby { id } => html! { <Game id = {id.clone()}/>},
-        //Route::Lobby { id } => html! {<p>{format!("You are looking at game lobby {}", id)}</p>},
         Route::PageNotFound => html! { <h1>{ "404" }</h1> },
     }
 }
