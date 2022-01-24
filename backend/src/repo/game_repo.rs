@@ -19,6 +19,6 @@ impl InMemoryGameRepo {
     }
 
     pub fn find_game_by_id(&mut self, game_id: &String) -> Option<&mut Game>{
-        self.games.iter_mut().find(|game| game.id == game_id)
+        self.games.iter_mut().find(|game| &game.id == game_id)
     }
 }

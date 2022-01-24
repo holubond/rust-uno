@@ -1,3 +1,4 @@
+use std::fmt::Error;
 use actix::fut::result;
 use actix_web::error::ParseError;
 use actix_web::http::header::Header;
@@ -10,7 +11,7 @@ pub struct AuthorizationRepo {
 }
 
 #[derive(Serialize, Deserialize)]
-struct JwtData {
+pub struct JwtData {
     player_name: String,
     game_id: String,
 }
@@ -27,14 +28,13 @@ impl AuthorizationRepo {
         self.key.authenticate(claims).unwrap()
     }
 
-    pub fn verify_jwt(&self, player_name: String, game_id: String, token: String) -> bool {
+    pub fn valid_jwt(&self, token: &String) -> Result<JWTClaims<JwtData>, anyhow::Error> {
         let token = self.rem_bearer(&token);
-        let claims = self.key.verify_token::<JwtData>(&token, None);
+        self.key.verify_token::<JwtData>(&token, None)
 
-        let claims = match claims {
-            Ok(x) => x,
-            _ => return false
-        };
+    }
+
+    pub fn verify_jwt(&self, player_name: String, game_id: String, claims: JWTClaims<JwtData>) -> bool {
         let is_author = claims.custom.game_id == game_id;
         let is_user = claims.custom.player_name == player_name;
         is_author && is_user

@@ -35,11 +35,16 @@ pub async fn start_game(
         _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"No auth token provided by the client".to_string()})
     };
 
+    let claims = match authorization_repo.valid_jwt(&jwt)  {
+        Ok(claims) => claims,
+        _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"Token is not valid".to_string()})
+    };
+
     let author_name = match game.find_author() {
         Some(player) => player.name(),
-        _ => return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
+        _ => return HttpResponse::InternalServerError().json(MessageResponse{message: "Game does not have player".to_string()})
     };
-    if !authorization_repo.verify_jwt(author_name,gameID, jwt) {
+    if !authorization_repo.verify_jwt(author_name,gameID, claims) {
         return HttpResponse::Forbidden().json(MessageResponse {message:"Token does not prove client is the Author".to_string()});
     }
 
