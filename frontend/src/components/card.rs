@@ -1,8 +1,8 @@
 use gloo_console::log;
 use serde::{Deserialize, Serialize};
+use yew::html;
 use yew::html::Scope;
 use yew::prelude::*;
-use yew::html;
 
 pub struct Card;
 
@@ -92,7 +92,7 @@ impl Component for Card {
         }
         true
     }
-    
+
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
         if props.card_info._type.clone() == CardType::Wild {
