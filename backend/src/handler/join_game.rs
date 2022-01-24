@@ -39,14 +39,20 @@ pub async fn join_game(
     }
 
     let mut game_repo = match game_repo.lock() {
-        Err(_) => return HttpResponse::BadRequest().json(MessageResponse {
-            message: "Name of the player cannot be empty.".to_string(),
-        }),
+        Err(_) => {
+            return HttpResponse::BadRequest().json(MessageResponse {
+                message: "Name of the player cannot be empty.".to_string(),
+            })
+        }
         Ok(game_repo) => game_repo,
     };
 
     let game = match game_repo.find_game_by_id(&game_id) {
-        None => return HttpResponse::NotFound().json(MessageResponse {message: "Game not found".to_string()}),
+        None => {
+            return HttpResponse::NotFound().json(MessageResponse {
+                message: "Game not found".to_string(),
+            })
+        }
         Some(game) => game,
     };
 
@@ -55,7 +61,7 @@ pub async fn join_game(
             message: "Game does not accept any new players.".to_string(),
         });
     }
-    
+
     game.add_player(player_name.clone());
 
     let jwt = authorization_repo.generate_jwt(player_name, &game_id);
