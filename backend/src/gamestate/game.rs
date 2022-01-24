@@ -12,6 +12,7 @@ use crate::err::game_start::GameStartError;
 use crate::err::status::CreateStatusError;
 use crate::err::player_turn::PlayerTurnError;
 use crate::err::player_exist::PlayerExistError;
+use crate::err::play_card::PlayCardError;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -310,20 +311,16 @@ impl Game {
     }
 
     /// Performs immutable checks whether the player is eligible to play a card.
-    fn can_player_play(&self, player_name: String, card: &Card) -> anyhow::Result<()> {
+    fn can_player_play(&self, player_name: String, card: &Card) -> Result<(), PlayCardError> {
         let player = self.does_player_exist(player_name.clone())?;
 
         self.is_player_at_turn(player)?;
 
         if !self.can_play_card(card) {
-            anyhow::bail!(
-                "You cannot play a {} after a {}.",
-                card,
-                self.deck.top_discard_card()
-            )
+            Err(PlayCardError::CardCannotBePlayed(card.clone(), self.deck.top_discard_card().clone()))
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     pub fn play_card(
@@ -331,7 +328,7 @@ impl Game {
         player_name: String,
         card: Card,
         maybe_new_color: Option<CardColor>,
-    ) -> anyhow::Result<()> {
+    ) -> Result<(), PlayCardError> {
         self.can_player_play(player_name.clone(), &card)?;
 
         // required to be borrowed before mutable section
@@ -353,7 +350,7 @@ impl Game {
         wanted_card: Card,
         maybe_new_color: Option<CardColor>,
         possible_position: usize,
-    ) -> anyhow::Result<(Card, bool)> {
+    ) -> Result<(Card, bool), PlayCardError> {
         let player = self
             .players
             .iter_mut()
@@ -393,7 +390,7 @@ impl Game {
         player_finished: bool,
         player_name: String,
         played_card: Card,
-    ) -> anyhow::Result<()> {
+    ) -> Result<(), CreateStatusError> {
         let new_player_name = self.get_current_player().unwrap().name();
         self.message_all(WSMsg::play_card(
             player_name.clone(),

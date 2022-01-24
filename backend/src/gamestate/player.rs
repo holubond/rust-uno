@@ -1,6 +1,7 @@
 use crate::cards::card::Card;
 use serde::{Deserialize, Serialize};
 use crate::ws::ws_message::WSMsg;
+use crate::err::play_card::PlayCardError;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct Player {
@@ -34,16 +35,12 @@ impl Player {
     }
 
     /// Function returns Err if card is not owned by the player.
-    pub fn play_card_by_eq(&mut self, card: Card) -> anyhow::Result<Card> {
+    pub fn play_card_by_eq(&mut self, card: Card) -> Result<Card, PlayCardError> {
         let maybe_position = self.cards.iter().position(|c| c == &card);
 
         match maybe_position {
-            None => anyhow::bail!(
-                "Card {:?} was not found in player {}'s hands.",
-                card,
-                self.name
-            ),
-            Some(position) => self.play_card_by_index(position),
+            None => Err(PlayCardError::PlayerHasNoSuchCard(card)),
+            Some(position) => Ok(self.play_card_by_index(position).unwrap()),
         }
     }
 
