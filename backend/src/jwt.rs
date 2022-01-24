@@ -12,6 +12,6 @@ pub(crate) fn generate_jwt(player_name: &String, game_id: &String) -> String {
         game_id: game_id.clone(),
     };
     let key = HS256Key::generate();
-    let claims = Claims::with_custom_claims(jwt_data, Duration::from_secs(30));
+    let claims = Claims::with_custom_claims(jwt_data, Duration::);
     key.authenticate(claims).unwrap()
 }
