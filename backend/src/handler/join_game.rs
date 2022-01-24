@@ -37,7 +37,13 @@ pub async fn join_game(
             message: "Name of the player cannot be empty.".to_string(),
         });
     }
-    let mut game_repo = game_repo.lock().unwrap();
+
+    let mut game_repo = match game_repo.lock() {
+        Err(_) => return HttpResponse::BadRequest().json(MessageResponse {
+            message: "Name of the player cannot be empty.".to_string(),
+        }),
+        Ok(game_repo) => game_repo,
+    };
 
     let game = match game_repo.find_game_by_id(&game_id) {
         Some(game) => game,
