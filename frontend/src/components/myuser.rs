@@ -55,7 +55,7 @@ fn player_board(username: String, cards: Vec<CardInfo>, card_on_click: Callback<
                 }
             </div>
             <div>
-                <p class="text-2xl text-center text-Black-500 font-bold">{format!("{}",username)}</p>
+                <p class="text-2xl text-center text-Black-500 font-bold">{username}</p>
             </div>
         </>
     };
