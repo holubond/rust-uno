@@ -1,4 +1,6 @@
 use crate::cards::card::Card;
+use crate::err::play_card::PlayCardError;
+use crate::ws::ws_message::WSMsg;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
@@ -15,7 +17,7 @@ impl Player {
             name,
             is_author,
             cards: vec![],
-            position: None
+            position: None,
         }
     }
 
@@ -33,21 +35,21 @@ impl Player {
     }
 
     /// Function returns Err if card is not owned by the player.
-    pub fn play_card_by_eq(&mut self, card: Card) -> anyhow::Result<Card> {
+    pub fn play_card_by_eq(&mut self, card: Card) -> Result<Card, PlayCardError> {
         let maybe_position = self.cards.iter().position(|c| c == &card);
 
         match maybe_position {
-            None => anyhow::bail!(
-                "Card {:?} was not found in player {}'s hands.",
-                card,
-                self.name
-            ),
-            Some(position) => self.play_card_by_index(position),
+            None => Err(PlayCardError::PlayerHasNoSuchCard(card)),
+            Some(position) => Ok(self.play_card_by_index(position).unwrap()),
         }
     }
 
     pub fn give_card(&mut self, card: Card) {
         self.cards.push(card)
+    }
+
+    pub fn drop_all_cards(&mut self) {
+        self.cards.clear();
     }
 
     pub fn is_finished(&self) -> bool {
@@ -62,11 +64,15 @@ impl Player {
         self.position = Some(position)
     }
 
+    pub fn clear_position(&mut self) {
+        self.position = None
+    }
+
     pub fn get_card_count(&self) -> usize {
         self.cards.len()
     }
 
-    /// Clones the name of the player.
+    /// Clones the vector of cards of the player.
     pub fn cards(&self) -> Vec<Card> {
         self.cards.clone()
     }
@@ -74,5 +80,9 @@ impl Player {
     /// Clones the name of the player.
     pub fn name(&self) -> String {
         self.name.clone()
+    }
+
+    pub fn message(&self, msg: WSMsg) {
+        // todo!("self.ws.send(msg);")
     }
 }

@@ -19,3 +19,4 @@ jwt-simple = "0.10"
 nanoid = "0.4.0"
 local-ip-address = "0.4.4"
 clap = { version = "3.0.10", features = ["derive"] }
+actix-web-httpauth = "0.5.1"
