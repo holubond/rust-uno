@@ -1,5 +1,4 @@
 use crate::gamestate::game::Game;
-use crate::jwt::generate_jwt;
 use crate::repo::game_repo::GameRepo;
 use crate::repo::address_repo::AddressRepo;
 use crate::InMemoryGameRepo;
@@ -7,6 +6,7 @@ use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
+use crate::repo::authorization_repo::AuthorizationRepo;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
@@ -28,6 +28,7 @@ pub struct GameCreateResponse {
 #[post("/game")]
 pub async fn create_game(
     game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
+    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
     address_repo: web::Data<Arc<AddressRepo>>,
     body: web::Json<GameCreateData>,
 ) -> impl Responder {
@@ -40,7 +41,7 @@ pub async fn create_game(
 
     let game = Game::new(author_name);
     let game_id = game.id.clone();
-    let jwt = generate_jwt(author_name, &game_id);
+    let jwt = authorization_repo.generate_jwt(author_name, &game_id);
 
     game_repo.lock().unwrap().add_game(game);
 
