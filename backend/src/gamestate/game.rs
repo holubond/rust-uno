@@ -190,6 +190,14 @@ impl Game {
         }
     }
 
+    pub fn message_all_but(&self, excluded_player_name: String, msg: WSMsg) {
+        for player in self.players.iter() {
+            if player.name() != excluded_player_name {
+                player.message(msg.clone());
+            }
+        }
+    }
+
     /// If there are any active cards, returns true only if the played_card's symbol matches:
     /// e.g. playing a Blue Skip on a Red Skip.
     /// If there are no active cards, returns true if the played_card's symbol OR color matches, or it is a Black card.
