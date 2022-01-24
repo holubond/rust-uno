@@ -1,3 +1,8 @@
+use actix::fut::result;
+use actix_web::error::ParseError;
+use actix_web::http::header::Header;
+use actix_web::HttpRequest;
+use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use jwt_simple::prelude::*;
 
 pub struct AuthorizationRepo {
@@ -34,7 +39,11 @@ impl AuthorizationRepo {
         is_author && is_user
     }
 
-    pub fn rem_bearer(&self, value: &str) -> String {
+    pub fn parse_jwt(&self, request: HttpRequest) -> Result<Authorization<Bearer>, ParseError> {
+        Authorization::<Bearer>::parse(&request)
+    }
+
+    fn rem_bearer(&self, value: &str) -> String {
         let mut chars = value.chars();
         for _ in 0..7 {
             chars.next();
