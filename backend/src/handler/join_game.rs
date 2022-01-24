@@ -29,15 +29,17 @@ pub async fn join_game(
     authorization_repo: web::Data<Arc<AuthorizationRepo>>,
     params: web::Path<String>,
 ) -> impl Responder {
-    let gameID = params.into_inner();
-    if body.name.is_empty() {
+    let game_id = params.into_inner();
+    let player_name = &body.name;
+
+    if player_name.is_empty() {
         return HttpResponse::BadRequest().json(MessageResponse {
             message: "Name of the player cannot be empty.".to_string(),
         });
     }
     let mut game_repo = game_repo.lock().unwrap();
 
-    let game = match game_repo.find_game_by_id(&gameID) {
+    let game = match game_repo.find_game_by_id(&game_id) {
         Some(game) => game,
         _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
     };
@@ -47,9 +49,9 @@ pub async fn join_game(
             message: "Game does not accept any new players.".to_string(),
         });
     }
-    game.add_player(body.name.clone());
+    game.add_player(player_name.clone());
 
-    let jwt = authorization_repo.generate_jwt(&body.name, &gameID);
+    let jwt = authorization_repo.generate_jwt(player_name, &game_id);
 
     HttpResponse::Created().json(GameJoinResponse {
         server: address_repo.full_local_address(),
