@@ -21,18 +21,19 @@ pub async fn start_game(
     params: web::Path<String>,
 ) -> impl Responder {
     let gameID = params.into_inner();
-    if game_repo.lock().unwrap().find_game_by_id(gameID.clone()).is_none()
-    {
-        return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()});
-    }
 
-    let game = game_repo.lock().unwrap().find_game_by_id(gameID.clone()).unwrap().clone();
+    let game = match game_repo.lock().unwrap().find_game_by_id(gameID.clone()).clone() {
+        Some(game) => game.clone(),
+        _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
+    };
 
     let jwt = authorization_repo.parse_jwt(request);
-    if jwt.is_err() {
-        return HttpResponse::Unauthorized().json(MessageResponse {message:"No auth token provided by the client".to_string()});
-    }
-    let jwt = jwt.unwrap().to_string();
+
+    let jwt = match jwt {
+        Ok(jwt) => jwt.to_string(),
+        _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"No auth token provided by the client".to_string()})
+    };
+
     let author_name = game.find_author().unwrap().clone().name();
     if !authorization_repo.verify_jwt(author_name,gameID, jwt) {
         return HttpResponse::Forbidden().json(MessageResponse {message:"Token does not prove client is the Author".to_string()});

@@ -30,10 +30,11 @@ impl AuthorizationRepo {
     pub fn verify_jwt(&self, player_name: String, game_id: String, token: String) -> bool {
         let token = self.rem_bearer(&token);
         let claims = self.key.verify_token::<JwtData>(&token, None);
-        if claims.is_err() {
-            return false
-        }
-        let claims = claims.unwrap();
+
+        let claims = match claims {
+            Ok(x) => x,
+            _ => return false
+        };
         let is_author = claims.custom.game_id == game_id;
         let is_user = claims.custom.player_name == player_name;
         is_author && is_user
