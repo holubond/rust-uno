@@ -8,6 +8,7 @@ use crate::ws::ws_structs::status::{
 };
 use crate::ws::ws_structs::WsMessageWrapper;
 use actix::Message;
+use crate::err::status::CreateStatusError;
 
 /// WebSocket message that can be sent to a WebSocket connection
 #[derive(Message, Clone)]
@@ -21,7 +22,7 @@ impl WSMsg {
         Self { msg: msg }
     }
 
-    pub fn status(game: &Game, target_player_name: String) -> anyhow::Result<Self> {
+    pub fn status(game: &Game, target_player_name: String) -> Result<Self, CreateStatusError> {
         let msg = match game.status() {
             GameStatus::Lobby => {
                 LobbyStatusWSMessage::new(game, target_player_name)?.ws_serialize()

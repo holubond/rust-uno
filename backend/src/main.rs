@@ -12,6 +12,7 @@ mod handler;
 mod jwt;
 mod repo;
 mod ws;
+mod err;
 
 #[derive(Parser)]
 #[clap(version = "1.0", author = "L.G.")]

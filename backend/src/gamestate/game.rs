@@ -8,6 +8,8 @@ use nanoid::nanoid;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use crate::err::game_start::GameStartError;
+use crate::err::status::CreateStatusError;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -43,11 +45,10 @@ impl Game {
     }
 
     /// Randomizes player order and start, clears positions from previous games, resets the deck and deals cards to players.
-    /// Returns ?
     /// Returns Err is the game is already Running.
-    pub fn start(&mut self) -> anyhow::Result<()> {
+    pub fn start(&mut self) -> Result<(), GameStartError> {
         if self.status == GameStatus::Running {
-            anyhow::bail!("Attempted to start an already running game.")
+            return Err(GameStartError::GameAlreadyStarted);
         }
 
         self.randomize_player_order();
@@ -78,7 +79,7 @@ impl Game {
     }
 
     /// Clears all players' hands and gives them new cards from a new Deck.
-    fn deal_starting_cards(&mut self) -> anyhow::Result<()> {
+    fn deal_starting_cards(&mut self) -> Result<(), GameStartError> {
         self.deck = Deck::new();
 
         for player in self.players.iter_mut() {
@@ -86,9 +87,7 @@ impl Game {
 
             for _ in 0..CARDS_DEALT_TO_PLAYERS {
                 match self.deck.draw() {
-                    None => anyhow::bail!(
-                        "Draw pile is empty and unable to be switched with discard pile when starting game, this should not happen."
-                    ),
+                    None => return Err(GameStartError::DeckEmptyWhenStartingGame),
                     Some(card) => player.give_card(card),
                 }
             }
@@ -173,7 +172,7 @@ impl Game {
     }
 
     /// Sends a personalized (==containing name) STATUS WSMessage to all players.
-    fn status_message_all(&self) -> anyhow::Result<()> {
+    fn status_message_all(&self) -> Result<(), CreateStatusError> {
         for player in self.players.iter() {
             player.message(WSMsg::status(&self, player.name())?);
         }

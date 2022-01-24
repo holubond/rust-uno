@@ -1,6 +1,8 @@
+use crate::err::game_start::GameStartError;
 use crate::gamestate::game::Game;
 use crate::gamestate::WSMessage;
 use serde::Serialize;
+use crate::err::status::CreateStatusError;
 
 pub(super) mod draw;
 pub(super) mod finish;
@@ -20,16 +22,16 @@ fn get_finished_player_names(game: &Game) -> Vec<String> {
         .collect()
 }
 
-fn find_author_name(game: &Game) -> anyhow::Result<String> {
+fn find_author_name(game: &Game) -> Result<String, CreateStatusError> {
     match game.find_author() {
-        None => anyhow::bail!("Unable to find author of game id={}", game.id),
+        None => Err(CreateStatusError::AuthorNotFound),
         Some(author) => Ok(author.name()),
     }
 }
 
-fn get_current_player_name(game: &Game) -> anyhow::Result<String> {
+fn get_current_player_name(game: &Game) -> Result<String, CreateStatusError> {
     match game.get_current_player() {
-        None => anyhow::bail!("Unable to find current player of game id={}", game.id),
+        None => Err(CreateStatusError::CurrentPlayerNotFound),
         Some(player) => Ok(player.name()),
     }
 }
