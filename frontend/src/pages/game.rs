@@ -3,6 +3,7 @@ use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
 use crate::pages::game::GameState::Lobby;
 use crate::sample_data;
+use crate::util::alert::alert;
 use futures::StreamExt;
 use gloo_console::log;
 use gloo_storage::Storage;
@@ -184,18 +185,16 @@ impl Component for Game {
             Msg::SubmitSuccess => {
                 //todo start game
             }
-            
+
             Msg::SubmitFailure => {
-                web_sys::window()
-                    .unwrap()
-                    .alert_with_message("Error occured during starting game.");
+                alert("Error occured during starting game.");
             }
         }
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let props = ctx.props();
+        let _props = ctx.props();
         let card_on_click = ctx.link().callback(|card: CardInfo| {
             log!("parent callback.");
             Msg::PlayCard(card)
