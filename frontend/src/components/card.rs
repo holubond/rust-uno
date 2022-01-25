@@ -68,6 +68,19 @@ pub struct CardInfo {
     pub value: Option<u32>,
 }
 
+impl CardInfo {
+    fn value_to_string(&self) -> String {
+        if self._type != CardType::Value {
+            return self._type.card_type_text();
+        }
+
+        match self.value {
+            None => panic!("Attempting to access value of a card, that does not have any"),
+            Some(v) => v.to_string()
+        }
+    }
+}
+
 impl Component for Card {
     type Message = Msg;
     type Properties = CardProps;
@@ -96,19 +109,23 @@ impl Component for Card {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
 
-        match props.card_info._type {
-            CardType::Wild => 
-                print_wild_card(props.card_info._type.card_type_text(), ctx.link().clone()),                
+        if props.card_info._type == CardType::Wild {
+            return print_wild_card(props.card_info.value_to_string(), ctx.link().clone());
+        }
+
+        
+
+        match props.card_info._type {             
             CardType::Value =>
                 print_card(
-                    props.card_info.color,
-                    props.card_info.value.unwrap().to_string(),
+                    props.card_info.color.clone(),
+                    props.card_info.value_to_string(),
                     ctx.link().clone()
                 ),
             _ => 
                 print_card(
-                    props.card_info.color,
-                    props.card_info._type.card_type_text(),
+                    props.card_info.color.clone(),
+                    props.card_info.value_to_string(),
                     ctx.link().clone()
                 )
         }
