@@ -51,4 +51,11 @@ impl AuthorizationRepo {
         }
         chars.as_str().to_string()
     }
+
+    pub fn user_from_token(&self, token: &String) -> Option<(String, String)>{
+       return match self.key.verify_token::<JwtData>(&token, None) {
+           Ok(claims) => Some((claims.custom.player_name, claims.custom.game_id)),
+           Err(_) => None
+       };
+    }
 }
