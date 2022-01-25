@@ -240,7 +240,7 @@ impl Component for Game {
                         <img onclick={draw_pile_on_click} class="h-full w-full" src="../resources/draw_pile.png" alt="card"/>
                     </div>
 
-                    <div class="-mt-16 -mb-16 opacity-10">
+                    <div class="opacity-10">
                         {
                             if self.clockwise {
                                 html!{
