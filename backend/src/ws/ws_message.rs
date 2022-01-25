@@ -21,7 +21,7 @@ pub struct WSMsg {
 
 impl WSMsg {
     fn new(msg: String) -> Self {
-        Self { msg: msg }
+        Self { msg }
     }
 
     pub fn status(game: &Game, target_player_name: String) -> Result<Self, CreateStatusError> {

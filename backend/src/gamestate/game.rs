@@ -40,7 +40,7 @@ impl Game {
         Game {
             id: nanoid!(10),
             status: GameStatus::Lobby,
-            players: vec![Player::new(author_name.clone(), true)],
+            players: vec![Player::new(author_name, true)],
             deck: Deck::new(),
             current_player: 0,
             active_cards: ActiveCards::new(),
@@ -164,7 +164,7 @@ impl Game {
             }
         }
 
-        return true;
+        true
     }
 
     pub fn reverse(&mut self) {
@@ -178,7 +178,7 @@ impl Game {
     /// Sends a personalized (==containing name) STATUS WSMessage to all players.
     fn status_message_all(&self) -> Result<(), CreateStatusError> {
         for player in self.players.iter() {
-            player.message(WSMsg::status(&self, player.name())?);
+            player.message(WSMsg::status(self, player.name())?);
         }
 
         Ok(())
@@ -215,12 +215,12 @@ impl Game {
 
     /// Returns reference to a player matching the provided name, Err if they do not exist.
     fn does_player_exist(&self, player_name: String) -> Result<&Player, PlayerExistError> {
-        let player = self.find_player(player_name.clone());
+        let maybe_player = self.find_player(player_name.clone());
 
-        if player.is_none() {
-            Err(PlayerExistError::NoSuchPlayer(player_name))
+        if let Some(player) = maybe_player {
+            Ok(player)
         } else {
-            Ok(player.unwrap())
+            Err(PlayerExistError::NoSuchPlayer(player_name))
         }
     }
 
@@ -240,7 +240,7 @@ impl Game {
 
     /// Performs immutable checks whether the player is eligible to draw a card.
     fn can_player_draw(&self, player_name: String) -> Result<(), DrawCardsError> {
-        let player = self.does_player_exist(player_name.clone())?;
+        let player = self.does_player_exist(player_name)?;
         self.is_player_at_turn(player)?;
 
         if player.cards().iter().any(|card| self.can_play_card(card)) {
@@ -321,7 +321,7 @@ impl Game {
         card: &Card,
         said_uno: bool,
     ) -> Result<(), PlayCardError> {
-        let player = self.does_player_exist(player_name.clone())?;
+        let player = self.does_player_exist(player_name)?;
 
         self.is_player_at_turn(player)?;
 
@@ -368,7 +368,7 @@ impl Game {
 
     fn mutate_player(
         &mut self,
-        player_name: &String,
+        player_name: &str,
         wanted_card: Card,
         maybe_new_color: Option<CardColor>,
         possible_position: usize,
