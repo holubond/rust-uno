@@ -79,8 +79,8 @@ impl Component for Game {
 
     fn create(_ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("timestampPH").unwrap();
-
-        let ws = WebSocket::open("wss://echo.websocket.org").unwrap();
+        let url = format!("ws://localhost:6000/ws/token/{}",game.token);
+        let ws = WebSocket::open(&url).unwrap();
         let (mut _write, mut read) = ws.split();
         spawn_local(async move {
             while let Some(msg) = read.next().await {
