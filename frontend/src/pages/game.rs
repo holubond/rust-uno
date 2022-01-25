@@ -113,21 +113,6 @@ impl Component for Game {
         match msg {
             Msg::UnoChanged => {
                 self.uno_bool = !self.uno_bool;
-                let card1 = CardInfo {
-                    color: Color::Blue,
-                    _type: CardType::Value,
-                    value: Some(1),
-                };
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
-                self.cards.push(card1.clone());
 
                 return false;
             }
