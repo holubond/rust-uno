@@ -130,6 +130,7 @@ impl Component for Game {
 
                 return false;
             }
+
             Msg::SubmitStart => {
                 let client = self.client.clone();
                 let id = self.game.gameID.clone();
@@ -142,6 +143,7 @@ impl Component for Game {
                     }
                 });
             }
+
             Msg::PlayCard(card) => {
                 log!("PLAY CARD");
                 // todo send ret api play card
@@ -157,6 +159,7 @@ impl Component for Game {
                     }
                 });
             }
+
             Msg::DrawCard => {
                 log!("DRAW CARD");
                 let client = self.client.clone();
@@ -170,15 +173,18 @@ impl Component for Game {
                     }
                 });
             }
+
             Msg::DrawSuccess(response) => {
                 response.cards.iter().for_each(|card| {
                     self.cards.push(card.clone());
                 });
                 self.current_player = Some(response.next);
             }
+
             Msg::SubmitSuccess => {
                 //todo start game
             }
+            
             Msg::SubmitFailure => {
                 web_sys::window()
                     .unwrap()
