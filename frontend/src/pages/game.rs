@@ -91,8 +91,8 @@ impl Component for Game {
             log!("WebSocket Closed")
         });
         //test purposes data
-        test_session(game,)
-        /*
+        //test_session(game,)
+
         Self {
             client: Arc::new(Client::new()),
             game,
@@ -110,7 +110,7 @@ impl Component for Game {
                 _type: CardType::Value,
                 value: Some(1),
             },
-        }*/
+        }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -183,7 +183,6 @@ impl Component for Game {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        /*
         if self.status.eq(&GameState::Loading){
             return html!{
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
@@ -192,14 +191,14 @@ impl Component for Game {
                     </div>
                 </main>
             }
-        }*/
+        }
         let _props = ctx.props();
         let card_on_click = ctx.link().callback(|card: PlayCardRequest| {
             log!("parent callback.");
             Msg::PlayCard(card)
         });
         let draw_pile_on_click = ctx.link().callback(|_: MouseEvent| Msg::DrawCard);
-        /*
+
         // loby screen
         if self.status.eq(&GameState::Lobby) {
             return html!{
@@ -235,7 +234,7 @@ impl Component for Game {
                 </main>
             }
         }
-        */
+        
         /*
         //todo finish screen
         if self.status.eq(&GameState::Finished) {
