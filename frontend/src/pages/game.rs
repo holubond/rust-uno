@@ -1,7 +1,6 @@
 use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
-use crate::pages::game::GameState::Lobby;
 use crate::util::alert::alert;
 use crate::{sample_data, url};
 use futures::StreamExt;
@@ -15,34 +14,36 @@ use std::sync::Arc;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
+use crate::module::module::{MessageResponse, CardConflictMessageResponse, PlayCardRequest};
+use crate::sample_data::test_session;
 
 pub enum Msg {
     UnoChanged,
     SubmitStart,
     SubmitSuccess,
-    SubmitFailure,
-    PlayCard(CardInfo),
+    SubmitFailure(String),
+    PlayCard(PlayCardRequest),
     DrawCard,
     DrawSuccess(DrawResponse),
 }
 
 pub struct Game {
-    client: Arc<Client>,
-    game: GameStore,
-    status: GameState,
-    author: String,
-    you: String,
-    cards: Vec<CardInfo>,
-    players: Vec<Player>,
-    current_player: Option<String>,
-    finished_players: Option<Vec<String>>,
-    clockwise: bool,
-    uno_bool: bool,
-    discarted_card: CardInfo, //todo discarted card
+    pub(crate) client: Arc<Client>,
+    pub(crate) game: GameStore,
+    pub(crate) status: GameState,
+    pub(crate) author: String,
+    pub(crate) you: String,
+    pub(crate) cards: Vec<CardInfo>,
+    pub(crate) players: Vec<Player>,
+    pub(crate) current_player: Option<String>,
+    pub(crate) finished_players: Option<Vec<String>>,
+    pub(crate) clockwise: bool,
+    pub(crate) uno_bool: bool,
+    pub(crate) discarted_card: CardInfo, //todo discarted card
 }
 
 #[derive(Debug, Deserialize)]
-struct GameStore {
+pub struct GameStore {
     #[serde(rename="gameID")]
     game_id: String,
     server: String,
@@ -50,10 +51,11 @@ struct GameStore {
 }
 
 #[derive(Eq, PartialEq)]
-enum GameState {
+pub enum GameState {
     Lobby,
     Running,
     Finished,
+    Loading,
 }
 
 #[derive(PartialEq, Clone)]
@@ -88,27 +90,27 @@ impl Component for Game {
             }
             log!("WebSocket Closed")
         });
-
+        //test purposes data
+        test_session(game,)
+        /*
         Self {
             client: Arc::new(Client::new()),
             game,
-            status: Lobby,
-            //author: String::new(),
-            author: "Were".to_string(),
-            you: "Were".to_string(),
-            //you: String::new(),
-            cards: sample_data::cards(),
-            players: sample_data::players(),
-            current_player: Some("Holy".to_string()),
+            status: GameState::Loading,
+            author: String::new(),
+            you: String::new(),
+            cards: vec![],
+            players: vec![],
+            current_player: None,
             finished_players: None,
             clockwise: true,
             uno_bool: false,
             discarted_card: CardInfo {
                 color: Color::Red,
                 _type: CardType::Value,
-                value: Some(3),
+                value: Some(1),
             },
-        }
+        }*/
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -116,7 +118,7 @@ impl Component for Game {
             Msg::UnoChanged => {
                 self.uno_bool = !self.uno_bool;
 
-                return false;
+                return true;
             }
 
             Msg::SubmitStart => {
@@ -127,23 +129,22 @@ impl Component for Game {
                 ctx.link().send_future(async {
                     match submit_start_game(client, id, token).await {
                         Ok(_) => Msg::SubmitSuccess,
-                        _ => Msg::SubmitFailure,
+                        Err(err) => Msg::SubmitFailure(err),
                     }
                 });
             }
 
             Msg::PlayCard(card) => {
                 log!("PLAY CARD");
-                // todo send ret api play card
                 let client = self.client.clone();
                 let id = self.game.game_id.clone();
                 let token = self.game.token.clone();
                 let said_uno = self.uno_bool.clone();
                 log!("Start game sending");
                 ctx.link().send_future(async move {
-                    match play_card_request(client, id, token, card, None, said_uno.clone()).await {
+                    match play_card_request(client, id, token, card, said_uno.clone()).await {
                         Ok(_) => Msg::SubmitSuccess,
-                        _ => Msg::SubmitFailure,
+                        Err(err) => Msg::SubmitFailure(err),
                     }
                 });
             }
@@ -157,7 +158,7 @@ impl Component for Game {
                 ctx.link().send_future(async {
                     match draw_card_request(client, id, token).await {
                         Ok(result) => Msg::DrawSuccess(result),
-                        _ => Msg::SubmitFailure,
+                        Err(err) => Msg::SubmitFailure(err),
                     }
                 });
             }
@@ -170,19 +171,30 @@ impl Component for Game {
             }
 
             Msg::SubmitSuccess => {
-                //todo start game
+                //todo render changes
             }
 
-            Msg::SubmitFailure => {
-                alert("Error occured during starting game.");
+            Msg::SubmitFailure(err_msg) => {
+                alert(&err_msg);
+                log!("Got Err response sending create");
             }
         }
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        /*
+        if self.status.eq(&GameState::Loading){
+            return html!{
+                <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
+                    <div>
+                        <p>{"Waiting for server .... loading data ..."}</p>
+                    </div>
+                </main>
+            }
+        }*/
         let _props = ctx.props();
-        let card_on_click = ctx.link().callback(|card: CardInfo| {
+        let card_on_click = ctx.link().callback(|card: PlayCardRequest| {
             log!("parent callback.");
             Msg::PlayCard(card)
         });
@@ -267,6 +279,7 @@ impl Component for Game {
                             id="uno"
                             class="bg-gray-200 w-full py-2 px-4"
                             type="checkbox"
+                            checked={self.uno_bool.clone()}
                             onchange={ctx.link().callback(|_| Msg::UnoChanged)}
                         />
 
@@ -318,51 +331,69 @@ async fn submit_start_game(
     client: Arc<Client>,
     game_id: String,
     token: String,
-) -> Result<(), &'static str> {
+) -> Result<(), String> {
     let url = url::status_running(game_id);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error"),
+        _ => return Err("Server is not responding.".to_string()),
     };
-    match response.status() {
+    return match response.status() {
         StatusCode::NO_CONTENT => Ok(()),
-        _ => return Err("Error"),
-    }
+        StatusCode::UNAUTHORIZED|StatusCode::FORBIDDEN|StatusCode::NOT_FOUND|StatusCode::CONFLICT => {
+            match response.json::<MessageResponse>().await {
+                Ok(x) => Err(x.message.clone()),
+                _ => Err("Error: message from server had bad struct.".to_string()),
+            }
+        }
+        _ => Err("Undefined error occurred.".to_string()),
+    };
 }
 
 async fn draw_card_request(
     client: Arc<Client>,
     game_id: String,
     token: String,
-) -> Result<DrawResponse, &'static str> {
+) -> Result<DrawResponse, String> {
     let url = url::drawn_cards(game_id);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error"),
+        _ => return Err("Server is not responding.".to_string()),
     };
-    match response.status() {
+
+    return match response.status() {
         StatusCode::OK => match response.json::<DrawResponse>().await {
             Ok(x) => return Ok(x),
-            _ => return Err("Error: msg prom server has bad struct."),
+            _ => Err("Error: message from server had bad struct.".to_string()),
         },
-        _ => return Err("Error"),
-    }
+        StatusCode::UNAUTHORIZED|StatusCode::FORBIDDEN|StatusCode::NOT_FOUND => {
+            match response.json::<MessageResponse>().await {
+                Ok(x) => Err(x.message.clone()),
+                _ => Err("Error: message from server had bad struct.".to_string()),
+            }
+        }
+        StatusCode::CONFLICT => {
+            match response.json::<CardConflictMessageResponse>().await {
+                Ok(x) => Err(x.message.clone()),
+                _ => Err("Error: message from server had bad struct.".to_string()),
+            }
+        }
+        _ => Err("Undefined error occurred.".to_string()),
+    };
 }
 
 async fn play_card_request(
     client: Arc<Client>,
     game_id: String,
     token: String,
-    card: CardInfo,
-    new_color: Option<Color>,
+    card: PlayCardRequest,
     said_uno: bool,
-) -> Result<(), &'static str> {
+) -> Result<(), String> {
     let mut request_body = HashMap::new();
-    request_body.insert("card", serde_json::to_string(&card).unwrap());
-    if new_color.is_some() {
-        request_body.insert("newColor", new_color.unwrap().to_str().to_uppercase());
+    request_body.insert("card", serde_json::to_string(&card.card).unwrap());
+    if card.new_color.is_some() {
+        request_body.insert("newColor", card.new_color.unwrap().to_uppercase());
     }
     request_body.insert("saidUno", said_uno.clone().to_string());
     let url = url::play_card(game_id);
@@ -374,10 +405,22 @@ async fn play_card_request(
         .await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal comunication error"),
+        _ => return Err("Server is not responding.".to_string()),
     };
-    match response.status() {
+    return match response.status() {
         StatusCode::NO_CONTENT => Ok(()),
-        _ => return Err("Error"),
-    }
+        StatusCode::BAD_REQUEST|StatusCode::UNAUTHORIZED|StatusCode::FORBIDDEN|StatusCode::NOT_FOUND => {
+            match response.json::<MessageResponse>().await {
+                Ok(x) => Err(x.message.clone()),
+                _ => Err("Error: message from server had bad struct.".to_string()),
+            }
+        }
+        StatusCode::CONFLICT => {
+            match response.json::<CardConflictMessageResponse>().await {
+                Ok(x) => Err(x.message.clone()),
+                _ => Err("Error: message from server had bad struct.".to_string()),
+            }
+        }
+        _ => Err("Undefined error occurred.".to_string()),
+    };
 }
