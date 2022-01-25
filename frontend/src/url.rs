@@ -14,6 +14,15 @@ pub fn status_running(game_id: String) -> String {
     route(format!("/game/{}/statusRunning", game_id))
 }
 
+pub fn drawn_cards(game_id: String) -> String {
+    route(format!("/game/{}/drawnCards", game_id))
+}
+
+
+pub fn play_card(game_id: String) -> String {
+    route(format!("/game/{}/playCard", game_id))
+}
+
 fn route(endpoint: String) -> String {
     format!("{}://{}:{}{}", METHOD, HOST, PORT, endpoint)
 }

@@ -349,7 +349,7 @@ async fn draw_card_request(
     game_id: String,
     token: String,
 ) -> Result<DrawResponse, &'static str> {
-    let url = format!("http://localhost:9000/game/{}/drawnCards", game_id);
+    let url = url::drawn_cards(game_id);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
@@ -378,7 +378,7 @@ async fn play_card_request(
         request_body.insert("newColor", new_color.unwrap().to_str().to_uppercase());
     }
     request_body.insert("saidUno", said_uno.clone().to_string());
-    let url = format!("http://localhost:9000/game/{}/playCard", game_id);
+    let url = url::play_card(game_id);
     let response = client
         .post(url)
         .json(&request_body)
