@@ -73,20 +73,29 @@ impl Component for Oponents {
     fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
+
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
+
+        let current_player = match &ctx.props().current {
+            None => panic!("OponentsProps.current is None"),
+            Some(x) => x,
+        };
+
         return html! {
-            props.players.iter().filter(|p| p.name!=props.you).map(|player| {
-                if player.name == ctx.props().current.clone().unwrap() {
-                    html!{
-                        <Oponent name ={player.name.clone()} num ={player.cards} current={true} />
+            props.players.iter()
+                .filter(|p| p.name != props.you)
+                .map( |player| {
+                    if &player.name == current_player {
+                        html!{
+                            <Oponent name={player.name.clone()} num={player.cards} current={true} />
+                        }
+                    } else{
+                        html!{
+                            <Oponent name={player.name.clone()} num={player.cards} current={false} />
+                        }
                     }
-                } else{
-                    html!{
-                        <Oponent name ={player.name.clone()} num ={player.cards} current={false} />
-                    }
-                }
-            }).collect::<Html>()
+                }).collect::<Html>()
         };
     }
 }
