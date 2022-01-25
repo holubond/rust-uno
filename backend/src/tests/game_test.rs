@@ -322,7 +322,7 @@ fn test_active_cards() {
     assert!(!game.active_cards.are_cards_active());
 
     assert!(game
-        .play_card("Andy".into(), blu_skip.clone(), None, false)
+        .play_card("Andy".into(), blu_skip.clone(), None, true)
         .is_ok());
     assert_eq!(game.find_player("Andy".into()).unwrap().cards(), vec![green_skip.clone()]);
     assert_eq!(game.deck.top_discard_card().symbol, game.active_cards.active_symbol().unwrap());
