@@ -1,9 +1,6 @@
-use crate::components::card::{Card, CardInfo, CardProps};
-use crate::pages::game::Msg;
-use crate::Game;
-use futures::SinkExt;
+use crate::components::card::{Card, CardInfo};
 use yew::prelude::*;
-use yew::{function_component, html};
+use yew::html;
 
 pub struct MyUser;
 #[derive(Clone, PartialEq, Properties)]
