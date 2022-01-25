@@ -26,7 +26,7 @@ impl Component for Oponent {
                 </div>
             };
         }
-        
+
         return html! {
             <div class="w-1/5 h-full flex flex-col rounded-lg bg-red-100 shadow-md">
                 { render_opponent(&ctx.props().name, ctx.props().num) }
@@ -36,7 +36,7 @@ impl Component for Oponent {
 }
 
 fn render_opponent(name: &String, number_of_cards: u32) -> Html {
-    return html!{
+    html! {
         <>
             <div>
                 <p class="text-2xl text-center text-Black-500 font-bold">
