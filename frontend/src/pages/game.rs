@@ -247,10 +247,12 @@ impl Component for Game {
                 <div class="w-screen flex flex-row justify-between">
                     <Oponents players={self.players.clone()} you={self.you.clone()} current={self.current_player.clone()}/>
                 </div>
+
                 <div class="w-screen h-48 flex justify-around">
                     <div>
                         <img onclick={draw_pile_on_click} class="h-full w-full" src="../resources/draw_pile.png" alt="card"/>
                     </div>
+
                     <div class="-mt-16 -mb-16 opacity-10">
                         {
                             if self.clockwise {
@@ -264,27 +266,39 @@ impl Component for Game {
                             }
                         }
                     </div>
+
                     <div class="rounded-lg w-32 bg-black shadow-md">
                         {
-                            print_discarted_card(self.discarted_card.clone())
+                            print_discarded_card(self.discarted_card.clone())
                         }
                     </div>
                 </div>
+
                 <div class="w-screen flex flex-row justify-between">
                     <div>
-                        <input class="bg-gray-200 w-full py-2 px-4" type="checkbox"
+                        <input 
                             id="uno"
-                            onchange={ctx.link().callback(|_| Msg::UnoChanged)}/>
+                            class="bg-gray-200 w-full py-2 px-4"
+                            type="checkbox"
+                            onchange={ctx.link().callback(|_| Msg::UnoChanged)}
+                        />
+                        
                         <label for="uno">{"UNO!"}</label>
                     </div>
-                    <MyUser username={self.you.clone()} current_username={self.current_player.clone()} cards={self.cards.clone()} card_on_click={card_on_click} />
+                    
+                    <MyUser 
+                        username={self.you.clone()} 
+                        current_username={self.current_player.clone()} 
+                        cards={self.cards.clone()} 
+                        card_on_click={card_on_click} 
+                    />
                 </div>
             </main>
         };
     }
 }
 
-fn print_discarted_card(card: CardInfo) -> Html {
+fn print_discarded_card(card: CardInfo) -> Html {
     let use_color = card.color.to_str();
     let mut print_value = String::new();
     if card._type != CardType::Value {
