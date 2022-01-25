@@ -1,4 +1,5 @@
 use crate::cards::card::Card;
+use crate::err::status::CreateStatusError;
 use crate::gamestate::game::{Game, GameStatus};
 use crate::ws::ws_structs::draw::DrawWSMessage;
 use crate::ws::ws_structs::finish::FinishWSMessage;
@@ -21,7 +22,7 @@ impl WSMsg {
         Self { msg: msg }
     }
 
-    pub fn status(game: &Game, target_player_name: String) -> anyhow::Result<Self> {
+    pub fn status(game: &Game, target_player_name: String) -> Result<Self, CreateStatusError> {
         let msg = match game.status() {
             GameStatus::Lobby => {
                 LobbyStatusWSMessage::new(game, target_player_name)?.ws_serialize()
@@ -37,17 +38,17 @@ impl WSMsg {
         Ok(Self::new(msg))
     }
 
-    pub fn draw(target_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
-        let msg = DrawWSMessage::new(target_player_name, next_player_name, cards_drawn);
+    pub fn draw(drawing_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
+        let msg = DrawWSMessage::new(drawing_player_name, next_player_name, cards_drawn);
         Self::new(msg.ws_serialize())
     }
 
     pub fn play_card(
-        target_player_name: String,
+        playing_player_name: String,
         next_player_name: String,
         card_drawn: Card,
     ) -> Self {
-        let msg = PlayCardWSMessage::new(target_player_name, next_player_name, card_drawn);
+        let msg = PlayCardWSMessage::new(playing_player_name, next_player_name, card_drawn);
         Self::new(msg.ws_serialize())
     }
 

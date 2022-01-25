@@ -1,5 +1,7 @@
+use crate::cards::card::CardColor::{Blue, Green, Red, Yellow};
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use rand::seq::SliceRandom;
+use rand::Rng;
 
 #[derive(Clone)]
 pub struct Deck {
@@ -15,14 +17,20 @@ impl Deck {
         insert_colored_symbol_cards(&mut draw_pile);
         insert_black_symbol_cards(&mut draw_pile);
 
-        assert_eq!(draw_pile.len(), 108);
-
         let mut deck = Deck {
             draw_pile,
             discard_pile: Vec::new(),
         };
 
         deck.shuffle_draw_pile();
+
+        // ensure discard pile starts with one random card
+        let mut new_top_card = deck.draw_pile.pop().unwrap();
+        if new_top_card.should_be_black() {
+            new_top_card = new_top_card.morph_black_card(random_color()).unwrap();
+        }
+        deck.discard_pile.push(new_top_card);
+
         deck
     }
 
@@ -37,8 +45,7 @@ impl Deck {
                     return None;
                 }
 
-                self.draw_pile.append(&mut self.discard_pile);
-                self.shuffle_draw_pile();
+                self.switch_piles();
 
                 // should definitely be a safe operation
                 Some(self.draw_pile.pop().unwrap())
@@ -47,8 +54,36 @@ impl Deck {
         }
     }
 
+    fn switch_piles(&mut self) {
+        let last_discarded_card = self.discard_pile.pop().unwrap();
+
+        for card in self.discard_pile.iter_mut() {
+            if card.should_be_black() {
+                card.color = CardColor::Black;
+            }
+        }
+
+        self.draw_pile.append(&mut self.discard_pile);
+        self.shuffle_draw_pile();
+
+        self.discard_pile.push(last_discarded_card);
+    }
+
     pub fn play(&mut self, card: Card) {
         self.discard_pile.push(card);
+    }
+
+    pub fn top_discard_card(&self) -> &Card {
+        // draw pile should always have at least one card
+        self.discard_pile.last().unwrap()
+    }
+
+    pub fn draw_pile_size(&self) -> usize {
+        self.draw_pile.len()
+    }
+
+    pub fn discard_pile_size(&self) -> usize {
+        self.discard_pile.len()
     }
 }
 
@@ -79,5 +114,18 @@ fn insert_black_symbol_cards(card_stack: &mut Vec<Card>) {
     for _ in 0..4 {
         card_stack.push(Card::new(CardColor::Black, CardSymbol::Wild).unwrap());
         card_stack.push(Card::new(CardColor::Black, CardSymbol::Draw4).unwrap());
+    }
+}
+
+#[cfg(test)]
+#[path = "../tests/deck_test.rs"]
+mod tests;
+
+fn random_color() -> CardColor {
+    match rand::thread_rng().gen_range(0..4) {
+        0 => Red,
+        1 => Blue,
+        2 => Green,
+        _ => Yellow,
     }
 }

@@ -1,8 +1,7 @@
 use crate::cards::card::Card;
+use crate::err::status::CreateStatusError;
 use crate::gamestate::game::{Game, GameStatus};
-use crate::ws::ws_structs::{
-    find_author_name, get_current_player_name, get_finished_player_names, WsMessageWrapper,
-};
+use crate::ws::ws_structs::WsMessageWrapper;
 use ::serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -16,13 +15,16 @@ pub struct LobbyStatusWSMessage {
 }
 
 impl LobbyStatusWSMessage {
-    pub fn new(game: &Game, target_player_name: String) -> anyhow::Result<LobbyStatusWSMessage> {
+    pub fn new(
+        game: &Game,
+        target_player_name: String,
+    ) -> Result<LobbyStatusWSMessage, CreateStatusError> {
         Ok(LobbyStatusWSMessage {
             typee: "STATUS".to_string(),
             status: GameStatus::Lobby,
             author: find_author_name(game)?,
             you: target_player_name,
-            players: game.players.iter().map(|p| p.name()).collect(),
+            players: game.players().iter().map(|p| p.name()).collect(),
         })
     }
 }
@@ -48,7 +50,10 @@ pub struct RunningStatusWSMessage {
 }
 
 impl RunningStatusWSMessage {
-    pub fn new(game: &Game, target_player_name: String) -> anyhow::Result<RunningStatusWSMessage> {
+    pub fn new(
+        game: &Game,
+        target_player_name: String,
+    ) -> Result<RunningStatusWSMessage, CreateStatusError> {
         Ok(RunningStatusWSMessage {
             typee: "STATUS".to_string(),
             status: GameStatus::Running,
@@ -67,7 +72,7 @@ impl RunningStatusWSMessage {
     fn process_players(game: &Game) -> Vec<RunningPlayer> {
         let mut players = Vec::new();
 
-        for player in game.players.clone() {
+        for player in game.players() {
             players.push(RunningPlayer {
                 name: player.name(),
                 cards: player.get_card_count(),
@@ -89,7 +94,10 @@ pub struct FinishedStatusWSMessage {
 }
 
 impl FinishedStatusWSMessage {
-    pub fn new(game: &Game, target_player_name: String) -> anyhow::Result<FinishedStatusWSMessage> {
+    pub fn new(
+        game: &Game,
+        target_player_name: String,
+    ) -> Result<FinishedStatusWSMessage, CreateStatusError> {
         Ok(FinishedStatusWSMessage {
             typee: "STATUS".into(),
             status: GameStatus::Finished,
@@ -105,3 +113,24 @@ impl WsMessageWrapper for LobbyStatusWSMessage {}
 impl WsMessageWrapper for RunningStatusWSMessage {}
 
 impl WsMessageWrapper for FinishedStatusWSMessage {}
+
+fn get_finished_player_names(game: &Game) -> Vec<String> {
+    game.get_finished_players()
+        .iter()
+        .map(|p| p.name())
+        .collect()
+}
+
+fn find_author_name(game: &Game) -> Result<String, CreateStatusError> {
+    match game.find_author() {
+        None => Err(CreateStatusError::AuthorNotFound),
+        Some(author) => Ok(author.name()),
+    }
+}
+
+fn get_current_player_name(game: &Game) -> Result<String, CreateStatusError> {
+    match game.get_current_player() {
+        None => Err(CreateStatusError::CurrentPlayerNotFound),
+        Some(player) => Ok(player.name()),
+    }
+}
