@@ -23,21 +23,21 @@ impl Component for MyUser {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
 
-        let current_username = match props.current_username.clone() {
+        let current_username = match props.current_username {
             None => panic!("No value in MyUserProps.current_username"),
             Some(x) => x,
         };
 
-        if current_username == props.username.clone() {
+        if current_username == props.username {
             return html! {
                 <div class="flex flex-col w-80 h-96 rounded-lg bg-yellow-300 shadow-md justify-center">
-                    {player_board(props.username.clone(), props.cards.clone(), props.card_on_click.clone())}
+                    {player_board(props.username, props.cards, props.card_on_click)}
                 </div>
             };
         }
         return html! {
             <div class="flex flex-col w-2/3 h-96 rounded-lg bg-white shadow-md justify-center">
-                {player_board(props.username.clone(), props.cards.clone(), props.card_on_click.clone())}
+                {player_board(props.username, props.cards, props.card_on_click)}
             </div>
         };
     }
