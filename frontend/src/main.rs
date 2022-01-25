@@ -3,6 +3,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 mod components;
 mod pages;
+mod sample_data;
 mod url;
 mod util;
 use crate::pages::game::Game;

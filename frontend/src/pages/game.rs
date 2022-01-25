@@ -2,6 +2,7 @@ use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
 use crate::pages::game::GameState::Lobby;
+use crate::sample_data;
 use futures::StreamExt;
 use gloo_console::log;
 use gloo_storage::Storage;
@@ -76,7 +77,7 @@ impl Component for Game {
 
     fn create(_ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("timestampPH").unwrap();
-        let mut ws = WebSocket::open("wss://echo.websocket.org").unwrap();
+        let ws = WebSocket::open("wss://echo.websocket.org").unwrap();
         let (mut _write, mut read) = ws.split();
         spawn_local(async move {
             while let Some(msg) = read.next().await {
@@ -84,62 +85,7 @@ impl Component for Game {
             }
             log!("WebSocket Closed")
         });
-        //todo delete test data
-        let test1 = Player {
-            name: "Kája".to_string(),
-            cards: 8,
-        };
-        let test2 = Player {
-            name: "Grolig".to_string(),
-            cards: 5,
-        };
-        let test3 = Player {
-            name: "Holy".to_string(),
-            cards: 0,
-        };
-        let test4 = Player {
-            name: "End".to_string(),
-            cards: 4,
-        };
-        let test5 = Player {
-            name: "Were".to_string(),
-            cards: 4,
-        };
-        let card1 = CardInfo {
-            color: Color::Blue,
-            _type: CardType::Value,
-            value: Some(1),
-        };
-        let card2 = CardInfo {
-            color: Color::Green,
-            _type: CardType::Value,
-            value: Some(3),
-        };
-        let card3 = CardInfo {
-            color: Color::Red,
-            _type: CardType::Value,
-            value: Some(3),
-        };
-        let card4 = CardInfo {
-            color: Color::Black,
-            _type: CardType::Wild,
-            value: None,
-        };
-        let card5 = CardInfo {
-            color: Color::Green,
-            _type: CardType::Value,
-            value: Some(3),
-        };
-        let card6 = CardInfo {
-            color: Color::Red,
-            _type: CardType::Draw2,
-            value: Some(3),
-        };
-        let card7 = CardInfo {
-            color: Color::Red,
-            _type: CardType::Value,
-            value: Some(3),
-        };
+
         Self {
             client: Arc::new(Client::new()),
             game,
@@ -148,13 +94,17 @@ impl Component for Game {
             author: "Were".to_string(),
             you: "Were".to_string(),
             //you: String::new(),
-            cards: vec![card1, card2, card3, card4, card5, card6],
-            players: vec![test1, test2, test3, test4, test5],
+            cards: sample_data::cards(),
+            players: sample_data::players(),
             current_player: Some("Holy".to_string()),
             finished_players: None,
             clockwise: true,
             uno_bool: false,
-            discarted_card: card7,
+            discarted_card: CardInfo {
+                color: Color::Red,
+                _type: CardType::Value,
+                value: Some(3),
+            },
         }
     }
 
