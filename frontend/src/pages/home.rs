@@ -96,7 +96,7 @@ impl Component for Home {
 
             Msg::SubmitCreateSuccess(result) => {
                 let id = result.game_id.clone();
-                local_storage::set("timestampPH", result);
+                local_storage::set("lastGame", result);
                 ctx.link().history().unwrap().push(Route::Lobby { id });
             }
 
@@ -109,7 +109,7 @@ impl Component for Home {
                         server: result.server,
                     };
 
-                    local_storage::set("timestampPH", game_data);
+                    local_storage::set("lastGame", game_data);
 
                     ctx.link()
                         .history()
@@ -249,13 +249,19 @@ async fn send_create_game_request(
     let response = client.post(url::game()).json(&request_body).send().await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal communication error.".to_string()),
+        _ => return Err("Server is not responding.".to_string()),
     };
     return match response.status() {
         StatusCode::CREATED => match response.json::<CreateResponse>().await {
             Ok(x) => Ok(x),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
+        StatusCode::BAD_REQUEST => {
+            match response.json::<MessageResponse>().await {
+                Ok(x) => Err(x.message.clone()),
+                _ => Err("Error: message from server had bad struct.".to_string()),
+            }
+        }
         _ => Err("Undefined error occurred.".to_string()),
     };
 }
@@ -271,7 +277,7 @@ async fn send_join_game_request(
     let response = client.post(url).json(&request_body).send().await;
     let response = match response {
         Ok(x) => x,
-        _ => return Err("Internal communication error.".to_string()),
+        _ => return Err("Server is not responding.".to_string()),
     };
     return match response.status() {
         StatusCode::CREATED => match response.json::<JoinResponse>().await {
