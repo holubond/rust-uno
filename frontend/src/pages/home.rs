@@ -9,6 +9,7 @@ use std::sync::Arc;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew_router::prelude::*;
+use crate::module::module::MessageResponse;
 
 #[derive(Deserialize,Serialize, Clone, Debug)]
 pub struct CreateResponse {
@@ -22,11 +23,6 @@ pub struct CreateResponse {
 pub struct JoinResponse {
     server: String,
     token: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct MessageResponse {
-    message: String,
 }
 
 pub enum Msg {
@@ -80,15 +76,17 @@ impl Component for Home {
             Msg::SubmitJoin => {
                 if let Some(name) = self.name_join.cast::<HtmlInputElement>() {
                     if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
-                        let name_join = name.value();
-                        let game_id = game.value();
-                        let client = self.client.clone();
-                        ctx.link().send_future(async {
-                            match send_join_game_request(client, name_join, game_id).await {
-                                Ok(result) => Msg::SubmitJoinSuccess(result),
-                                Err(err) => Msg::SubmitFailure(err),
-                            }
-                        });
+                        let name_join: String = name.value();
+                        let game_id: String = game.value();
+                        if !game_id.is_empty() {
+                            let client = self.client.clone();
+                            ctx.link().send_future(async {
+                                match send_join_game_request(client, name_join, game_id).await {
+                                    Ok(result) => Msg::SubmitJoinSuccess(result),
+                                    Err(err) => Msg::SubmitFailure(err),
+                                }
+                            });
+                        }
                     }
                 }
                 return false;
