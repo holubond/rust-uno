@@ -92,16 +92,7 @@ impl Component for Home {
 
             Msg::SubmitCreateSuccess(result) => {
                 let id = result.gameID.clone();
-                match gloo_storage::LocalStorage::set("timestampPH", result) {
-                    Ok(_) => (),
-                    _ => match web_sys::window()
-                        .unwrap()
-                        .alert_with_message("Local storage Error")
-                    {
-                        Ok(_) => (),
-                        _ => log!("Alert failed to pop up!"),
-                    },
-                }
+                local_storage_set("timestampPH", result);
                 ctx.link().history().unwrap().push(Route::Lobby { id });
             }
             Msg::SubmitJoinSuccess(result) => {
@@ -112,16 +103,9 @@ impl Component for Home {
                         token: result.token,
                         server: result.server,
                     };
-                    match gloo_storage::LocalStorage::set("timestampPH", game_data) {
-                        Ok(_) => (),
-                        _ => match web_sys::window()
-                            .unwrap()
-                            .alert_with_message("Local storage Error")
-                        {
-                            Ok(_) => (),
-                            _ => log!("Alert failed to pop up!"),
-                        },
-                    }
+
+                    local_storage_set("timestampPH", game_data);
+                    
                     ctx.link()
                         .history()
                         .unwrap()
@@ -220,6 +204,22 @@ impl Component for Home {
                 </div>
             </main>
         };
+    }
+}
+
+fn local_storage_set<T>(key: impl AsRef<str>, value: T)
+where
+    T: Serialize
+{
+    match gloo_storage::LocalStorage::set(key, value) {
+        Ok(_) => (),
+        _ => match web_sys::window()
+            .unwrap()
+            .alert_with_message("Local storage Error")
+        {
+            Ok(_) => (),
+            _ => log!("Alert failed to pop up!"),
+        },
     }
 }
 
