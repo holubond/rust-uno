@@ -3,6 +3,8 @@ use crate::err::status::CreateStatusError;
 use crate::gamestate::game::{Game, GameStatus};
 use crate::ws::ws_structs::draw::DrawWSMessage;
 use crate::ws::ws_structs::finish::FinishWSMessage;
+use crate::ws::ws_structs::gained_cards::GainedCardsWSMessage;
+use crate::ws::ws_structs::penalty::PenaltyWSMessage;
 use crate::ws::ws_structs::play_card::PlayCardWSMessage;
 use crate::ws::ws_structs::status::{
     FinishedStatusWSMessage, LobbyStatusWSMessage, RunningStatusWSMessage,
@@ -19,7 +21,7 @@ pub struct WSMsg {
 
 impl WSMsg {
     fn new(msg: String) -> Self {
-        Self { msg: msg }
+        Self { msg }
     }
 
     pub fn status(game: &Game, target_player_name: String) -> Result<Self, CreateStatusError> {
@@ -54,6 +56,16 @@ impl WSMsg {
 
     pub fn finish(finished_player_name: String) -> Self {
         let msg = FinishWSMessage::new(finished_player_name);
+        Self::new(msg.ws_serialize())
+    }
+
+    pub fn penalty(penalized_player_name: String, gained_cards: Vec<Card>) -> Self {
+        let msg = PenaltyWSMessage::new(penalized_player_name, gained_cards);
+        Self::new(msg.ws_serialize())
+    }
+
+    pub fn gained_cards(penalized_player_name: String, gained_cards_count: usize) -> Self {
+        let msg = GainedCardsWSMessage::new(penalized_player_name, gained_cards_count);
         Self::new(msg.ws_serialize())
     }
 }

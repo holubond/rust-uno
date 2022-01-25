@@ -62,7 +62,7 @@ impl RunningStatusWSMessage {
             current_player: get_current_player_name(game)?,
             players: RunningStatusWSMessage::process_players(game),
             finished_players: get_finished_player_names(game),
-            cards: match game.find_player(target_player_name.clone()) {
+            cards: match game.find_player(target_player_name) {
                 None => vec![],
                 Some(player) => player.cards(),
             },
@@ -102,7 +102,7 @@ impl FinishedStatusWSMessage {
             typee: "STATUS".into(),
             status: GameStatus::Finished,
             author: find_author_name(game)?,
-            you: target_player_name.clone(),
+            you: target_player_name,
             finished_players: get_finished_player_names(game),
         })
     }
