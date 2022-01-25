@@ -1,6 +1,6 @@
 use crate::pages::game::Player;
+use yew::html;
 use yew::prelude::*;
-use yew::{function_component, html};
 
 pub struct Oponent;
 #[derive(Clone, PartialEq, Properties)]
