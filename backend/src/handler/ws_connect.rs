@@ -33,17 +33,18 @@ pub async fn ws_connect(r: HttpRequest, stream: web::Payload, params: web::Path<
         Some(game) => game,
         _ => return Err(ErrorBadRequest("Game with given id does not exist"))
     };
+
+    let (conn, response) = WSConn::new(&r, stream)?;
+    if game_mut.set_connection_to_player(&author_name, conn) {
+        return Err(ErrorBadRequest("Player with given name does not exist"))
+    }
+
+    let msg = WSMsg::status(game_mut, author_name.clone()).unwrap();
     let mut player: &mut Player = match game_mut.find_player_mut(&author_name) {
         Some(player) => player,
         _ => return Err(ErrorBadRequest("Player with given name does not exist"))
     };
-
-    let (conn, response) = WSConn::new(&r, stream)?;
-
-    player.set_connection(conn);
-
-    player.message(WSMsg::status(game_mut, author_name.clone()).unwrap());
-
+    player.message(msg);
 
     Ok(response)
 }

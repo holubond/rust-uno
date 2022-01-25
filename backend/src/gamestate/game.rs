@@ -14,6 +14,7 @@ use nanoid::nanoid;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use crate::ws::ws_conn::WSConn;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -406,6 +407,14 @@ impl Game {
         }
 
         Ok(())
+    }
+
+    pub fn set_connection_to_player(&mut self, name_of_player: &String, connection: WSConn) -> bool{
+        match self.find_player_mut(&name_of_player) {
+            Some(player) => player.set_connection(connection),
+            _ => return false
+        };
+        return true
     }
 }
 

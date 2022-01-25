@@ -84,10 +84,6 @@ impl Player {
         self.name.clone()
     }
 
-    pub fn set_connection(&mut self, connection: WSConn) {
-        self.connection = Option::Some(connection)
-    }
-
     pub fn message(&self, msg: WSMsg) {
         self.connection.as_ref().unwrap().send(msg)
     }
