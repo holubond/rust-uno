@@ -289,6 +289,7 @@ fn test_active_cards() {
     game.active_cards.clear();
     game.active_cards.push(red_plus_2.clone()).unwrap();
 
+    // different symbol
     assert!(game
         .active_cards
         .push(Card::new(Red, Skip).unwrap())
@@ -303,12 +304,14 @@ fn test_active_cards() {
         andy.give_card(blu_skip.clone());
         andy.give_card(green_skip.clone());
     }
+    assert_eq!(game.find_player("Andy".into()).unwrap().cards(), vec![blu_plus_2.clone(), blu_skip.clone(), green_skip.clone()]);
     assert!(game
         .play_card("Andy".into(), blu_skip.clone(), None, false)
         .is_err()); // must respond to draw2
     assert!(game
         .play_card("Andy".into(), blu_plus_2.clone(), None, false)
         .is_ok());
+    assert_eq!(game.find_player("Andy".into()).unwrap().cards(), vec![blu_skip.clone(), green_skip.clone()]);
     assert_eq!(game.active_cards.active_symbol().unwrap(), Draw2);
     assert_eq!(game.active_cards.sum_active_draw_cards(), Some(4)); // 2 from before + 2 from Andy
 
@@ -321,9 +324,12 @@ fn test_active_cards() {
     assert!(game
         .play_card("Andy".into(), blu_skip.clone(), None, false)
         .is_ok());
+    assert_eq!(game.find_player("Andy".into()).unwrap().cards(), vec![green_skip.clone()]);
+    assert_eq!(game.deck.top_discard_card().symbol, game.active_cards.active_symbol().unwrap());
     {
+        let game_before = game.clone();
         let andy = game.players.get_mut(0).unwrap();
-        assert!(andy.play_card_by_eq(blu_skip.clone()).is_err()); // card is no longer in Andy's hand
+        assert!(andy.play_card_by_eq(blu_skip.clone()).is_err(), "Before: \n{:?}\nAfter: \n{:?}", game_before, game.clone()); // card is no longer in Andy's hand
     }
     assert_eq!(game.active_cards.active_symbol(), Some(Skip));
     assert_eq!(game.active_cards.sum_active_draw_cards(), None);
