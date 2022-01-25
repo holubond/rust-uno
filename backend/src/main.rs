@@ -16,6 +16,7 @@ mod gamestate;
 mod handler;
 mod repo;
 mod ws;
+mod util;
 
 #[derive(Parser)]
 #[clap(version = "1.0", author = "L.G.")]
