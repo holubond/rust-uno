@@ -91,7 +91,7 @@ pub async fn draw_card(
             HttpResponse::Ok().json(MessageResponse{ cards: drawn_cards, next: next_player.name() })
         }
         Err(DrawCardsError::PlayerCanPlayInstead)|Err(DrawCardsError::PlayerMustPlayInstead(_)) => {
-            HttpResponse::Ok().json(MessageResponseType{ type_of_error: TypeOfError::CANNOT_DRAW.into_response_string(), message: "Player has to play has to play card instead".to_string() })
+            HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::CANNOT_DRAW.into_response_string(), message: "Player has to play has to play card instead".to_string() })
         }
         _ => HttpResponse::InternalServerError().json(ErrorMessageResponse{ message: "Error occurred during draw card".to_string() })
     }
