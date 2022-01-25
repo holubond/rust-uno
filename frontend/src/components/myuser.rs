@@ -44,10 +44,6 @@ impl Component for MyUser {
 }
 
 fn player_board(username: String, cards: Vec<CardInfo>, card_on_click: Callback<CardInfo>) -> Html {
-    /*
-    let card_on_click = move |card:CardInfo|{
-        card_on_click.emit(card.clone());
-    };*/
     return html! {
         <>
             <div class="h-80 flex flex-row overflow-auto">
