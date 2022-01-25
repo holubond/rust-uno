@@ -211,15 +211,17 @@ fn local_storage_set<T>(key: impl AsRef<str>, value: T)
 where
     T: Serialize
 {
-    match gloo_storage::LocalStorage::set(key, value) {
-        Ok(_) => (),
-        _ => match web_sys::window()
-            .unwrap()
-            .alert_with_message("Local storage Error")
-        {
-            Ok(_) => (),
-            _ => log!("Alert failed to pop up!"),
-        },
+    if gloo_storage::LocalStorage::set(key, value).is_ok() {
+        return;
+    }
+
+    let window = match web_sys::window() {
+        None => panic!("Failed attempt to call web_sys::window() in local_storage_set()"),
+        Some(x) => x,
+    };
+
+    if window.alert_with_message("Local storage error").is_err() {
+        log!("Alert failed to pop up!")
     }
 }
 
