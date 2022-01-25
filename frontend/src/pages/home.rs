@@ -1,6 +1,6 @@
+use crate::util::local_storage;
 use crate::Route;
 use gloo_console::log;
-use gloo_storage::Storage;
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -92,7 +92,7 @@ impl Component for Home {
 
             Msg::SubmitCreateSuccess(result) => {
                 let id = result.gameID.clone();
-                local_storage_set("timestampPH", result);
+                local_storage::set("timestampPH", result);
                 ctx.link().history().unwrap().push(Route::Lobby { id });
             }
             Msg::SubmitJoinSuccess(result) => {
@@ -104,8 +104,8 @@ impl Component for Home {
                         server: result.server,
                     };
 
-                    local_storage_set("timestampPH", game_data);
-                    
+                    local_storage::set("timestampPH", game_data);
+
                     ctx.link()
                         .history()
                         .unwrap()
@@ -204,24 +204,6 @@ impl Component for Home {
                 </div>
             </main>
         };
-    }
-}
-
-fn local_storage_set<T>(key: impl AsRef<str>, value: T)
-where
-    T: Serialize
-{
-    if gloo_storage::LocalStorage::set(key, value).is_ok() {
-        return;
-    }
-
-    let window = match web_sys::window() {
-        None => panic!("Failed attempt to call web_sys::window() in local_storage_set()"),
-        Some(x) => x,
-    };
-
-    if window.alert_with_message("Local storage error").is_err() {
-        log!("Alert failed to pop up!")
     }
 }
 
