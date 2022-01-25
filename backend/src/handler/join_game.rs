@@ -48,7 +48,7 @@ pub async fn join_game(
         Ok(game_repo) => game_repo,
     };
 
-    let game = match game_repo.find_game_by_id(&game_id) {
+    let game = match game_repo.find_game_by_id_mut(&game_id) {
         None => {
             return HttpResponse::NotFound().json(MessageResponse {
                 message: "Game not found".to_string(),
@@ -67,7 +67,7 @@ pub async fn join_game(
 
     let jwt = authorization_repo.generate_jwt(player_name, &game_id);
 
-    game.players().into_iter().map(|player|player.connection().send(WSMsg::status(game, player.name()).unwrap()));
+    game.status_message_all();
 
     HttpResponse::Created().json(GameJoinResponse {
         server: address_repo.full_local_address(),

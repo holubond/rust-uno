@@ -180,7 +180,7 @@ impl Game {
     }
 
     /// Sends a personalized (==containing name) STATUS WSMessage to all players.
-    fn status_message_all(&self) -> Result<(), CreateStatusError> {
+    pub fn status_message_all(&self) -> Result<(), CreateStatusError> {
         for player in self.players.iter() {
             player.message(WSMsg::status(&self, player.name())?);
         }
