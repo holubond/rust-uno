@@ -132,7 +132,7 @@ fn print_card(color: Color, value: String, link: Scope<Card>) -> Html {
     return html! {
         <div class="w-40 h-full flex flex-col rounded-lg shadow-md"
         style={format!("background-color: {}", color.use_color().clone())}
-        onclick={link.callback(|e: MouseEvent| { Msg::PlayCard })}
+        onclick={link.callback(|_: MouseEvent| { Msg::PlayCard })}
         >
                 <div class="h-1/3 w-40">
                     <p class="text-6xl text-left text-White-500 font-bold">{format!("{}",value)}</p>
@@ -147,22 +147,21 @@ fn print_card(color: Color, value: String, link: Scope<Card>) -> Html {
     };
 }
 fn print_wild_card(value: String, link: Scope<Card>) -> Html {
-    let r = Color::Red.use_color();
     return html! {
         <div class="w-40 h-full flex flex-col bg-black rounded-lg shadow-md">
             <div class="h-1/3 w-full flex flex-row rounded-lg">
-                <div class="h-full w-1/2 rounded-lg" style="background-color: red" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Red) })}>
+                <div class="h-full w-1/2 rounded-lg" style="background-color: red" onclick={link.callback(|_: MouseEvent| { Msg::PlayWild(Color::Red) })}>
                 </div>
-                <div class="h-full w-1/2 rounded-lg" style="background-color: blue" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Blue) })}>
+                <div class="h-full w-1/2 rounded-lg" style="background-color: blue" onclick={link.callback(|_: MouseEvent| { Msg::PlayWild(Color::Blue) })}>
                 </div>
             </div>
             <div class="h-1/3 w-40 flex justify-center">
                 <p class="text-5xl text-center bg-gray-300 text-Black-500 font-bold">{format!("{}",value)}</p>
             </div>
             <div class="h-1/3 w-full flex flex-row rounded-lg">
-                <div class="h-full w-1/2 rounded-lg" style="background-color: yellow" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Yellow) })}>
+                <div class="h-full w-1/2 rounded-lg" style="background-color: yellow" onclick={link.callback(|_: MouseEvent| { Msg::PlayWild(Color::Yellow) })}>
                 </div>
-                <div class="h-full w-1/2 rounded-lg" style="background-color: green" onclick={link.callback(|e: MouseEvent| { Msg::PlayWild(Color::Green) })}>
+                <div class="h-full w-1/2 rounded-lg" style="background-color: green" onclick={link.callback(|_: MouseEvent| { Msg::PlayWild(Color::Green) })}>
                 </div>
             </div>
         </div>
