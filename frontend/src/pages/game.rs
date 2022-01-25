@@ -1,20 +1,18 @@
-use crate::components::card::{Card, CardInfo, CardType, Color};
+use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
-use crate::components::oponent::{Oponent, Oponents};
+use crate::components::oponent::Oponents;
 use crate::pages::game::GameState::Lobby;
-use futures::{SinkExt, StreamExt};
+use futures::StreamExt;
 use gloo_console::log;
 use gloo_storage::Storage;
-use reqwasm::websocket::{futures::WebSocket, Message};
+use reqwasm::websocket::futures::WebSocket;
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::thread::current;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlInputElement;
+use yew::html;
 use yew::prelude::*;
-use yew::{function_component, html};
 
 pub enum Msg {
     UnoChanged,
