@@ -27,13 +27,13 @@ pub enum Color {
 }
 
 impl Color {
-    pub fn use_color(&self) -> String {
+    pub fn use_color(&self) -> &str {
         match self {
-            Color::Red => "red".to_string(),
-            Color::Yellow => "yellow".to_string(),
-            Color::Green => "green".to_string(),
-            Color::Blue => "blue".to_string(),
-            Color::Black => "black".to_string(),
+            Color::Red => "red",
+            Color::Yellow => "yellow",
+            Color::Green => "green",
+            Color::Blue => "blue",
+            Color::Black => "black",
         }
     }
 }
@@ -114,7 +114,7 @@ impl Component for Card {
         }
 
         print_card(
-            props.card_info.color.clone(),
+            &props.card_info.color,
             props.card_info.value_to_string(),
             ctx.link().clone()
         )
@@ -122,10 +122,10 @@ impl Component for Card {
     }
 }
 
-fn print_card(color: Color, value: String, link: Scope<Card>) -> Html {
+fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
     return html! {
         <div class="w-40 h-full flex flex-col rounded-lg shadow-md"
-        style={format!("background-color: {}", color.use_color().clone())}
+        style={format!("background-color: {}", color.use_color())}
         onclick={link.callback(|_: MouseEvent| { Msg::PlayCard })}
         >
                 <div class="h-1/3 w-40">
