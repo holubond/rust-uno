@@ -36,6 +36,7 @@ impl TypeOfError {
 }
 #[derive(Serialize)]
 pub struct MessageResponseType {
+    #[serde(rename(serialize = "type", deserialize = "type"))]
     type_of_error: String,
     message: String,
 }
