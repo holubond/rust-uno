@@ -38,32 +38,38 @@ pub struct Game {
     uno_bool: bool,
     discarted_card: CardInfo, //todo discarted card
 }
+
 #[derive(Debug, Deserialize)]
 struct GameStore {
     gameID: String,
     server: String,
     token: String,
 }
+
 #[derive(Eq, PartialEq)]
 enum GameState {
     Lobby,
     Running,
     Finished,
 }
+
 #[derive(PartialEq, Clone)]
 pub struct Player {
     pub name: String,
     pub cards: u32,
 }
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DrawResponse {
     cards: Vec<CardInfo>,
     next: String,
 }
+
 #[derive(Clone, Debug, Eq, PartialEq, Properties)]
 pub struct Props {
     pub id: String,
 }
+
 impl Component for Game {
     type Message = Msg;
     type Properties = Props;
@@ -322,6 +328,7 @@ impl Component for Game {
         };
     }
 }
+
 fn print_discarted_card(card: CardInfo) -> Html {
     let use_color = card.color.to_str();
     let mut print_value = String::new();
@@ -346,6 +353,7 @@ fn print_discarted_card(card: CardInfo) -> Html {
             </div>
     };
 }
+
 async fn submit_start_game(
     client: Arc<Client>,
     game_id: String,
@@ -362,6 +370,7 @@ async fn submit_start_game(
         _ => return Err("Error"),
     }
 }
+
 async fn draw_card_request(
     client: Arc<Client>,
     game_id: String,
@@ -381,6 +390,7 @@ async fn draw_card_request(
         _ => return Err("Error"),
     }
 }
+
 async fn play_card_request(
     client: Arc<Client>,
     game_id: String,
