@@ -199,7 +199,7 @@ impl Component for Game {
             log!("parent callback.");
             Msg::PlayCard(card)
         });
-        let draw_pile_on_click = ctx.link().callback(|e: MouseEvent| Msg::DrawCard);
+        let draw_pile_on_click = ctx.link().callback(|_: MouseEvent| Msg::DrawCard);
         /*
         // loby screen
         if self.status.eq(&GameState::Lobby) {
