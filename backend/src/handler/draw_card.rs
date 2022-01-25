@@ -18,15 +18,15 @@ pub struct MessageResponse {
 }
 
 pub enum TypeOfError {
-    GAME_NOT_RUNNING,
-    CANNOT_DRAW
+    GameNotRunning,
+    CannotDraw
 }
 
 impl TypeOfError {
     fn into_response_string(&self) -> String{
         match self {
-            TypeOfError::GAME_NOT_RUNNING => "GAME_NOT_RUNNING".to_string(),
-            TypeOfError::CANNOT_DRAW => "CANNOT_DRAW".to_string()
+            TypeOfError::GameNotRunning => "GAME_NOT_RUNNING".to_string(),
+            TypeOfError::CannotDraw => "CANNOT_DRAW".to_string()
         }
     }
 }
@@ -75,7 +75,7 @@ pub async fn draw_card(
     }
 
     if game.status() != GameStatus::Running {
-        return HttpResponse::Conflict().json(MessageResponseType { type_of_error: TypeOfError::GAME_NOT_RUNNING.into_response_string(), message:"Game is not running ".to_string()});
+        return HttpResponse::Conflict().json(MessageResponseType { type_of_error: TypeOfError::GameNotRunning.into_response_string(), message:"Game is not running ".to_string()});
     }
 
     return match game.draw_cards(username.clone()) {
@@ -87,7 +87,7 @@ pub async fn draw_card(
             HttpResponse::Ok().json(MessageResponse{ cards: drawn_cards, next: next_player.name() })
         }
         Err(DrawCardsError::PlayerCanPlayInstead)|Err(DrawCardsError::PlayerMustPlayInstead(_)) => {
-            HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::CANNOT_DRAW.into_response_string(), message: "Player has to play has to play card instead".to_string() })
+            HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::CannotDraw.into_response_string(), message: "Player has to play has to play card instead".to_string() })
         }
         _ => HttpResponse::InternalServerError().json(ErrorMessageResponse{ message: "Error occurred during draw card".to_string() })
     }
