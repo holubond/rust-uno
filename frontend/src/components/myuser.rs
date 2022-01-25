@@ -3,6 +3,7 @@ use yew::html;
 use yew::prelude::*;
 
 pub struct MyUser;
+
 #[derive(Clone, PartialEq, Properties)]
 pub struct MyUserProps {
     pub username: String,
@@ -10,6 +11,7 @@ pub struct MyUserProps {
     pub cards: Vec<CardInfo>,
     pub card_on_click: Callback<CardInfo>,
 }
+
 impl Component for MyUser {
     type Message = ();
     type Properties = MyUserProps;
@@ -17,6 +19,7 @@ impl Component for MyUser {
     fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
+
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
 
@@ -35,6 +38,7 @@ impl Component for MyUser {
         };
     }
 }
+
 fn player_board(username: String, cards: Vec<CardInfo>, card_on_click: Callback<CardInfo>) -> Html {
     /*
     let card_on_click = move |card:CardInfo|{
