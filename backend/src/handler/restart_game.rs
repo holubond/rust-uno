@@ -23,7 +23,7 @@ pub async fn start_game(
 
     let mut game_repo = game_repo.lock().unwrap();
 
-    let game = match game_repo.find_game_by_id(&gameID) {
+    let game = match game_repo.find_game_by_id_mut(&gameID) {
         Some(game) => game,
         _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
     };

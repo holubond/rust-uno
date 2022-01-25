@@ -9,7 +9,7 @@ pub struct Player {
     pub is_author: bool,
     cards: Vec<Card>,
     position: Option<usize>,
-    pub(crate) connection: Option<WSConn>
+    connection: Option<WSConn>
 }
 
 impl Player {
@@ -84,11 +84,11 @@ impl Player {
         self.name.clone()
     }
 
-    pub fn connection(&self) -> &WSConn {
-        self.connection.as_ref().unwrap()
+    pub fn set_connection(&mut self, connection: WSConn) {
+        self.connection = Option::Some(connection)
     }
 
     pub fn message(&self, msg: WSMsg) {
-        // todo!("self.ws.send(msg);")
+        self.connection.as_ref().unwrap().send(msg)
     }
 }
