@@ -4,6 +4,7 @@ use yew_router::prelude::*;
 mod components;
 mod pages;
 mod util;
+mod url;
 use crate::pages::game::Game;
 use crate::pages::home::Home;
 
