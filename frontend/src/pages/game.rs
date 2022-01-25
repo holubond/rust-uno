@@ -74,7 +74,7 @@ impl Component for Game {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("timestampPH").unwrap();
         let mut ws = WebSocket::open("wss://echo.websocket.org").unwrap();
         let (mut _write, mut read) = ws.split();
