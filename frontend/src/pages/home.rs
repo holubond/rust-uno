@@ -12,7 +12,7 @@ use yew_router::prelude::*;
 
 #[derive(Deserialize,Serialize, Clone, Debug)]
 pub struct CreateResponse {
-    #[serde(rename(serialize = "gameID", deserialize = "game_id"))]
+    #[serde(rename(serialize = "gameID", deserialize = "gameID"))]
     game_id: String,
     server: String,
     token: String,
