@@ -1,11 +1,11 @@
 use serde::Serialize;
 
 #[derive(Serialize, Debug)]
-pub struct ErrorMessage<'a> {
+pub struct ErrResp<'a> {
     message: &'a str,
 }
 
-impl<'a> ErrorMessage<'a> {
+impl<'a> ErrResp<'a> {
     pub fn new(message: &'a str) -> Self {
         Self { message }
     }

@@ -1,17 +1,13 @@
 use crate::cards::card::Card;
 use crate::err::draw_cards::DrawCardsError;
 use crate::gamestate::game::GameStatus;
+use crate::handler::util::response::ErrResp;
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthorizationRepo, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ErrorMessageResponse {
-    message: String,
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
@@ -57,9 +53,7 @@ pub async fn draw_card(
     let game = match game_repo.find_game_by_id(&game_id) {
         Some(game) => game,
         _ => {
-            return HttpResponse::NotFound().json(ErrorMessageResponse {
-                message: "Game not found".to_string(),
-            })
+            return HttpResponse::NotFound().json( ErrResp::new("Game not found") )
         }
     };
 
@@ -68,26 +62,20 @@ pub async fn draw_card(
     let jwt = match jwt {
         Ok(jwt) => jwt.to_string(),
         _ => {
-            return HttpResponse::Unauthorized().json(ErrorMessageResponse {
-                message: "No auth token provided by the client".to_string(),
-            })
+            return HttpResponse::Unauthorized().json( ErrResp::new("No auth token provided by the client") )
         }
     };
 
     let claims = match authorization_repo.valid_jwt(&jwt) {
         Ok(claims) => claims,
         _ => {
-            return HttpResponse::Unauthorized().json(ErrorMessageResponse {
-                message: "Token is not valid".to_string(),
-            })
+            return HttpResponse::Unauthorized().json( ErrResp::new("Token is not valid") )
         }
     };
     let username = authorization_repo.user_from_claims(&claims);
 
     if !authorization_repo.verify_jwt(username.clone(), game_id, claims) {
-        return HttpResponse::Forbidden().json(ErrorMessageResponse {
-            message: "Token does not prove client is the Author".to_string(),
-        });
+        return HttpResponse::Forbidden().json( ErrResp::new("Token does not prove client is the Author") );
     }
 
     if game.status() != GameStatus::Running {
@@ -101,9 +89,7 @@ pub async fn draw_card(
         Ok(drawn_cards) => {
             let next_player = match game.get_current_player() {
                 None => {
-                    return HttpResponse::InternalServerError().json(ErrorMessageResponse {
-                        message: "Current player not found".to_string(),
-                    })
+                    return HttpResponse::InternalServerError().json( ErrResp::new("Current player not found") )
                 }
                 Some(player) => player,
             };
@@ -119,8 +105,6 @@ pub async fn draw_card(
                 message: "Player has to play has to play card instead".to_string(),
             })
         }
-        _ => HttpResponse::InternalServerError().json(ErrorMessageResponse {
-            message: "Error occurred during draw card".to_string(),
-        }),
+        _ => HttpResponse::InternalServerError().json( ErrResp::new("Error occurred during draw card") ),
     };
 }
