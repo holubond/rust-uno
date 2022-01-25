@@ -1,7 +1,8 @@
 use crate::cards::card::Card;
 use crate::err::draw_cards::DrawCardsError;
 use crate::gamestate::game::GameStatus;
-use crate::{AuthorizationRepo, InMemoryGameRepo, util};
+use crate::handler::util::safe_lock::safe_lock;
+use crate::{AuthorizationRepo, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
@@ -48,7 +49,7 @@ pub async fn draw_card(
 ) -> impl Responder {
     let game_id = params.into_inner();
 
-    let mut game_repo = match util::safe_lock(&game_repo) {
+    let mut game_repo = match safe_lock(&game_repo) {
         Err(response) => return response,
         Ok(repo) => repo,
     };
