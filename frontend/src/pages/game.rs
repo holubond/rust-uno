@@ -43,7 +43,8 @@ pub struct Game {
 
 #[derive(Debug, Deserialize)]
 struct GameStore {
-    gameID: String,
+    #[serde(rename="gameID")]
+    game_id: String,
     server: String,
     token: String,
 }
@@ -78,6 +79,7 @@ impl Component for Game {
 
     fn create(_ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("timestampPH").unwrap();
+
         let ws = WebSocket::open("wss://echo.websocket.org").unwrap();
         let (mut _write, mut read) = ws.split();
         spawn_local(async move {
@@ -119,7 +121,7 @@ impl Component for Game {
 
             Msg::SubmitStart => {
                 let client = self.client.clone();
-                let id = self.game.gameID.clone();
+                let id = self.game.game_id.clone();
                 let token = self.game.token.clone();
                 log!("Start game sending");
                 ctx.link().send_future(async {
@@ -134,7 +136,7 @@ impl Component for Game {
                 log!("PLAY CARD");
                 // todo send ret api play card
                 let client = self.client.clone();
-                let id = self.game.gameID.clone();
+                let id = self.game.game_id.clone();
                 let token = self.game.token.clone();
                 let said_uno = self.uno_bool.clone();
                 log!("Start game sending");
@@ -149,7 +151,7 @@ impl Component for Game {
             Msg::DrawCard => {
                 log!("DRAW CARD");
                 let client = self.client.clone();
-                let id = self.game.gameID.clone();
+                let id = self.game.game_id.clone();
                 let token = self.game.token.clone();
                 log!("Start sending draw card");
                 ctx.link().send_future(async {

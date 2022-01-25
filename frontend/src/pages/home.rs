@@ -10,9 +10,10 @@ use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize,Serialize, Clone, Debug)]
 pub struct CreateResponse {
-    gameID: String,
+    #[serde(rename(serialize = "gameID", deserialize = "game_id"))]
+    game_id: String,
     server: String,
     token: String,
 }
@@ -94,7 +95,7 @@ impl Component for Home {
             }
 
             Msg::SubmitCreateSuccess(result) => {
-                let id = result.gameID.clone();
+                let id = result.game_id.clone();
                 local_storage::set("timestampPH", result);
                 ctx.link().history().unwrap().push(Route::Lobby { id });
             }
@@ -103,7 +104,7 @@ impl Component for Home {
                 if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
                     let game_id = game.value();
                     let game_data = CreateResponse {
-                        gameID: game_id.clone(),
+                        game_id: game_id.clone(),
                         token: result.token,
                         server: result.server,
                     };
