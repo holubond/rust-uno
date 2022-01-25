@@ -23,7 +23,11 @@ impl Component for MyUser {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
 
-        let current_username = props.current_username.clone().unwrap();
+        let current_username = match props.current_username.clone() {
+            None => panic!("No value in MyUserProps.current_username"),
+            Some(x) => x,
+        };
+
         if current_username == props.username.clone() {
             return html! {
                 <div class="flex flex-col w-80 h-96 rounded-lg bg-yellow-300 shadow-md justify-center">
