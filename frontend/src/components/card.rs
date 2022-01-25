@@ -100,7 +100,7 @@ impl Component for Card {
             CardType::Wild => {
                 return html! {
                     { print_wild_card(
-                        props.card_info._type.card_type_text().clone(),
+                        props.card_info._type.card_type_text(),
                         ctx.link().clone()
                     )}
                 }
@@ -109,8 +109,8 @@ impl Component for Card {
             CardType::Value => {
                 return html! {
                     { print_card(
-                        props.card_info.color.clone(),
-                        props.card_info.value.unwrap().to_string().clone(),
+                        props.card_info.color,
+                        props.card_info.value.unwrap().to_string(),
                         ctx.link().clone()
                     )}
                 }
@@ -119,8 +119,8 @@ impl Component for Card {
             _ => {
                 return html! {
                     { print_card(
-                        props.card_info.color.clone(),
-                        props.card_info._type.card_type_text().clone(),
+                        props.card_info.color,
+                        props.card_info._type.card_type_text(),
                         ctx.link().clone()
                     )}
                 }
