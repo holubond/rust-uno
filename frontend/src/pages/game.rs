@@ -137,7 +137,7 @@ impl Component for Game {
                 log!("Start game sending");
                 ctx.link().send_future(async {
                     match submit_start_game(client, id, token).await {
-                        Ok(result) => Msg::SubmitSuccess,
+                        Ok(_) => Msg::SubmitSuccess,
                         _ => Msg::SubmitFailure,
                     }
                 });
