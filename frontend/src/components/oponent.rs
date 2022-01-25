@@ -3,12 +3,14 @@ use yew::html;
 use yew::prelude::*;
 
 pub struct Oponent;
+
 #[derive(Clone, PartialEq, Properties)]
 pub struct OponentProps {
     pub name: String,
     pub num: u32,
     pub current: bool,
 }
+
 impl Component for Oponent {
     type Message = ();
     type Properties = OponentProps;
@@ -47,13 +49,16 @@ impl Component for Oponent {
         };
     }
 }
+
 pub struct Oponents;
+
 #[derive(Clone, PartialEq, Properties)]
 pub struct OponentsProps {
     pub players: Vec<Player>,
     pub you: String,
     pub current: Option<String>,
 }
+
 impl Component for Oponents {
     type Message = ();
     type Properties = OponentsProps;
