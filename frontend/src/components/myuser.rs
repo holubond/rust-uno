@@ -1,6 +1,6 @@
 use crate::components::card::{Card, CardInfo};
-use yew::prelude::*;
 use yew::html;
+use yew::prelude::*;
 
 pub struct MyUser;
 #[derive(Clone, PartialEq, Properties)]

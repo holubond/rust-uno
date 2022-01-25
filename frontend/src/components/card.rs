@@ -76,7 +76,7 @@ impl CardInfo {
 
         match self.value {
             None => panic!("Attempting to access value of a card, that does not have any"),
-            Some(v) => v.to_string()
+            Some(v) => v.to_string(),
         }
     }
 }
@@ -116,9 +116,8 @@ impl Component for Card {
         print_card(
             &props.card_info.color,
             props.card_info.value_to_string(),
-            ctx.link().clone()
+            ctx.link().clone(),
         )
-
     }
 }
 
@@ -147,13 +146,13 @@ fn print_wild_card(value: String, link: Scope<Card>) -> Html {
     return html! {
         <div class="w-40 h-full flex flex-col bg-black rounded-lg shadow-md">
             <div class="h-1/3 w-full flex flex-row rounded-lg">
-                <div 
+                <div
                     class="h-full w-1/2 rounded-lg" style="background-color: red"
                     onclick={link.callback(|_: MouseEvent| { Msg::PlayWild(Color::Red) })}
                 >
                 </div>
 
-                <div 
+                <div
                     class="h-full w-1/2 rounded-lg" style="background-color: blue"
                     onclick={link.callback(|_: MouseEvent| { Msg::PlayWild(Color::Blue) })}
                 >
@@ -172,8 +171,8 @@ fn print_wild_card(value: String, link: Scope<Card>) -> Html {
                     onclick={link.callback(|_: MouseEvent| { Msg::PlayWild(Color::Yellow) })}
                 >
                 </div>
-                
-                <div 
+
+                <div
                     class="h-full w-1/2 rounded-lg" style="background-color: green"
                     onclick={link.callback(|_: MouseEvent| { Msg::PlayWild(Color::Green) })}
                 >
