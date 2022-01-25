@@ -1,15 +1,11 @@
 use std::sync::{Arc, Mutex};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
-use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
-use actix_web::http::header::Header;
 use crate::{AuthorizationRepo, InMemoryGameRepo};
 use crate::gamestate::game::GameStatus;
 use crate::cards::card::Card;
 use serde::Deserialize;
 use serde::Serialize;
 use crate::err::draw_cards::DrawCardsError;
-use crate::gamestate::player::Player;
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ErrorMessageResponse {
