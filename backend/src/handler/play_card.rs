@@ -73,7 +73,7 @@ pub async fn create_game(
     if game.status() != GameStatus::Running {
         return HttpResponse::Conflict().json(TypeMessageResponse{ type_of_error: "GAME_NOT_RUNNING".to_string(), message: "Game is not running".to_string() });
     }
-    return match game.play_card(username, card.clone(), Option::Some(new_color)) {
+    return match game.play_card(username, card.clone(), Option::Some(new_color),said_uno) {
         Err(PlayCardError::PlayerHasNoSuchCard(x)) =>
             HttpResponse::Conflict().json(TypeMessageResponse{ type_of_error: "CARD_NOT_IN_HAND".to_string(), message: PlayCardError::PlayerHasNoSuchCard(x).to_string()}),
         Err(PlayCardError::CardCannotBePlayed(x,y)) =>
@@ -84,6 +84,8 @@ pub async fn create_game(
             HttpResponse::NotFound().json(MessageResponse{ message: PlayCardError::PlayerExistError(x).to_string()}),
         Err(PlayCardError::CreateStatusError(x)) =>
             HttpResponse::InternalServerError().json(MessageResponse{ message: x.to_string() }),
+        Err(PlayCardError::SaidUnoWhenShouldNotHave) =>
+            HttpResponse::BadRequest().json(MessageResponse{ message: "Cannot say UNO".to_string()}),
         Ok(_) => HttpResponse::NoContent().finish(),
     }
 
