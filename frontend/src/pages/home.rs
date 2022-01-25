@@ -1,3 +1,4 @@
+use crate::util::alert::alert;
 use crate::util::local_storage;
 use crate::Route;
 use gloo_console::log;
@@ -117,10 +118,7 @@ impl Component for Home {
             }
             
             Msg::SubmitFailure(err_msg) => {
-                match web_sys::window().unwrap().alert_with_message(&err_msg) {
-                    Ok(_) => (),
-                    _ => log!("Alert failed to pop up!"),
-                };
+                alert(&err_msg);
                 log!("Got Err response sending create");
             }
         }
