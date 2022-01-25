@@ -56,6 +56,10 @@ impl Player {
         self.position != None
     }
 
+    pub fn should_say_uno(&self) -> bool {
+        self.cards.len() == 2
+    }
+
     pub fn position(&self) -> Option<usize> {
         self.position
     }
