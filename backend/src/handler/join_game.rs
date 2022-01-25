@@ -6,6 +6,7 @@ use local_ip_address::local_ip;
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
+use crate::ws::ws_message::WSMsg;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GameJoinData {
@@ -52,6 +53,8 @@ pub async fn join_game(
     game.add_player(body.name.clone());
 
     let jwt = authorization_repo.generate_jwt(&body.name, &gameID);
+
+    game.players().into_iter().map(|player|player.connection().send(WSMsg::status(game, player.name()).unwrap()));
 
     HttpResponse::Created().json(GameJoinResponse {
         server: address_repo.full_local_address(),
