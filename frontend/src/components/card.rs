@@ -69,7 +69,7 @@ pub struct CardInfo {
 }
 
 impl CardInfo {
-    fn value_to_string(&self) -> String {
+    pub fn value_to_string(&self) -> String {
         if self._type != CardType::Value {
             return self._type.card_type_text();
         }

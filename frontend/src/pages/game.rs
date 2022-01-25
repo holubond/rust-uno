@@ -300,12 +300,7 @@ impl Component for Game {
 
 fn print_discarded_card(card: CardInfo) -> Html {
     let use_color = card.color.to_str();
-    let mut print_value = String::new();
-    if card._type != CardType::Value {
-        print_value = card._type.card_type_text();
-    } else {
-        print_value = card.value.unwrap().to_string();
-    }
+    let print_value = card.value_to_string();
     return html! {
         <div class="w-full h-full flex flex-col rounded-lg shadow-md"
         style={format!("background-color: {}", use_color)}
