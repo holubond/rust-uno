@@ -97,37 +97,24 @@ impl Component for Card {
         let props = ctx.props().clone();
 
         match props.card_info._type {
-            CardType::Wild => {
-                return html! {
-                    { print_wild_card(
-                        props.card_info._type.card_type_text(),
-                        ctx.link().clone()
-                    )}
-                }
-            }
-
-            CardType::Value => {
-                return html! {
-                    { print_card(
-                        props.card_info.color,
-                        props.card_info.value.unwrap().to_string(),
-                        ctx.link().clone()
-                    )}
-                }
-            }
-
-            _ => {
-                return html! {
-                    { print_card(
-                        props.card_info.color,
-                        props.card_info._type.card_type_text(),
-                        ctx.link().clone()
-                    )}
-                }
-            }
+            CardType::Wild => 
+                print_wild_card(props.card_info._type.card_type_text(), ctx.link().clone()),                
+            CardType::Value =>
+                print_card(
+                    props.card_info.color,
+                    props.card_info.value.unwrap().to_string(),
+                    ctx.link().clone()
+                ),
+            _ => 
+                print_card(
+                    props.card_info.color,
+                    props.card_info._type.card_type_text(),
+                    ctx.link().clone()
+                )
         }
     }
 }
+
 fn print_card(color: Color, value: String, link: Scope<Card>) -> Html {
     return html! {
         <div class="w-40 h-full flex flex-col rounded-lg shadow-md"
@@ -146,6 +133,7 @@ fn print_card(color: Color, value: String, link: Scope<Card>) -> Html {
             </div>
     };
 }
+
 fn print_wild_card(value: String, link: Scope<Card>) -> Html {
     return html! {
         <div class="w-40 h-full flex flex-col bg-black rounded-lg shadow-md">
