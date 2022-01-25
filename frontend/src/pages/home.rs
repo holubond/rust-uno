@@ -15,15 +15,18 @@ pub struct CreateResponse {
     server: String,
     token: String,
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct JoinResponse {
     server: String,
     token: String,
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MessageResponse {
     message: String,
 }
+
 pub enum Msg {
     InputChanged,
     SubmitCreate,
@@ -219,6 +222,7 @@ impl Component for Home {
         };
     }
 }
+
 async fn send_create_game_request(
     client: Arc<Client>,
     name: String,
@@ -242,6 +246,7 @@ async fn send_create_game_request(
         _ => Err("Undefined error occurred.".to_string()),
     };
 }
+
 async fn send_join_game_request(
     client: Arc<Client>,
     name: String,
