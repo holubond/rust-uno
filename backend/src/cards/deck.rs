@@ -3,7 +3,7 @@ use crate::cards::card::{Card, CardColor, CardSymbol};
 use rand::seq::SliceRandom;
 use rand::Rng;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Deck {
     draw_pile: Vec<Card>,
     discard_pile: Vec<Card>,

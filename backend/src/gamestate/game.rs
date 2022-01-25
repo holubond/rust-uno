@@ -23,7 +23,7 @@ pub enum GameStatus {
     Finished,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Game {
     pub id: String,
     status: GameStatus,
