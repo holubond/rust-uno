@@ -18,7 +18,7 @@ impl InMemoryGameRepo {
         self.games.push(game);
     }
 
-    pub fn find_game_by_id(&mut self, game_id: &String) -> Option<&mut Game>{
+    pub fn find_game_by_id_mut(&mut self, game_id: &String) -> Option<&mut Game>{
         self.games.iter_mut().find(|game| &game.id == game_id)
     }
 }
