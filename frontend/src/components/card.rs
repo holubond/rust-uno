@@ -3,13 +3,14 @@ use serde::{Deserialize, Serialize};
 use yew::html;
 use yew::html::Scope;
 use yew::prelude::*;
+use crate::module::module::PlayCardRequest;
 
 pub struct Card;
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct CardProps {
     pub card_info: CardInfo,
-    pub card_on_click: Callback<CardInfo>,
+    pub card_on_click: Callback<PlayCardRequest>,
 }
 
 pub enum Msg {
@@ -64,6 +65,7 @@ impl CardType {
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct CardInfo {
     pub color: Color,
+    #[serde(rename(serialize = "type", deserialize = "type"))]
     pub _type: CardType,
     pub value: Option<u32>,
 }
@@ -94,13 +96,20 @@ impl Component for Card {
             Msg::PlayCard => {
                 log! {"msg fired"};
                 let props = ctx.props().clone();
-                props.card_on_click.emit(props.card_info);
+                props.card_on_click.emit(PlayCardRequest{
+                    card: props.card_info,
+                    new_color: None,
+                    said_uno: false
+                });
             }
             Msg::PlayWild(chosen_color) => {
                 log! {"wild card clicked"};
                 let mut props = ctx.props().clone();
-                props.card_info.color = chosen_color;
-                props.card_on_click.emit(props.card_info);
+                props.card_on_click.emit(PlayCardRequest{
+                    card: props.card_info,
+                    new_color: Some(chosen_color.to_str().to_string()),
+                    said_uno: false
+                });
             }
         }
         true

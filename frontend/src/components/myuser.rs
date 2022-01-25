@@ -1,6 +1,7 @@
 use crate::components::card::{Card, CardInfo};
 use yew::html;
 use yew::prelude::*;
+use crate::module::module::PlayCardRequest;
 
 pub struct MyUser;
 
@@ -9,7 +10,7 @@ pub struct MyUserProps {
     pub username: String,
     pub current_username: Option<String>,
     pub cards: Vec<CardInfo>,
-    pub card_on_click: Callback<CardInfo>,
+    pub card_on_click: Callback<PlayCardRequest>,
 }
 
 impl Component for MyUser {
@@ -43,7 +44,7 @@ impl Component for MyUser {
     }
 }
 
-fn player_board(username: String, cards: Vec<CardInfo>, card_on_click: Callback<CardInfo>) -> Html {
+fn player_board(username: String, cards: Vec<CardInfo>, card_on_click: Callback<PlayCardRequest>) -> Html {
     return html! {
         <>
             <div class="h-80 flex flex-row overflow-auto">
