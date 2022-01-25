@@ -15,7 +15,7 @@ impl Component for Oponent {
     type Message = ();
     type Properties = OponentProps;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
     fn view(&self, ctx: &Context<Self>) -> Html {
@@ -63,7 +63,7 @@ impl Component for Oponents {
     type Message = ();
     type Properties = OponentsProps;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
     fn view(&self, ctx: &Context<Self>) -> Html {
