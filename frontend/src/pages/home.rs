@@ -59,6 +59,7 @@ impl Component for Home {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::InputChanged => {}
+
             Msg::SubmitCreate => {
                 if let Some(input) = self.name_create.cast::<HtmlInputElement>() {
                     let name_create = input.value();
@@ -73,6 +74,7 @@ impl Component for Home {
                     return false;
                 }
             }
+
             Msg::SubmitJoin => {
                 if let Some(name) = self.name_join.cast::<HtmlInputElement>() {
                     if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
@@ -95,6 +97,7 @@ impl Component for Home {
                 local_storage::set("timestampPH", result);
                 ctx.link().history().unwrap().push(Route::Lobby { id });
             }
+
             Msg::SubmitJoinSuccess(result) => {
                 if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
                     let game_id = game.value();
@@ -112,6 +115,7 @@ impl Component for Home {
                         .push(Route::Lobby { id: game_id });
                 }
             }
+            
             Msg::SubmitFailure(err_msg) => {
                 match web_sys::window().unwrap().alert_with_message(&err_msg) {
                     Ok(_) => (),
