@@ -61,4 +61,8 @@ pub async fn create_game(
     if !authorization_repo.verify_jwt(username.clone(),game_id, claims) {
         return HttpResponse::Forbidden().json(ErrorMessageResponse {message:"Token does not prove client is the Author".to_string()});
     }
+
+    if body.said_uno { }
+
+    HttpResponse::NoContent()
 }
