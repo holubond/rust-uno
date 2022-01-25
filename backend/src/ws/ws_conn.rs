@@ -5,6 +5,7 @@ use actix_web_actors::ws;
 use super::{ws_actor::WSActor, ws_message::WSMsg};
 
 /// WebSocket connection to which it is possible to send messages
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct WSConn {
     addr: Addr<WSActor>,
 }
