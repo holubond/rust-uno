@@ -11,6 +11,7 @@ use std::sync::{Arc, Mutex};
 pub struct ErrorMessageResponse {
     message: String,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
     cards: Vec<Card>,
@@ -30,6 +31,7 @@ impl TypeOfError {
         }
     }
 }
+
 #[derive(Serialize)]
 pub struct MessageResponseType {
     #[serde(rename(serialize = "type", deserialize = "type"))]
