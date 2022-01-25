@@ -18,6 +18,12 @@ pub struct PlayCardData {
 pub struct MessageResponse {
     message: String,
 }
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TypeMessageResponse {
+    #[serde(rename(serialize = "type", deserialize = "type_of_error"))]
+    type_of_error: String,
+    message: String,
+}
 
 #[post("/game/{gameID}/playCard")]
 pub async fn create_game(
