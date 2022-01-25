@@ -80,14 +80,6 @@ pub async fn draw_card(
     };
     let username = authorization_repo.user_from_claims(&claims);
 
-    let player = match game.find_player(username.clone()) {
-        Some(player) => player,
-        _ => {
-            return HttpResponse::InternalServerError().json(ErrorMessageResponse {
-                message: "Game does not have player".to_string(),
-            })
-        }
-    };
     if !authorization_repo.verify_jwt(username.clone(), game_id, claims) {
         return HttpResponse::Forbidden().json(ErrorMessageResponse {
             message: "Token does not prove client is the Author".to_string(),
