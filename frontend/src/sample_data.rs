@@ -1,7 +1,28 @@
-use crate::{
-    components::card::{CardInfo, CardType, Color},
-    pages::game::Player,
-};
+use std::sync::Arc;
+use reqwest::Client;
+use crate::{components::card::{CardInfo, CardType, Color}, Game, pages::game::Player};
+use crate::pages::game::{GameState, GameStore};
+
+pub fn test_session(game: GameStore) -> Game{
+        Game {
+            client: Arc::new(Client::new()),
+            game,
+            status: GameState::Lobby,
+            author: "Were".to_string(),
+            you: "Were".to_string(),
+            cards: cards(),
+            players: players(),
+            current_player: Some("Holy".to_string()),
+            finished_players: None,
+            clockwise: true,
+            uno_bool: false,
+            discarted_card: CardInfo {
+                color: Color::Red,
+                _type: CardType::Value,
+                value: Some(3),
+            },
+        }
+}
 
 pub fn players() -> Vec<Player> {
     let players = vec![
