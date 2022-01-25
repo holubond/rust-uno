@@ -2,8 +2,8 @@ use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
 use crate::pages::game::GameState::Lobby;
-use crate::{sample_data, url};
 use crate::util::alert::alert;
+use crate::{sample_data, url};
 use futures::StreamExt;
 use gloo_console::log;
 use gloo_storage::Storage;
@@ -276,21 +276,21 @@ impl Component for Game {
 
                 <div class="w-screen flex flex-row justify-between">
                     <div>
-                        <input 
+                        <input
                             id="uno"
                             class="bg-gray-200 w-full py-2 px-4"
                             type="checkbox"
                             onchange={ctx.link().callback(|_| Msg::UnoChanged)}
                         />
-                        
+
                         <label for="uno">{"UNO!"}</label>
                     </div>
-                    
-                    <MyUser 
-                        username={self.you.clone()} 
-                        current_username={self.current_player.clone()} 
-                        cards={self.cards.clone()} 
-                        card_on_click={card_on_click} 
+
+                    <MyUser
+                        username={self.you.clone()}
+                        current_username={self.current_player.clone()}
+                        cards={self.cards.clone()}
+                        card_on_click={card_on_click}
                     />
                 </div>
             </main>
@@ -311,13 +311,13 @@ fn print_discarded_card(card: CardInfo) -> Html {
                     { format!("{}", print_value) }
                 </p>
             </div>
-        
+
             <div class="h-1/3 flex justify-center">
                 <p class="text-4xl text-center bg-gray-300 text-Black-500 font-bold">
                     { format!("{}", print_value) }
                 </p>
             </div>
-        
+
             <div class="h-1/3">
                 <p class="text-4xl text-right text-White-500 font-bold">
                     { format!{"{}", print_value} }
