@@ -40,6 +40,10 @@ impl AuthorizationRepo {
         is_author && is_user
     }
 
+    pub fn user_from_claims(&self, claims: &JWTClaims<JwtData>) -> String {
+        claims.custom.player_name.clone()
+    }
+
     pub fn parse_jwt(&self, request: HttpRequest) -> Result<Authorization<Bearer>, ParseError> {
         Authorization::<Bearer>::parse(&request)
     }

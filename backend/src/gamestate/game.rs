@@ -319,7 +319,7 @@ impl Game {
     pub fn play_card(
         &mut self,
         player_name: String,
-        card: &Card,
+        card: Card,
         maybe_new_color: Option<CardColor>,
     ) -> Result<(), PlayCardError> {
         self.can_player_play(player_name.clone(), &card)?;
