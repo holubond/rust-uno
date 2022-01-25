@@ -113,22 +113,12 @@ impl Component for Card {
             return print_wild_card(props.card_info.value_to_string(), ctx.link().clone());
         }
 
-        
+        print_card(
+            props.card_info.color.clone(),
+            props.card_info.value_to_string(),
+            ctx.link().clone()
+        )
 
-        match props.card_info._type {             
-            CardType::Value =>
-                print_card(
-                    props.card_info.color.clone(),
-                    props.card_info.value_to_string(),
-                    ctx.link().clone()
-                ),
-            _ => 
-                print_card(
-                    props.card_info.color.clone(),
-                    props.card_info.value_to_string(),
-                    ctx.link().clone()
-                )
-        }
     }
 }
 
