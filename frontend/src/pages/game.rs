@@ -2,7 +2,7 @@ use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
 use crate::pages::game::GameState::Lobby;
-use crate::sample_data;
+use crate::{sample_data, url};
 use crate::util::alert::alert;
 use futures::StreamExt;
 use gloo_console::log;
@@ -332,7 +332,7 @@ async fn submit_start_game(
     game_id: String,
     token: String,
 ) -> Result<(), &'static str> {
-    let url = format!("http://localhost:9000/game/{}/statusRunning", game_id);
+    let url = url::status_running(game_id);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
