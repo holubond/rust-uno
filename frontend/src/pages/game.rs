@@ -302,19 +302,28 @@ fn print_discarded_card(card: CardInfo) -> Html {
     let use_color = card.color.to_str();
     let print_value = card.value_to_string();
     return html! {
-        <div class="w-full h-full flex flex-col rounded-lg shadow-md"
-        style={format!("background-color: {}", use_color)}
+        <div
+            class="w-full h-full flex flex-col rounded-lg shadow-md"
+            style={format!("background-color: {}", use_color)}
         >
-                <div class="h-1/3">
-                    <p class="text-4xl text-left text-White-500 font-bold">{format!("{}",print_value.clone())}</p>
-                </div>
-                <div class="h-1/3 flex justify-center">
-                    <p class="text-4xl text-center bg-gray-300 text-Black-500 font-bold">{format!("{}",print_value.clone())}</p>
-                </div>
-                <div class="h-1/3">
-                    <p class="text-4xl text-right text-White-500 font-bold">{format!{"{}",print_value.clone()}}</p>
-                </div>
+            <div class="h-1/3">
+                <p class="text-4xl text-left text-White-500 font-bold">
+                    {format!("{}",print_value.clone())}
+                </p>
             </div>
+        
+            <div class="h-1/3 flex justify-center">
+                <p class="text-4xl text-center bg-gray-300 text-Black-500 font-bold">
+                    {format!("{}",print_value.clone())}
+                </p>
+            </div>
+        
+            <div class="h-1/3">
+                <p class="text-4xl text-right text-White-500 font-bold">
+                    {format!{"{}",print_value.clone()}}
+                </p>
+            </div>
+        </div>
     };
 }
 
