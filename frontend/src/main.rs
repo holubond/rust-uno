@@ -31,13 +31,15 @@ impl Component for App {
 
 #[derive(Debug, Clone, PartialEq, Routable)]
 pub enum Route {
+    #[at("/")]
+    HomePage,
+
     #[at("/game/:id")]
     Lobby { id: String },
+
     #[not_found]
     #[at("/404")]
     PageNotFound,
-    #[at("/")]
-    HomePage,
 }
 
 fn switch(routes: &Route) -> Html {
