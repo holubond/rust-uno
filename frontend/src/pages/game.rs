@@ -325,7 +325,7 @@ impl Component for Game {
     }
 }
 fn print_discarted_card(card: CardInfo) -> Html {
-    let use_color = card.color.use_color();
+    let use_color = card.color.to_str();
     let mut print_value = String::new();
     if card._type != CardType::Value {
         print_value = card._type.card_type_text();
@@ -394,7 +394,7 @@ async fn play_card_request(
     let mut request_body = HashMap::new();
     request_body.insert("card", serde_json::to_string(&card).unwrap());
     if new_color.is_some() {
-        request_body.insert("newColor", new_color.unwrap().use_color().to_uppercase());
+        request_body.insert("newColor", new_color.unwrap().to_str().to_uppercase());
     }
     request_body.insert("saidUno", said_uno.clone().to_string());
     let url = format!("http://localhost:9000/game/{}/playCard", game_id);

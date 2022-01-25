@@ -27,7 +27,7 @@ pub enum Color {
 }
 
 impl Color {
-    pub fn use_color(&self) -> &str {
+    pub fn to_str(&self) -> &str {
         match self {
             Color::Red => "red",
             Color::Yellow => "yellow",
@@ -125,7 +125,7 @@ impl Component for Card {
 fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
     return html! {
         <div class="w-40 h-full flex flex-col rounded-lg shadow-md"
-        style={format!("background-color: {}", color.use_color())}
+        style={format!("background-color: {}", color.to_str())}
         onclick={link.callback(|_: MouseEvent| { Msg::PlayCard })}
         >
                 <div class="h-1/3 w-40">
