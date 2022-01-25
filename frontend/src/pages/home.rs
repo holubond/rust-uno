@@ -1,12 +1,11 @@
 use crate::Route;
-use futures::future::err;
 use gloo_console::log;
-use gloo_storage::{LocalStorage, Storage};
+use gloo_storage::Storage;
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use web_sys::{HtmlInputElement, Window};
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
