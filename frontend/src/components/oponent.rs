@@ -23,13 +23,19 @@ impl Component for Oponent {
             return html! {
                 <div class="w-1/5 h-full flex flex-col rounded-lg bg-yellow-300 shadow-md">
                     <div>
-                        <p class="text-2xl text-center text-Black-500 font-bold">{format!("{}",ctx.props().name)}</p>
+                        <p class="text-2xl text-center text-Black-500 font-bold">
+                            {format!("{}", ctx.props().name)}
+                        </p>
                     </div>
+
                     <div>
                         <img class="h-full w-2/3" src="../resources/card_face_down.png" alt="card"/>
                     </div>
+
                     <div>
-                        <p class="text-xl text-center text-Black-500 font-bold">{format!{"number of cards: {}",ctx.props().num}}</p>
+                        <p class="text-xl text-center text-Black-500 font-bold">
+                            {format!{"number of cards: {}", ctx.props().num}}
+                        </p>
                     </div>
                 </div>
             };
@@ -37,13 +43,19 @@ impl Component for Oponent {
         return html! {
             <div class="w-1/5 h-full flex flex-col rounded-lg bg-red-100 shadow-md">
                 <div>
-                    <p class="text-2xl text-center text-Black-500 font-bold">{format!("{}",ctx.props().name)}</p>
+                    <p class="text-2xl text-center text-Black-500 font-bold">
+                        {format!("{}", ctx.props().name)}
+                    </p>
                 </div>
+
                 <div>
                     <img class="h-full w-2/3" src="../resources/card_face_down.png" alt="card"/>
                 </div>
+
                 <div>
-                    <p class="text-xl text-center text-Black-500 font-bold">{format!{"number of cards: {}",ctx.props().num}}</p>
+                    <p class="text-xl text-center text-Black-500 font-bold">
+                        {format!{"number of cards: {}", ctx.props().num}}
+                    </p>
                 </div>
             </div>
         };
