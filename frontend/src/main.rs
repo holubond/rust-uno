@@ -3,8 +3,8 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 mod components;
 mod pages;
-mod util;
 mod url;
+mod util;
 use crate::pages::game::Game;
 use crate::pages::home::Home;
 

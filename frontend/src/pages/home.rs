@@ -1,6 +1,6 @@
 use crate::util::alert::alert;
 use crate::util::local_storage;
-use crate::{Route, url};
+use crate::{url, Route};
 use gloo_console::log;
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -116,7 +116,7 @@ impl Component for Home {
                         .push(Route::Lobby { id: game_id });
                 }
             }
-            
+
             Msg::SubmitFailure(err_msg) => {
                 alert(&err_msg);
                 log!("Got Err response sending create");
@@ -142,7 +142,7 @@ impl Component for Home {
 
                     <div class="flex">
                         <div class="flex-1 text-center p-12 rounded-lg">
-                            <form 
+                            <form
                                 onsubmit={ctx.link().callback(|e: FocusEvent| { e.prevent_default(); Msg::SubmitCreate })}
                                 class="w-full max-w-sm"
                             >
@@ -155,7 +155,7 @@ impl Component for Home {
                                 </div>
 
                                 <div class="md:w-2/3">
-                                    <input 
+                                    <input
                                         id="name"
                                         class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
                                         type="text"
@@ -164,12 +164,12 @@ impl Component for Home {
                                         placeholder="Username"
                                     />
                                 </div>
-                                
-                                
+
+
                                 <div class="md:flex md:items-center">
                                     <div class="md:w-1/3">
                                     </div>
-                                    
+
                                     <div class="md:w-2/3">
                                         <button class="shadow bg-red-600 hover:bg-red-800 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
                                             {"Create game"}
@@ -204,7 +204,7 @@ impl Component for Home {
                                         <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="text">
                                             {"Game ID"}
                                         </label>
-                                        
+
                                         <p class="text-red-500 text-xs italic">{"If joining Game."}</p>
                                     </div>
 
@@ -246,11 +246,7 @@ async fn send_create_game_request(
 ) -> Result<CreateResponse, String> {
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
-    let response = client
-        .post(url::game())
-        .json(&request_body)
-        .send()
-        .await;
+    let response = client.post(url::game()).json(&request_body).send().await;
     let response = match response {
         Ok(x) => x,
         _ => return Err("Internal communication error.".to_string()),

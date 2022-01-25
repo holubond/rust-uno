@@ -13,4 +13,3 @@ pub fn player(game_id: String) -> String {
 fn route(endpoint: String) -> String {
     format!("{}://{}:{}{}", METHOD, HOST, PORT, endpoint)
 }
-
