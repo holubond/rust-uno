@@ -1,11 +1,24 @@
 use std::sync::{Arc, Mutex};
-use actix_web::{HttpResponse, Responder, web};
-use crate::{AddressRepo, InMemoryGameRepo};
+use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
+use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
+use actix_web::http::header::Header;
+use crate::{AuthorizationRepo, InMemoryGameRepo};
 use crate::gamestate::game::GameStatus;
+use crate::cards::card::Card;
+use serde::Deserialize;
+use serde::Serialize;
+use crate::err::draw_cards::DrawCardsError;
+use crate::gamestate::player::Player;
+
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MessageResponse {
+pub struct ErrorMessageResponse {
     message: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MessageResponse {
+    cards: Vec<Card>,
+    next: String,
 }
 
 pub enum TypeOfError {
@@ -13,42 +26,72 @@ pub enum TypeOfError {
     CANNOT_DRAW
 }
 
+impl TypeOfError {
+    fn into_response_string(&self) -> String{
+        match self {
+            TypeOfError::GAME_NOT_RUNNING => "GAME_NOT_RUNNING".to_string(),
+            TypeOfError::CANNOT_DRAW => "CANNOT_DRAW".to_string()
+        }
+    }
+}
+#[derive(Serialize)]
 pub struct MessageResponseType {
-    type_of_error: TypeOfError,
+    type_of_error: String,
     message: String,
 }
 
 #[post("/game/{gameID}/drawnCards")]
-pub async fn create_game(
+pub async fn draw_card(
     game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    address_repo: web::Data<Arc<AddressRepo>>,
+    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
+    request: HttpRequest,
     params: web::Path<String>
 ) -> impl Responder {
-    let gameID = params.into_inner();
+    let game_id = params.into_inner();
 
-    let game = match game_repo.lock().unwrap().find_game_by_id(gameID.clone()).clone() {
-        Some(game) => game.clone(),
-        _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
+    let mut game_repo = game_repo.lock().unwrap();
+
+    let game = match game_repo.find_game_by_id(&game_id) {
+        Some(game) => game,
+        _=> return HttpResponse::NotFound().json(ErrorMessageResponse {message:"Game not found".to_string()})
     };
 
     let jwt = authorization_repo.parse_jwt(request);
 
     let jwt = match jwt {
         Ok(jwt) => jwt.to_string(),
-        _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"No auth token provided by the client".to_string()})
+        _ => return HttpResponse::Unauthorized().json(ErrorMessageResponse {message:"No auth token provided by the client".to_string()})
     };
 
-    let author_name = game.find_author().unwrap().clone().name();
-    if !authorization_repo.verify_jwt(author_name,gameID, jwt) {
-        return HttpResponse::Forbidden().json(MessageResponse {message:"Token does not prove client is the Author".to_string()});
+    let claims = match authorization_repo.valid_jwt(&jwt)  {
+        Ok(claims) => claims,
+        _ => return HttpResponse::Unauthorized().json(ErrorMessageResponse {message:"Token is not valid".to_string()})
+    };
+    let username = authorization_repo.user_from_claims(&claims);
+
+    let player = match game.find_player(username.clone()) {
+        Some(player) => player,
+        _ => return HttpResponse::InternalServerError().json(ErrorMessageResponse{message: "Game does not have player".to_string()})
+    };
+    if !authorization_repo.verify_jwt(username.clone(),game_id, claims) {
+        return HttpResponse::Forbidden().json(ErrorMessageResponse {message:"Token does not prove client is the Author".to_string()});
     }
 
     if game.status() != GameStatus::Running {
-        return HttpResponse::Conflict().json(MessageResponseType { type_of_error: TypeOfError::GAME_NOT_RUNNING, message:"Game is not running ".to_string()});
+        return HttpResponse::Conflict().json(MessageResponseType { type_of_error: TypeOfError::GAME_NOT_RUNNING.into_response_string(), message:"Game is not running ".to_string()});
     }
 
-    //TODO draw card
-
-    HttpResponse::NoContent().finish()
-
+    return match game.draw_cards(username.clone()) {
+        Ok(drawn_cards) => {
+            let next_player = match game.get_current_player() {
+                None => return HttpResponse::InternalServerError().json(ErrorMessageResponse{ message: "Current player not found".to_string()}),
+                Some(player) => player
+            };
+            HttpResponse::Ok().json(MessageResponse{ cards: drawn_cards, next: next_player.name() })
+        }
+        Err(DrawCardsError::PlayerCanPlayInstead)|Err(DrawCardsError::PlayerMustPlayInstead(_)) => {
+            HttpResponse::Ok().json(MessageResponseType{ type_of_error: TypeOfError::CANNOT_DRAW.into_response_string(), message: "Player has to play has to play card instead".to_string() })
+        }
+        _ => HttpResponse::InternalServerError().json(ErrorMessageResponse{ message: "Error occurred during draw card".to_string() })
+    }
 }
