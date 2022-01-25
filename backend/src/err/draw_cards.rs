@@ -21,7 +21,7 @@ impl Display for DrawCardsError {
         match self {
             PlayerTurnError(err) => write!(f, "{}", err),
             PlayerExistError(err) => write!(f, "{}", err),
-            PlayerCanPlayInstead => write!(f, "{}", "No need to draw, playing a card is possible"),
+            PlayerCanPlayInstead => write!(f, "No need to draw, playing a card is possible"),
             PlayerMustPlayInstead(top_card) => {
                 write!(f, "Cannot draw, must respond to the {}", top_card)
             }

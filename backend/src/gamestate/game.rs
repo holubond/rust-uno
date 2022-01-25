@@ -8,7 +8,7 @@ use crate::err::player_turn::PlayerTurnError;
 use crate::err::status::CreateStatusError;
 use crate::gamestate::active_cards::ActiveCards;
 use crate::gamestate::player::Player;
-use crate::gamestate::CARDS_DEALT_TO_PLAYERS;
+use crate::gamestate::{CARDS_DEALT_TO_PLAYERS, PENALTY_CARDS};
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
 use rand::seq::SliceRandom;
@@ -24,7 +24,7 @@ pub enum GameStatus {
     Finished,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Game {
     pub id: String,
     status: GameStatus,
@@ -41,7 +41,7 @@ impl Game {
         Game {
             id: nanoid!(10),
             status: GameStatus::Lobby,
-            players: vec![Player::new(author_name.clone(), true)],
+            players: vec![Player::new(author_name, true)],
             deck: Deck::new(),
             current_player: 0,
             active_cards: ActiveCards::new(),
@@ -169,7 +169,7 @@ impl Game {
             }
         }
 
-        return true;
+        true
     }
 
     pub fn reverse(&mut self) {
@@ -183,7 +183,7 @@ impl Game {
     /// Sends a personalized (==containing name) STATUS WSMessage to all players.
     pub fn status_message_all(&self) -> Result<(), CreateStatusError> {
         for player in self.players.iter() {
-            player.message(WSMsg::status(&self, player.name())?);
+            player.message(WSMsg::status(self, player.name())?);
         }
 
         Ok(())
@@ -192,6 +192,14 @@ impl Game {
     pub fn message_all(&self, msg: WSMsg) {
         for player in self.players.iter() {
             player.message(msg.clone());
+        }
+    }
+
+    pub fn message_all_but(&self, excluded_player_name: String, msg: WSMsg) {
+        for player in self.players.iter() {
+            if player.name() != excluded_player_name {
+                player.message(msg.clone());
+            }
         }
     }
 
@@ -212,12 +220,12 @@ impl Game {
 
     /// Returns reference to a player matching the provided name, Err if they do not exist.
     fn does_player_exist(&self, player_name: String) -> Result<&Player, PlayerExistError> {
-        let player = self.find_player(player_name.clone());
+        let maybe_player = self.find_player(player_name.clone());
 
-        if player.is_none() {
-            Err(PlayerExistError::NoSuchPlayer(player_name))
+        if let Some(player) = maybe_player {
+            Ok(player)
         } else {
-            Ok(player.unwrap())
+            Err(PlayerExistError::NoSuchPlayer(player_name))
         }
     }
 
@@ -237,19 +245,11 @@ impl Game {
 
     /// Performs immutable checks whether the player is eligible to draw a card.
     fn can_player_draw(&self, player_name: String) -> Result<(), DrawCardsError> {
-        let player = self.does_player_exist(player_name.clone())?;
+        let player = self.does_player_exist(player_name)?;
         self.is_player_at_turn(player)?;
 
         if player.cards().iter().any(|card| self.can_play_card(card)) {
             return Err(DrawCardsError::PlayerCanPlayInstead);
-        }
-
-        if self.active_cards.are_cards_active()
-            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
-        {
-            return Err(DrawCardsError::PlayerMustPlayInstead(
-                self.deck.top_discard_card().clone(),
-            ));
         }
 
         Ok(())
@@ -260,6 +260,15 @@ impl Game {
     /// Should get called whenever a player clicks the draw card pile.
     pub fn draw_cards(&mut self, player_name: String) -> Result<Vec<Card>, DrawCardsError> {
         self.can_player_draw(player_name.clone())?;
+
+        // Skip turn
+        if self.active_cards.are_cards_active()
+            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
+        {
+            self.end_turn();
+            self.active_cards.clear();
+            return Ok(vec![]);
+        }
 
         let draw_count = if self.active_cards.are_cards_active() {
             let count = self.active_cards.sum_active_draw_cards().expect(
@@ -273,15 +282,20 @@ impl Game {
         let drawn_cards = self.draw_n_cards(player_name.clone(), draw_count);
 
         self.end_turn();
-        self.message_all(WSMsg::draw(
-            player_name,
-            self.get_current_player().unwrap().name(),
-            draw_count,
-        ));
+        self.message_all_but(
+            player_name.clone(),
+            WSMsg::draw(
+                player_name,
+                self.get_current_player().unwrap().name(),
+                draw_count,
+            ),
+        );
 
         Ok(drawn_cards)
     }
 
+    /// Draws n cards from the deck and gives them to the named player.
+    /// Returns a clone of the cards drawn.
     fn draw_n_cards(&mut self, player_name: String, n: usize) -> Vec<Card> {
         let player = self
             .players
@@ -306,19 +320,28 @@ impl Game {
     }
 
     /// Performs immutable checks whether the player is eligible to play a card.
-    fn can_player_play(&self, player_name: String, card: &Card) -> Result<(), PlayCardError> {
-        let player = self.does_player_exist(player_name.clone())?;
+    fn can_player_play(
+        &self,
+        player_name: String,
+        card: &Card,
+        said_uno: bool,
+    ) -> Result<(), PlayCardError> {
+        let player = self.does_player_exist(player_name)?;
 
         self.is_player_at_turn(player)?;
 
+        if !player.should_say_uno() && said_uno {
+            return Err(PlayCardError::SaidUnoWhenShouldNotHave);
+        }
+
         if !self.can_play_card(card) {
-            Err(PlayCardError::CardCannotBePlayed(
+            return Err(PlayCardError::CardCannotBePlayed(
                 card.clone(),
                 self.deck.top_discard_card().clone(),
-            ))
-        } else {
-            Ok(())
+            ));
         }
+
+        Ok(())
     }
 
     pub fn play_card(
@@ -326,36 +349,44 @@ impl Game {
         player_name: String,
         card: Card,
         maybe_new_color: Option<CardColor>,
+        said_uno: bool,
     ) -> Result<(), PlayCardError> {
-        self.can_player_play(player_name.clone(), &card)?;
+        self.can_player_play(player_name.clone(), &card, said_uno)?;
 
         // required to be borrowed before mutable section
         let possible_position = self.get_finished_players().len();
-        let (played_card, player_finished) =
+        let (played_card, player_finished, should_say_uno) =
             self.mutate_player(&player_name, card, maybe_new_color, possible_position)?;
 
         self.handle_played_card(&played_card);
         self.deck.play(played_card.clone());
         self.end_turn();
-        self.play_card_messages(player_finished, player_name, played_card)?;
+        self.play_card_messages(
+            player_finished,
+            player_name,
+            played_card,
+            should_say_uno && !said_uno,
+        )?;
 
         Ok(())
     }
 
     fn mutate_player(
         &mut self,
-        player_name: &String,
+        player_name: &str,
         wanted_card: Card,
         maybe_new_color: Option<CardColor>,
         possible_position: usize,
-    ) -> Result<(Card, bool), PlayCardError> {
+    ) -> Result<(Card, bool, bool), PlayCardError> {
         let player = self
             .players
             .iter_mut()
             .find(|player| player.name() == *player_name)
             .unwrap();
 
+        let should_have_said_uno = player.should_say_uno(); // acquired before removing a card from players' hands
         let mut played_card = player.play_card_by_eq(wanted_card)?;
+
         if played_card.should_be_black() {
             if let Some(color) = maybe_new_color {
                 played_card = played_card.morph_black_card(color).unwrap();
@@ -367,7 +398,7 @@ impl Game {
             player.set_position(possible_position);
         }
 
-        Ok((played_card, player_finished))
+        Ok((played_card, player_finished, should_have_said_uno))
     }
 
     fn handle_played_card(&mut self, played_card: &Card) {
@@ -383,11 +414,13 @@ impl Game {
         }
     }
 
+    /// Assumes player_name is a valid player name, meaning that such a player exists.
     fn play_card_messages(
         &mut self,
         player_finished: bool,
         player_name: String,
         played_card: Card,
+        player_penalized: bool,
     ) -> Result<(), CreateStatusError> {
         let new_player_name = self.get_current_player().unwrap().name();
         self.message_all(WSMsg::play_card(
@@ -395,6 +428,17 @@ impl Game {
             new_player_name.clone(),
             played_card,
         ));
+
+        if player_penalized {
+            let gained_cards = self.draw_n_cards(player_name.clone(), PENALTY_CARDS);
+            self.message_all_but(
+                player_name.clone(),
+                WSMsg::gained_cards(player_name.clone(), gained_cards.len()),
+            );
+            self.find_player(player_name.clone())
+                .unwrap()
+                .message(WSMsg::penalty(player_name.clone(), gained_cards));
+        }
 
         if player_finished {
             self.message_all(WSMsg::finish(player_name.clone()));

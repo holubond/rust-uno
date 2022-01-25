@@ -3,7 +3,7 @@ use crate::cards::card::{Card, CardSymbol};
 static ALLOWED_ACTIVE_CARDS: [CardSymbol; 3] =
     [CardSymbol::Skip, CardSymbol::Draw2, CardSymbol::Draw4];
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(super) struct ActiveCards {
     active_cards: Vec<Card>,
 }

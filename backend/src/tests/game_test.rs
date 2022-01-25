@@ -108,7 +108,10 @@ fn test_draw_cards_draws() {
     let mut game = Game::new("Andy".into());
     game.deck
         .play(Card::new(CardColor::Blue, CardSymbol::Draw2).unwrap());
-    game.active_cards.push(game.deck.top_discard_card().clone());
+    assert!(game
+        .active_cards
+        .push(game.deck.top_discard_card().clone())
+        .is_ok());
 
     assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 2);
 
@@ -289,6 +292,7 @@ fn test_active_cards() {
     game.active_cards.clear();
     game.active_cards.push(red_plus_2.clone()).unwrap();
 
+    // different symbol
     assert!(game
         .active_cards
         .push(Card::new(Red, Skip).unwrap())
@@ -303,12 +307,20 @@ fn test_active_cards() {
         andy.give_card(blu_skip.clone());
         andy.give_card(green_skip.clone());
     }
+    assert_eq!(
+        game.find_player("Andy".into()).unwrap().cards(),
+        vec![blu_plus_2.clone(), blu_skip.clone(), green_skip.clone()]
+    );
     assert!(game
-        .play_card("Andy".into(), blu_skip.clone(), None)
+        .play_card("Andy".into(), blu_skip.clone(), None, false)
         .is_err()); // must respond to draw2
     assert!(game
-        .play_card("Andy".into(), blu_plus_2.clone(), None)
+        .play_card("Andy".into(), blu_plus_2.clone(), None, false)
         .is_ok());
+    assert_eq!(
+        game.find_player("Andy".into()).unwrap().cards(),
+        vec![blu_skip.clone(), green_skip.clone()]
+    );
     assert_eq!(game.active_cards.active_symbol().unwrap(), Draw2);
     assert_eq!(game.active_cards.sum_active_draw_cards(), Some(4)); // 2 from before + 2 from Andy
 
@@ -319,17 +331,31 @@ fn test_active_cards() {
     assert!(!game.active_cards.are_cards_active());
 
     assert!(game
-        .play_card("Andy".into(), blu_skip.clone(), None)
+        .play_card("Andy".into(), blu_skip.clone(), None, true)
         .is_ok());
+    assert_eq!(
+        game.find_player("Andy".into()).unwrap().cards(),
+        vec![green_skip.clone()]
+    );
+    assert_eq!(
+        game.deck.top_discard_card().symbol,
+        game.active_cards.active_symbol().unwrap()
+    );
     {
+        let game_before = game.clone();
         let andy = game.players.get_mut(0).unwrap();
-        assert!(andy.play_card_by_eq(blu_skip.clone()).is_err()); // card is no longer in Andy's hand
+        assert!(
+            andy.play_card_by_eq(blu_skip.clone()).is_err(),
+            "Before: \n{:?}\nAfter: \n{:?}",
+            game_before,
+            game.clone()
+        ); // card is no longer in Andy's hand
     }
     assert_eq!(game.active_cards.active_symbol(), Some(Skip));
     assert_eq!(game.active_cards.sum_active_draw_cards(), None);
 
     assert!(game
-        .play_card("Andy".into(), green_skip.clone(), None)
+        .play_card("Andy".into(), green_skip.clone(), None, false)
         .is_ok());
     assert_eq!(game.active_cards.active_symbol(), Some(Skip));
     assert_eq!(game.active_cards.sum_active_draw_cards(), None);
@@ -420,4 +446,118 @@ fn test_end_turn() {
     );
     game.players.get_mut(2).unwrap().set_position(6);
     assert!(!game.end_turn());
+}
+
+#[test]
+fn test_should_say_uno() {
+    let mut game = Game::new("Andy".into());
+    assert!(!game.find_player("Andy".into()).unwrap().should_say_uno()); // 0
+
+    game.draw_n_cards("Andy".into(), 1);
+    assert!(!game.find_player("Andy".into()).unwrap().should_say_uno()); // 1
+
+    game.draw_n_cards("Andy".into(), 1);
+    assert!(game.find_player("Andy".into()).unwrap().should_say_uno()); // 2
+
+    game.draw_n_cards("Andy".into(), 1);
+    assert!(!game.find_player("Andy".into()).unwrap().should_say_uno()); // 3...
+}
+
+#[test]
+fn test_say_uno() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new("Andy".into());
+    game.add_player("Bob".into());
+    game.add_player("Candace".into());
+    game.add_player("Danny".into());
+    let eight = Card::new(Blue, Value(8)).unwrap();
+    game.deck.play(eight.clone());
+
+    // didn't say uno and shouldn't have
+    game.players.get_mut(0).unwrap().give_card(eight.clone()); // should be playable
+    assert!(game
+        .play_card("Andy".into(), eight.clone(), None, false)
+        .is_ok());
+    assert!(game.players.get(0).unwrap().is_finished());
+    assert_eq!(game.players.get(0).unwrap().get_card_count(), 0); // should not receive penalty cards
+
+    // didn't say uno and should have
+    game.players.get_mut(1).unwrap().give_card(eight.clone());
+    game.players.get_mut(1).unwrap().give_card(eight.clone());
+    assert!(game
+        .play_card("Bob".into(), eight.clone(), None, false)
+        .is_ok());
+    assert!(!game.players.get(1).unwrap().is_finished());
+    assert_eq!(game.players.get(1).unwrap().get_card_count(), 3); // should receive penalty cards
+
+    // said uno and should have
+    game.players.get_mut(2).unwrap().give_card(eight.clone());
+    game.players.get_mut(2).unwrap().give_card(eight.clone());
+    assert!(game
+        .play_card("Candace".into(), eight.clone(), None, true)
+        .is_ok());
+    assert!(!game.players.get(2).unwrap().is_finished());
+    assert_eq!(game.players.get(2).unwrap().get_card_count(), 1); // should not receive penalty cards
+
+    // said uno and should have
+    game.players.get_mut(3).unwrap().give_card(eight.clone());
+    game.players.get_mut(3).unwrap().give_card(eight.clone());
+    game.players.get_mut(3).unwrap().give_card(eight.clone());
+    assert!(game
+        .play_card("Danny".into(), eight.clone(), None, true)
+        .is_err());
+    assert!(!game.players.get(3).unwrap().is_finished());
+    assert_eq!(game.players.get(3).unwrap().get_card_count(), 3); // cards should not change
+}
+
+#[test]
+fn test_skip() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new("Andy".into());
+    game.add_player("Bob".into());
+    game.add_player("Candace".into());
+
+    // give some starting cards to players to not trigger endgame
+    for player in game.players.iter_mut() {
+        player.give_card(Card::new(Blue, Value(1)).unwrap());
+        player.give_card(Card::new(Blue, Value(2)).unwrap());
+        player.give_card(Card::new(Blue, Value(3)).unwrap());
+    }
+
+    assert_eq!(game.players.get(0).unwrap().get_card_count(), 3);
+    assert_eq!(game.players.get(1).unwrap().get_card_count(), 3);
+
+    let skip = Card::new(Blue, Skip).unwrap();
+    game.deck.play(skip.clone());
+
+    // give skips that will be used
+    game.players.get_mut(0).unwrap().give_card(skip.clone());
+    game.players.get_mut(1).unwrap().give_card(skip.clone());
+    assert_eq!(game.players.get(0).unwrap().get_card_count(), 3 + 1);
+    assert_eq!(game.players.get(1).unwrap().get_card_count(), 3 + 1);
+
+    assert!(game
+        .play_card("Andy".into(), skip.clone(), None, false)
+        .is_ok());
+    assert_eq!(game.players.get(0).unwrap().get_card_count(), 3); // playing actually happened
+    assert!(game.active_cards.are_cards_active());
+    assert_eq!(game.active_cards.active_symbol().unwrap(), Skip);
+    assert_eq!(game.get_current_player().unwrap().name(), "Bob");
+
+    assert!(game
+        .play_card("Bob".into(), skip.clone(), None, false)
+        .is_ok());
+    assert!(game.active_cards.are_cards_active());
+    assert_eq!(game.active_cards.active_symbol().unwrap(), Skip);
+    assert_eq!(game.get_current_player().unwrap().name(), "Candace");
+
+    assert!(game.draw_cards("Candace".into()).is_ok());
+    assert_eq!(game.players.get(2).unwrap().get_card_count(), 3); // no drawing happened
+    assert!(game.active_cards.active_symbol().is_none());
+    assert!(!game.active_cards.are_cards_active());
+    assert_eq!(game.get_current_player().unwrap().name(), "Andy"); // candice gets skipped
 }
