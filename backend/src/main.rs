@@ -57,7 +57,7 @@ async fn main() -> anyhow::Result<()> {
             .service(ws_connect)
             .service(actix_files::Files::new("/", "./static").index_file("index.html"))
     })
-        .bind(format!("127.0.0.1:{}", port))?
+        .bind(format!("0.0.0.0:{}", port))?
         .run()
         .await?;
 
