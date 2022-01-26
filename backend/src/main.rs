@@ -7,7 +7,7 @@ use crate::repo::game_repo::InMemoryGameRepo;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use handler::{ws_connect::ws_connect, play_card::play_card};
-use std::{sync::{Arc, Mutex}};
+use std::{sync::{Arc, Mutex}, env};
 use actix_cors::Cors;
 use crate::repo::authorization_repo::AuthorizationRepo;
 
@@ -27,12 +27,16 @@ struct Opts {
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
-    let opts = Opts::parse();
-    let port = opts.port;
+    let port = match env::var("PORT") {
+        Ok(p) => p,
+        Err(_) => Opts::parse().port,
+    };
 
     let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new()));
     let address_repo = Arc::new(AddressRepo::new(port.clone()));
     let authorization_repo = Arc::new(AuthorizationRepo::new());
+
+    println!("Starting server on port {}", port);
 
     HttpServer::new(move || {
         let cors = Cors::default()
