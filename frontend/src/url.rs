@@ -1,6 +1,8 @@
 const METHOD: &str = "http";
 const HOST: &str = "localhost";
 const PORT: &str = "9000";
+const WSMETHOD: &str = "ws";
+const WSPORT: &str = "6000";
 
 pub fn game() -> String {
     route("/game".into())
@@ -24,4 +26,9 @@ pub fn play_card(game_id: String) -> String {
 
 fn route(endpoint: String) -> String {
     format!("{}://{}:{}{}", METHOD, HOST, PORT, endpoint)
+}
+
+pub fn game_ws(token: &String) -> String {
+    let endpoint = format!("/ws/token/{}", token);
+    format!("{}://{}:{}{}", WSMETHOD, HOST, WSPORT, endpoint)
 }

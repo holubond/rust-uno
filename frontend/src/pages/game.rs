@@ -1,6 +1,9 @@
 use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
+use crate::module::module::{CardConflictMessageResponse, MessageResponse, PlayCardRequest};
+use crate::sample_data::test_session;
+use crate::url::game_ws;
 use crate::util::alert::alert;
 use crate::{sample_data, url};
 use futures::StreamExt;
@@ -14,8 +17,6 @@ use std::sync::Arc;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
-use crate::module::module::{MessageResponse, CardConflictMessageResponse, PlayCardRequest};
-use crate::sample_data::test_session;
 
 pub enum Msg {
     UnoChanged,
@@ -44,7 +45,7 @@ pub struct Game {
 
 #[derive(Debug, Deserialize)]
 pub struct GameStore {
-    #[serde(rename="gameID")]
+    #[serde(rename = "gameID")]
     game_id: String,
     server: String,
     token: String,
@@ -81,8 +82,7 @@ impl Component for Game {
 
     fn create(_ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("timestampPH").unwrap();
-        let url = format!("ws://localhost:6000/ws/token/{}",game.token);
-        let ws = WebSocket::open(&url).unwrap();
+        let ws = WebSocket::open(&game_ws(&game.token)).unwrap();
         let (mut _write, mut read) = ws.split();
         spawn_local(async move {
             while let Some(msg) = read.next().await {
@@ -183,14 +183,14 @@ impl Component for Game {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        if self.status.eq(&GameState::Loading){
-            return html!{
+        if self.status.eq(&GameState::Loading) {
+            return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div>
                         <p>{"Waiting for server .... loading data ..."}</p>
                     </div>
                 </main>
-            }
+            };
         }
         let _props = ctx.props();
         let card_on_click = ctx.link().callback(|card: PlayCardRequest| {
@@ -201,7 +201,7 @@ impl Component for Game {
 
         // loby screen
         if self.status.eq(&GameState::Lobby) {
-            return html!{
+            return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
                         <div class="h-1/2">
@@ -232,9 +232,9 @@ impl Component for Game {
                         </div>
                     </div>
                 </main>
-            }
+            };
         }
-        
+
         /*
         //todo finish screen
         if self.status.eq(&GameState::Finished) {
@@ -339,12 +339,13 @@ async fn submit_start_game(
     };
     return match response.status() {
         StatusCode::NO_CONTENT => Ok(()),
-        StatusCode::UNAUTHORIZED|StatusCode::FORBIDDEN|StatusCode::NOT_FOUND|StatusCode::CONFLICT => {
-            match response.json::<MessageResponse>().await {
-                Ok(x) => Err(x.message.clone()),
-                _ => Err("Error: message from server had bad struct.".to_string()),
-            }
-        }
+        StatusCode::UNAUTHORIZED
+        | StatusCode::FORBIDDEN
+        | StatusCode::NOT_FOUND
+        | StatusCode::CONFLICT => match response.json::<MessageResponse>().await {
+            Ok(x) => Err(x.message.clone()),
+            _ => Err("Error: message from server had bad struct.".to_string()),
+        },
         _ => Err("Undefined error occurred.".to_string()),
     };
 }
@@ -366,18 +367,16 @@ async fn draw_card_request(
             Ok(x) => return Ok(x),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
-        StatusCode::UNAUTHORIZED|StatusCode::FORBIDDEN|StatusCode::NOT_FOUND => {
+        StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN | StatusCode::NOT_FOUND => {
             match response.json::<MessageResponse>().await {
                 Ok(x) => Err(x.message.clone()),
                 _ => Err("Error: message from server had bad struct.".to_string()),
             }
         }
-        StatusCode::CONFLICT => {
-            match response.json::<CardConflictMessageResponse>().await {
-                Ok(x) => Err(x.message.clone()),
-                _ => Err("Error: message from server had bad struct.".to_string()),
-            }
-        }
+        StatusCode::CONFLICT => match response.json::<CardConflictMessageResponse>().await {
+            Ok(x) => Err(x.message.clone()),
+            _ => Err("Error: message from server had bad struct.".to_string()),
+        },
         _ => Err("Undefined error occurred.".to_string()),
     };
 }
@@ -408,18 +407,17 @@ async fn play_card_request(
     };
     return match response.status() {
         StatusCode::NO_CONTENT => Ok(()),
-        StatusCode::BAD_REQUEST|StatusCode::UNAUTHORIZED|StatusCode::FORBIDDEN|StatusCode::NOT_FOUND => {
-            match response.json::<MessageResponse>().await {
-                Ok(x) => Err(x.message.clone()),
-                _ => Err("Error: message from server had bad struct.".to_string()),
-            }
-        }
-        StatusCode::CONFLICT => {
-            match response.json::<CardConflictMessageResponse>().await {
-                Ok(x) => Err(x.message.clone()),
-                _ => Err("Error: message from server had bad struct.".to_string()),
-            }
-        }
+        StatusCode::BAD_REQUEST
+        | StatusCode::UNAUTHORIZED
+        | StatusCode::FORBIDDEN
+        | StatusCode::NOT_FOUND => match response.json::<MessageResponse>().await {
+            Ok(x) => Err(x.message.clone()),
+            _ => Err("Error: message from server had bad struct.".to_string()),
+        },
+        StatusCode::CONFLICT => match response.json::<CardConflictMessageResponse>().await {
+            Ok(x) => Err(x.message.clone()),
+            _ => Err("Error: message from server had bad struct.".to_string()),
+        },
         _ => Err("Undefined error occurred.".to_string()),
     };
 }
