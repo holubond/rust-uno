@@ -47,6 +47,8 @@ pub struct RunningStatusWSMessage {
     players: Vec<RunningPlayer>,
     finished_players: Vec<String>,
     cards: Vec<Card>,
+    top_card: Card,
+    is_clockwise: bool,
 }
 
 impl RunningStatusWSMessage {
@@ -66,6 +68,8 @@ impl RunningStatusWSMessage {
                 None => vec![],
                 Some(player) => player.cards(),
             },
+            top_card: game.deck().top_discard_card().clone(),
+            is_clockwise: game.is_clockwise,
         })
     }
 
