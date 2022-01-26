@@ -197,18 +197,22 @@ impl Component for Game {
                 match msg {
                     Message::Text(text) => {
                         if text.contains("\"type\":\"STATUS\"") {
-                            log!("contains status");
-                            let lobby = serde_json::from_str::<LobbyStatus>(&text).unwrap();
-                            self.status = GameState::Lobby;
-                            self.author = lobby.author;
-                            self.you = lobby.you;
-                            self.players = vec![];
-                            lobby.players.iter().for_each(|p| {
-                                self.players.push(Player {
-                                    name: p.to_string(),
-                                    cards: 0,
-                                })
-                            });
+                            if text.contains("\"status\":\"LOBBY\"") {
+                                log!("contains status lobby");
+                                let lobby = serde_json::from_str::<LobbyStatus>(&text).unwrap();
+                                self.status = GameState::Lobby;
+                                self.author = lobby.author;
+                                self.you = lobby.you;
+                                self.players = vec![];
+                                lobby.players.iter().for_each(|p| {
+                                    self.players.push(Player {
+                                        name: p.to_string(),
+                                        cards: 0,
+                                    })
+                                });
+                            } else if text.contains("\"status\":\"RUNNING\"") {
+                                log!("contains status running");
+                            }
                         }
                     }
                     Message::Bytes(bytes) => (),
