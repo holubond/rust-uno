@@ -37,20 +37,20 @@ pub struct LobbyStatus {
 pub struct RunningStatus {
     #[serde(rename(serialize = "type", deserialize = "type"))]
     pub typee: String,
-    status: String,
-    author: String,
-    you: String, //jméno hráče, který žádal o status
+    pub status: String,
+    pub author: String,
+    pub you: String, //jméno hráče, který žádal o status
     #[serde(rename(serialize = "currentPlayer", deserialize = "currentPlayer"))]
-    current_player: String, //jméno hráče na tahu
-    players: Vec<Player>,
+    pub current_player: String, //jméno hráče na tahu
+    pub players: Vec<Player>,
     #[serde(rename(serialize = "finishedPlayers", deserialize = "finishedPlayers"))]
-    finished_players: Vec<String>, //hráči, kteří už se zbavili karet v pořadí, v jakém skončili
-    cards: Vec<CardInfo>,
+    pub finished_players: Vec<String>, //hráči, kteří už se zbavili karet v pořadí, v jakém skončili
+    pub cards: Vec<CardInfo>,
     #[serde(rename(serialize = "topCard", deserialize = "topCard"))]
-    top_card: CardInfo,
+    pub top_card: CardInfo,
     #[serde(rename(
         serialize = "isClockwiseDirection",
         deserialize = "isClockwiseDirection"
     ))]
-    is_clockwise_direction: bool,
+    pub is_clockwise_direction: bool,
 }
