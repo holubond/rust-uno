@@ -81,7 +81,7 @@ impl Component for Game {
     type Properties = Props;
 
     fn create(_ctx: &Context<Self>) -> Self {
-        let game: GameStore = gloo_storage::LocalStorage::get("timestampPH").unwrap();
+        let game: GameStore = gloo_storage::LocalStorage::get("lastGame").unwrap();
         let ws = WebSocket::open(&game_ws(&game.token)).unwrap();
         let (mut _write, mut read) = ws.split();
         spawn_local(async move {

@@ -2,7 +2,7 @@ const METHOD: &str = "http";
 const HOST: &str = "localhost";
 const PORT: &str = "9000";
 const WSMETHOD: &str = "ws";
-const WSPORT: &str = "6000";
+const WSPORT: &str = "9000";
 
 pub fn game() -> String {
     route("/game".into())

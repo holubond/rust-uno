@@ -100,4 +100,12 @@ impl AuthorizationRepo {
             Ok(data) => Ok((data.custom.game_id, data.custom.player_name)),
         }    
     }
+
+    pub fn extract_data_from_jwt(&self, jwt: String) -> Result<(GameID, PlayerName), HttpResponse> {
+
+        match self.key.verify_token::<JwtData>(&jwt, None) {
+            Err(_) => Err( HttpResponse::Unauthorized().json( ErrResp::new("Invalid JWT")) ),
+            Ok(data) => Ok((data.custom.game_id, data.custom.player_name)),
+        }
+    }
 }
