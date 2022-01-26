@@ -54,3 +54,43 @@ pub struct RunningStatus {
     ))]
     pub is_clockwise_direction: bool,
 }
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct PlayCard {
+    #[serde(rename(serialize = "type", deserialize = "type"))]
+    pub typee: String,
+    pub who: String,
+    pub next: String,
+    pub card: CardInfo,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DrawCard {
+    #[serde(rename(serialize = "type", deserialize = "type"))]
+    pub typee: String,
+    pub who: String,
+    pub next: String,
+    pub cards: u32,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Finish {
+    #[serde(rename(serialize = "type", deserialize = "type"))]
+    pub typee: String,
+    pub who: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Penalty {
+    #[serde(rename(serialize = "type", deserialize = "type"))]
+    pub typee: String,
+    pub cards: Vec<CardInfo>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct GainedCards {
+    #[serde(rename(serialize = "type", deserialize = "type"))]
+    pub typee: String,
+    pub who: String,
+    pub cards: u32,
+}
