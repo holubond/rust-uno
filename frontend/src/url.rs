@@ -33,7 +33,7 @@ pub fn play_card(game_id: String) -> String {
 
 fn route(endpoint: String) -> String {
     match env::var("PORT") {
-        Ok(heroku_port) => format!("{}://{}:{}{}", HEROKU_METHOD, HEROKU_HOST, HEROKU_PORT, endpoint),
+        Ok(heroku_port) => format!("{}://{}:{}{}", HEROKU_METHOD, HEROKU_HOST, heroku_port, endpoint),
         Err(_) => format!("{}://{}:{}{}", METHOD, HOST, PORT, endpoint),
     }
 }
@@ -41,7 +41,7 @@ fn route(endpoint: String) -> String {
 pub fn game_ws(token: &String) -> String {
     let endpoint = format!("/ws/token/{}", token);
     match env::var("PORT") {
-        Ok(heroku_port) => format!("{}://{}:{}{}", HEROKU_WSMETHOD, HEROKU_HOST, HEROKU_PORT, endpoint),
+        Ok(heroku_port) => format!("{}://{}:{}{}", HEROKU_WSMETHOD, HEROKU_HOST, heroku_port, endpoint),
         Err(_) => format!("{}://{}:{}{}", WSMETHOD, HOST, WSPORT, endpoint),
     }
 }
