@@ -94,7 +94,7 @@ pub struct FinishedStatusWSMessage {
     status: GameStatus,
     author: String,
     you: String,
-    finished_players: Vec<String>,
+    players: Vec<String>,
 }
 
 impl FinishedStatusWSMessage {

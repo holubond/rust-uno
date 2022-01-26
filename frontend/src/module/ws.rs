@@ -3,36 +3,53 @@ use crate::module::module::{
 };
 use crate::pages::game::{GameState, Player};
 use crate::Game;
+use web_sys::alert;
 
 pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
     if msg.contains("\"type\":\"STATUS\"") {
         if msg.contains("\"status\":\"LOBBY\"") {
-            let lobby = serde_json::from_str::<LobbyStatus>(&msg).unwrap();
-            handle_lobby(game, lobby);
+            match serde_json::from_str::<LobbyStatus>(&msg) {
+                Ok(x) => handle_lobby(game, x),
+                Err(_) => (),
+            };
         } else if msg.contains("\"status\":\"RUNNING\"") {
-            let running = serde_json::from_str::<RunningStatus>(&msg).unwrap();
-            handle_running(game, running);
+            match serde_json::from_str::<RunningStatus>(&msg) {
+                Ok(x) => handle_running(game, x),
+                Err(_) => (),
+            };
         } else if msg.contains("\"status\":\"FINISHED\"") {
-            let finished = serde_json::from_str::<LobbyStatus>(&msg).unwrap();
-            handle_lobby(game, finished);
+            match serde_json::from_str::<LobbyStatus>(&msg) {
+                Ok(x) => handle_lobby(game, x),
+                Err(_) => (),
+            };
         } else {
             return Err("Message from server has not valid struct".to_string());
         }
     } else if msg.contains("\"type\":\"PLAY CARD\"") {
-        let play_card = serde_json::from_str::<PlayCard>(&msg).unwrap();
-        handle_play_card(game, play_card);
+        match serde_json::from_str::<PlayCard>(&msg) {
+            Ok(x) => handle_play_card(game, x),
+            Err(_) => (),
+        };
     } else if msg.contains("\"type\":\"DRAW\"") {
-        let draw_card = serde_json::from_str::<DrawCard>(&msg).unwrap();
-        handle_draw_cards(game, draw_card);
+        match serde_json::from_str::<DrawCard>(&msg) {
+            Ok(x) => handle_draw_cards(game, x),
+            Err(_) => (),
+        };
     } else if msg.contains("\"type\":\"FINISH\"") {
-        let finish = serde_json::from_str::<Finish>(&msg).unwrap();
-        handle_finish(game, finish);
+        match serde_json::from_str::<Finish>(&msg) {
+            Ok(x) => handle_finish(game, x),
+            Err(_) => (),
+        };
     } else if msg.contains("\"type\":\"PENALTY\"") {
-        let penalty = serde_json::from_str::<Penalty>(&msg).unwrap();
-        handle_penalty(game, penalty);
+        match serde_json::from_str::<Penalty>(&msg) {
+            Ok(x) => handle_penalty(game, x),
+            Err(_) => (),
+        };
     } else if msg.contains("\"type\":\"GAINED CARDS\"") {
-        let gained = serde_json::from_str::<GainedCards>(&msg).unwrap();
-        handle_gained_cards(game, gained);
+        match serde_json::from_str::<GainedCards>(&msg) {
+            Ok(x) => handle_gained_cards(game, x),
+            Err(_) => (),
+        };
     } else {
         return Err("Message from server has not valid struct".to_string());
     }
