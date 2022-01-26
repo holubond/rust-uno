@@ -1,7 +1,8 @@
 use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
-use crate::module::module::{CardConflictMessageResponse, LobbyStatus, MessageResponse, PlayCardRequest, RunningStatus};
+use crate::module::module::{CardConflictMessageResponse, MessageResponse, PlayCardRequest};
+use crate::module::ws::ws_msg_handler;
 use crate::sample_data::test_session;
 use crate::url::game_ws;
 use crate::util::alert::alert;
@@ -10,16 +11,13 @@ use futures::StreamExt;
 use gloo_console::log;
 use gloo_storage::Storage;
 use reqwasm::websocket::futures::WebSocket;
-use reqwasm::websocket::{Message, State};
+use reqwasm::websocket::Message;
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::HashMap;
 use std::sync::Arc;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
-use crate::module::ws::{handle_lobby, handle_running, ws_msg_handler};
 
 pub enum Msg {
     UnoChanged,
@@ -88,7 +86,7 @@ impl Component for Game {
         let game: GameStore = gloo_storage::LocalStorage::get("lastGame").unwrap();
         let link = ctx.link().clone();
         let mut ws = WebSocket::open(&game_ws(&game.token.clone())).unwrap();
-        let (mut write, mut read) = ws.split();
+        let (_write, mut read) = ws.split();
         let default_data = Self {
             client: Arc::new(Client::new()),
             game,
@@ -196,9 +194,9 @@ impl Component for Game {
             Msg::UpdateStatus(msg) => {
                 match msg {
                     Message::Text(text) => {
-                        match ws_msg_handler(self,text) {
+                        match ws_msg_handler(self, text) {
                             Ok(_) => (),
-                            Err(x) => alert(&x);
+                            Err(x) => alert(&x),
                         };
                     }
                     Message::Bytes(bytes) => (),
@@ -416,12 +414,7 @@ async fn play_card_request(
 ) -> Result<(), String> {
     card.said_uno = said_uno;
     let url = url::play_card(game_id);
-    let response = client
-        .post(url)
-        .json(&card)
-        .bearer_auth(token)
-        .send()
-        .await;
+    let response = client.post(url).json(&card).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
         _ => return Err("Server is not responding.".to_string()),
