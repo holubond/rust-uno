@@ -6,7 +6,7 @@ use crate::sample_data::test_session;
 use crate::url::game_ws;
 use crate::util::alert::alert;
 use crate::{sample_data, url};
-use futures::StreamExt;
+use futures::{SinkExt, StreamExt};
 use gloo_console::log;
 use gloo_storage::Storage;
 use reqwasm::websocket::futures::WebSocket;
@@ -14,6 +14,7 @@ use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+use reqwasm::websocket::{Message, State};
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
@@ -82,14 +83,16 @@ impl Component for Game {
 
     fn create(_ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("lastGame").unwrap();
-        let ws = WebSocket::open(&game_ws(&game.token)).unwrap();
-        let (mut _write, mut read) = ws.split();
+
+        let mut ws = WebSocket::open(&game_ws(&game.token)).unwrap();
+        let (mut write, mut read) = ws.split();
         spawn_local(async move {
             while let Some(msg) = read.next().await {
-                log!(format!("1. {:?}", msg))
+                log!(format!("got msg in ws: {:?}", msg))
             }
             log!("WebSocket Closed")
         });
+
         //test purposes data
         //test_session(game,)
 
