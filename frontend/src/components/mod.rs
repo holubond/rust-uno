@@ -1,1 +1,3 @@
-pub mod home;
+pub mod card;
+pub mod myuser;
+pub mod oponent;
