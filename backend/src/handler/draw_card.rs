@@ -81,11 +81,13 @@ pub async fn draw_card(
                 }
                 Some(player) => player,
             };
+
             HttpResponse::Ok().json(MessageResponse {
                 cards: drawn_cards,
                 next: next_player.name(),
             })
         }
+
         Err(DrawCardsError::PlayerCanPlayInstead)
         | Err(DrawCardsError::PlayerMustPlayInstead(_)) => {
             HttpResponse::Conflict().json(MessageResponseType {
