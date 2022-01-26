@@ -1,7 +1,7 @@
 use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
-use crate::module::module::{CardConflictMessageResponse, MessageResponse, PlayCardRequest};
+use crate::module::module::{CardConflictMessageResponse, LobbyStatus, MessageResponse, PlayCardRequest};
 use crate::sample_data::test_session;
 use crate::url::game_ws;
 use crate::util::alert::alert;
@@ -14,7 +14,8 @@ use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use reqwasm::websocket::{State};
+use reqwasm::websocket::{Message, State};
+use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
@@ -27,6 +28,7 @@ pub enum Msg {
     PlayCard(PlayCardRequest),
     DrawCard,
     DrawSuccess(DrawResponse),
+    UpdateStatus(Message),
 }
 
 pub struct Game {
@@ -60,7 +62,7 @@ pub enum GameState {
     Loading,
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct Player {
     pub name: String,
     pub cards: u32,
@@ -81,22 +83,12 @@ impl Component for Game {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(_ctx: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("lastGame").unwrap();
-
-        let mut ws = WebSocket::open(&game_ws(&game.token)).unwrap();
+        let link = ctx.link().clone();
+        let mut ws = WebSocket::open(&game_ws(&game.token.clone())).unwrap();
         let (mut write, mut read) = ws.split();
-        spawn_local(async move {
-            while let Some(msg) = read.next().await {
-                log!(format!("got msg in ws: {:?}", msg))
-            }
-            log!("WebSocket Closed")
-        });
-
-        //test purposes data
-        //test_session(game,)
-
-        Self {
+        let default_data = Self {
             client: Arc::new(Client::new()),
             game,
             status: GameState::Loading,
@@ -113,7 +105,24 @@ impl Component for Game {
                 _type: CardType::Value,
                 value: Some(1),
             },
-        }
+        };
+        spawn_local(async move {
+            while let Some(msg) = read.next().await {
+                match msg {
+                    Ok(x) => {
+                        link.send_message(Msg::UpdateStatus(x.clone()));
+                        log!(format!("got msg in ws: {:?}", x))
+                    },
+                    Err(_) => ()
+                }
+            }
+            log!("WebSocket Closed")
+        });
+
+        //test purposes data
+        //test_session(game,)
+
+        return default_data;
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -181,6 +190,24 @@ impl Component for Game {
                 alert(&err_msg);
                 log!("Got Err response sending create");
             }
+
+            Msg::UpdateStatus(msg) => {
+                match msg {
+                    Message::Text(text) => {
+                        if text.contains("\"type\":\"STATUS\"") {
+                            log!("contains status");
+                            let lobby = serde_json::from_str::<LobbyStatus>(&text).unwrap();
+                            self.status = GameState::Lobby;
+                            self.author = lobby.author;
+                            self.you = lobby.you;
+                            self.players = vec![];
+                            lobby.players.iter().for_each(|p| self.players.push(Player{ name: p.to_string(), cards: 0 }));
+                        }
+                    },
+                    Message::Bytes(bytes) => ()
+                }
+                log!("Updating status msg");
+            }
         }
         true
     }
@@ -204,12 +231,12 @@ impl Component for Game {
 
         // loby screen
         if self.status.eq(&GameState::Lobby) {
+
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
                         <div class="h-1/2">
                             <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
-                            //todo start button
                             {
                                 if self.author == self.you {
                                     html!{
@@ -223,7 +250,7 @@ impl Component for Game {
                                 }
                             }
                         </div>
-                        <div class="h-1/6">
+                        <div class="h-1/2">
                             <p class="text-xl font-bold text-center">{"Joined players:"}</p>
                             {
                                 self.players.iter().map(|x|{
