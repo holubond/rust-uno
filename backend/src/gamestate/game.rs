@@ -267,6 +267,14 @@ impl Game {
         {
             self.end_turn();
             self.active_cards.clear();
+            self.message_all_but(
+                player_name.clone(),
+                WSMsg::draw(
+                    player_name,
+                    self.get_current_player().unwrap().name(),
+                    0,
+                ),
+            );
             return Ok(vec![]);
         }
 

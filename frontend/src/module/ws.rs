@@ -65,6 +65,12 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
 }
 
 pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
+    match game.players.iter_mut().find(|x| x.name == new_data.who) {
+        Some(player) => {
+            player.cards -= 1;
+        }
+        None => (),
+    };
     game.current_player = Some(new_data.next);
     game.discarted_card = new_data.card;
 }
