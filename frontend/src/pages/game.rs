@@ -19,7 +19,7 @@ use std::sync::Arc;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
-use crate::module::ws::{handle_lobby, handle_running};
+use crate::module::ws::{handle_lobby, handle_running, ws_msg_handler};
 
 pub enum Msg {
     UnoChanged,
@@ -41,7 +41,7 @@ pub struct Game {
     pub(crate) cards: Vec<CardInfo>,
     pub(crate) players: Vec<Player>,
     pub(crate) current_player: Option<String>,
-    pub(crate) finished_players: Option<Vec<String>>,
+    pub(crate) finished_players: Vec<String>,
     pub(crate) clockwise: bool,
     pub(crate) uno_bool: bool,
     pub(crate) discarted_card: CardInfo, //todo discarted card
@@ -98,7 +98,7 @@ impl Component for Game {
             cards: vec![],
             players: vec![],
             current_player: None,
-            finished_players: None,
+            finished_players: vec![],
             clockwise: true,
             uno_bool: false,
             discarted_card: CardInfo {
@@ -196,21 +196,10 @@ impl Component for Game {
             Msg::UpdateStatus(msg) => {
                 match msg {
                     Message::Text(text) => {
-                        if text.contains("\"type\":\"STATUS\"") {
-                            if text.contains("\"status\":\"LOBBY\"") {
-                                log!("contains status lobby");
-                                let lobby = serde_json::from_str::<LobbyStatus>(&text).unwrap();
-                                handle_lobby(self,lobby);
-                            } else if text.contains("\"status\":\"RUNNING\"") {
-                                log!("contains status running");
-                                let running = serde_json::from_str::<RunningStatus>(&text).unwrap();
-                                handle_running(self,running);
-                            } else if text.contains("\"status\":\"FINISHED\"") {
-                                log!("contains status finished");
-                                let finished = serde_json::from_str::<LobbyStatus>(&text).unwrap();
-                                handle_lobby(self,finished);
-                            }
-                        }
+                        match ws_msg_handler(self,text) {
+                            Ok(_) => (),
+                            Err(x) => alert(&x);
+                        };
                     }
                     Message::Bytes(bytes) => (),
                 }
