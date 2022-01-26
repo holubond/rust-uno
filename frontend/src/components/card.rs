@@ -19,6 +19,7 @@ pub enum Msg {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all(serialize = "UPPERCASE", deserialize = "UPPERCASE"))]
 pub enum Color {
     Red,
     Yellow,
@@ -40,6 +41,7 @@ impl Color {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all(serialize = "UPPERCASE", deserialize = "UPPERCASE"))]
 pub enum CardType {
     Value,
     Skip,
