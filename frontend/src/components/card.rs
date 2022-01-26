@@ -105,7 +105,7 @@ impl Component for Card {
                 });
             }
             Msg::PlayWild(chosen_color) => {
-                log! {"wild card clicked"};
+                log! {"colored card clicked"};
                 let props = ctx.props().clone();
                 props.card_on_click.emit(PlayCardRequest {
                     card: props.card_info,
@@ -120,8 +120,8 @@ impl Component for Card {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
 
-        if props.card_info._type == CardType::Wild {
-            return print_wild_card(props.card_info.value_to_string(), ctx.link().clone());
+        if props.card_info._type == CardType::Wild || props.card_info._type == CardType::Draw4 {
+            return print_colorful_card(props.card_info.value_to_string(), ctx.link().clone());
         }
 
         print_card(
@@ -153,7 +153,7 @@ fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
     };
 }
 
-fn print_wild_card(value: String, link: Scope<Card>) -> Html {
+fn print_colorful_card(value: String, link: Scope<Card>) -> Html {
     return html! {
         <div class="w-40 h-full flex flex-col bg-black rounded-lg shadow-md">
             <div class="h-1/3 w-full flex flex-row rounded-lg">
