@@ -155,7 +155,8 @@ impl Component for Game {
                 let said_uno = self.uno_bool.clone();
                 log!("play game sending");
                 ctx.link().send_future(async move {
-                    match play_card_request(client, id, token, card.clone(), said_uno.clone()).await {
+                    match play_card_request(client, id, token, card.clone(), said_uno.clone()).await
+                    {
                         Ok(_) => Msg::PlaySubmitSuccess(card),
                         Err(err) => Msg::SubmitFailure(err),
                     }
@@ -187,7 +188,7 @@ impl Component for Game {
                 //todo render changes
             }
             Msg::PlaySubmitSuccess(card) => {
-                let index = self.cards.iter().position(|c| c==&card.card).unwrap();
+                let index = self.cards.iter().position(|c| c == &card.card).unwrap();
                 self.cards.remove(index);
             }
 
@@ -419,8 +420,8 @@ async fn play_card_request(
 ) -> Result<(), String> {
     card.said_uno = said_uno;
     match card.new_color {
-        Some(x) => card.new_color=Some(x.to_uppercase()),
-        None => ()
+        Some(x) => card.new_color = Some(x.to_uppercase()),
+        None => (),
     }
     let url = url::play_card(game_id);
     let response = client.post(url).json(&card).bearer_auth(token).send().await;
