@@ -3,7 +3,6 @@ use crate::module::module::{
 };
 use crate::pages::game::{GameState, Player};
 use crate::Game;
-use web_sys::alert;
 
 pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
     if msg.contains("\"type\":\"STATUS\"") {
