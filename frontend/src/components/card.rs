@@ -139,15 +139,15 @@ fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
             onclick={link.callback(|_: MouseEvent| { Msg::PlayCard })}
         >
             <div class="h-1/3 w-40">
-                <p class="text-6xl text-left text-White-500 font-bold">{format!("{}",value)}</p>
+                <p class="text-6xl text-left text-White-500 font-bold">{value.to_string()}</p>
             </div>
 
             <div class="h-1/3 w-40 flex justify-center">
-                <p class="text-6xl text-center bg-gray-300 text-Black-500 font-bold">{format!("{}",value)}</p>
+                <p class="text-6xl text-center bg-gray-300 text-Black-500 font-bold">{value.to_string()}</p>
             </div>
 
             <div class="h-1/3 w-40">
-                <p class="text-6xl text-right text-White-500 font-bold">{format!{"{}",value}}</p>
+                <p class="text-6xl text-right text-White-500 font-bold">{value.to_string()}</p>
             </div>
         </div>
     };
@@ -172,7 +172,7 @@ fn print_colorful_card(value: String, link: Scope<Card>) -> Html {
 
             <div class="h-1/3 w-40 flex justify-center">
                 <p class="text-5xl text-center bg-gray-300 text-Black-500 font-bold">
-                    {format!("{}",value)}
+                    {value.to_string()}
                 </p>
             </div>
 
