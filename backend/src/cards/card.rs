@@ -1,8 +1,12 @@
 use serde::ser::SerializeStruct;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer, de};
 use std::fmt::{Display, Formatter};
+use jwt_simple::reexports::serde::de::Error;
+use jwt_simple::reexports::serde::Deserializer;
+use serde::de::{Visitor, MapAccess, SeqAccess};
+use std::fmt;
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Card {
     pub color: CardColor,
     pub symbol: CardSymbol,
@@ -61,6 +65,131 @@ impl Serialize for Card {
         }?;
 
         state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for Card {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        enum Field { Color, Symbol, value }
+
+        // This part could also be generated independently by:
+        //
+        //    #[derive(Deserialize)]
+        //    #[serde(field_identifier, rename_all = "lowercase")]
+        //    enum Field { Secs, Nanos }
+        impl<'de> Deserialize<'de> for Field {
+            fn deserialize<D>(deserializer: D) -> Result<Field, D::Error>
+                where
+                    D: Deserializer<'de>,
+            {
+                struct FieldVisitor;
+
+                impl<'de> Visitor<'de> for FieldVisitor {
+                    type Value = Field;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                        formatter.write_str("`color` or `symbol` or `value`")
+                    }
+
+                    fn visit_str<E>(self, value: &str) -> Result<Field, E>
+                        where
+                            E: de::Error,
+                    {
+                        match value {
+                            "color" => Ok(Field::Color),
+                            "type" => Ok(Field::Symbol),
+                            "value" => Ok(Field::value),
+                            _ => Err(de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+
+                deserializer.deserialize_identifier(FieldVisitor)
+            }
+        }
+
+        struct CardVisitor;
+
+        impl<'de> Visitor<'de> for CardVisitor {
+            type Value = Card;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct Card")
+            }
+
+            fn visit_seq<V>(self, mut seq: V) -> Result<Card, V::Error>
+                where
+                    V: SeqAccess<'de>,
+            {
+                let color = seq.next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let symbol = seq.next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+
+                let symbol = if let Ok(maybe_value) = seq.next_element() {
+                    if let Some(value) = maybe_value {
+                        CardSymbol::Value(value)
+                    } else {
+                        symbol
+                    }
+                } else {
+                    symbol
+                };
+                // todo not unwrap
+                Ok(Card::new(color, symbol).unwrap())
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Card, V::Error>
+                where
+                    V: MapAccess<'de>,
+            {
+                let mut color = None;
+                let mut symbol = None;
+                let mut value = None;
+
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Color => {
+                            if color.is_some() {
+                                return Err(de::Error::duplicate_field("color"));
+                            }
+                            color = Some(map.next_value()?);
+                        }
+                        Field::Symbol => {
+                            if symbol.is_some() {
+                                return Err(de::Error::duplicate_field("symbol"));
+                            }
+                            symbol = Some(map.next_value()?);
+                        }
+                        Field::value => {
+                            if value.is_some() {
+                                return Err(de::Error::duplicate_field("value"));
+                            }
+                            let maybe_value = map.next_value()?;
+                            if let Some(i8_value) = maybe_value {
+                                value = Some(i8_value);
+                            }
+                        }
+                    }
+                }
+                let color = color.ok_or_else(|| de::Error::missing_field("color"))?;
+                let symbol = symbol.ok_or_else(|| de::Error::missing_field("symbol"))?;
+                let symbol = if let Some(value) = value {
+                    CardSymbol::Value(value)
+                } else {
+                    symbol
+                };
+
+                // todo not unwrap
+                Ok(Card::new(color, symbol).unwrap())
+            }
+        }
+
+        const FIELDS: &'static [&'static str] = &["color", "symbol"];
+        deserializer.deserialize_struct("Card", FIELDS, CardVisitor)
     }
 }
 
