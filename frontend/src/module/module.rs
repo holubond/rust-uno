@@ -49,8 +49,8 @@ pub struct RunningStatus {
     #[serde(rename(serialize = "topCard", deserialize = "topCard"))]
     pub top_card: CardInfo,
     #[serde(rename(
-        serialize = "isClockwiseDirection",
-        deserialize = "isClockwiseDirection"
+        serialize = "isClockwise",
+        deserialize = "isClockwise"
     ))]
     pub is_clockwise_direction: bool,
 }
