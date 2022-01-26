@@ -29,7 +29,7 @@ pub struct TypeMessageResponse {
 }
 
 #[post("/game/{gameID}/playCard")]
-pub async fn create_game(
+pub async fn play_card(
     game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
     authorization_repo: web::Data<Arc<AuthorizationRepo>>,
     body: web::Json<PlayCardData>,
