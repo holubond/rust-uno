@@ -107,7 +107,7 @@ impl FinishedStatusWSMessage {
             status: GameStatus::Finished,
             author: find_author_name(game)?,
             you: target_player_name,
-            finished_players: get_finished_player_names(game),
+            players: get_finished_player_names(game),
         })
     }
 }
