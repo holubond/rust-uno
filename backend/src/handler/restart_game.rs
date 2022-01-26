@@ -52,7 +52,7 @@ pub async fn start_game(
         return HttpResponse::Conflict().json(MessageResponse {message:"Game cannot be started ((re)start is available to games with status LOBBY or FINISHED".to_string()});
     }
 
-    //TODO start game
+    game.start();
 
     HttpResponse::NoContent().finish()
 }
