@@ -48,10 +48,7 @@ pub struct RunningStatus {
     pub cards: Vec<CardInfo>,
     #[serde(rename(serialize = "topCard", deserialize = "topCard"))]
     pub top_card: CardInfo,
-    #[serde(rename(
-        serialize = "isClockwise",
-        deserialize = "isClockwise"
-    ))]
+    #[serde(rename(serialize = "isClockwise", deserialize = "isClockwise"))]
     pub is_clockwise_direction: bool,
 }
 
