@@ -1,6 +1,6 @@
 use crate::components::card::CardInfo;
-use serde::{Deserialize, Serialize};
 use crate::pages::game::Player;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct PlayCardRequest {
@@ -29,8 +29,8 @@ pub struct LobbyStatus {
     pub typee: String,
     pub status: String,
     pub author: String,
-    pub you: String,      //jméno hráče, který žádal o status
-    pub players: Vec<String> //jména všech hráčů
+    pub you: String,          //jméno hráče, který žádal o status
+    pub players: Vec<String>, //jména všech hráčů
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -39,15 +39,18 @@ pub struct RunningStatus {
     pub typee: String,
     status: String,
     author: String,
-    you: String,           //jméno hráče, který žádal o status
+    you: String, //jméno hráče, který žádal o status
     #[serde(rename(serialize = "currentPlayer", deserialize = "currentPlayer"))]
     current_player: String, //jméno hráče na tahu
     players: Vec<Player>,
     #[serde(rename(serialize = "finishedPlayers", deserialize = "finishedPlayers"))]
-    finished_players: Vec<String>,  //hráči, kteří už se zbavili karet v pořadí, v jakém skončili
+    finished_players: Vec<String>, //hráči, kteří už se zbavili karet v pořadí, v jakém skončili
     cards: Vec<CardInfo>,
     #[serde(rename(serialize = "topCard", deserialize = "topCard"))]
     top_card: CardInfo,
-    #[serde(rename(serialize = "isClockwiseDirection", deserialize = "isClockwiseDirection"))]
-    is_clockwise_direction: bool
+    #[serde(rename(
+        serialize = "isClockwiseDirection",
+        deserialize = "isClockwiseDirection"
+    ))]
+    is_clockwise_direction: bool,
 }

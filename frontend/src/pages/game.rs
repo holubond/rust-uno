@@ -1,21 +1,23 @@
 use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
-use crate::module::module::{CardConflictMessageResponse, LobbyStatus, MessageResponse, PlayCardRequest};
+use crate::module::module::{
+    CardConflictMessageResponse, LobbyStatus, MessageResponse, PlayCardRequest,
+};
 use crate::sample_data::test_session;
 use crate::url::game_ws;
 use crate::util::alert::alert;
 use crate::{sample_data, url};
-use futures::{StreamExt};
+use futures::StreamExt;
 use gloo_console::log;
 use gloo_storage::Storage;
 use reqwasm::websocket::futures::WebSocket;
+use reqwasm::websocket::{Message, State};
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
-use reqwasm::websocket::{Message, State};
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
@@ -112,8 +114,8 @@ impl Component for Game {
                     Ok(x) => {
                         link.send_message(Msg::UpdateStatus(x.clone()));
                         log!(format!("got msg in ws: {:?}", x))
-                    },
-                    Err(_) => ()
+                    }
+                    Err(_) => (),
                 }
             }
             log!("WebSocket Closed")
@@ -201,10 +203,15 @@ impl Component for Game {
                             self.author = lobby.author;
                             self.you = lobby.you;
                             self.players = vec![];
-                            lobby.players.iter().for_each(|p| self.players.push(Player{ name: p.to_string(), cards: 0 }));
+                            lobby.players.iter().for_each(|p| {
+                                self.players.push(Player {
+                                    name: p.to_string(),
+                                    cards: 0,
+                                })
+                            });
                         }
-                    },
-                    Message::Bytes(bytes) => ()
+                    }
+                    Message::Bytes(bytes) => (),
                 }
                 log!("Updating status msg");
             }
@@ -231,7 +238,6 @@ impl Component for Game {
 
         // loby screen
         if self.status.eq(&GameState::Lobby) {
-
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
