@@ -1,3 +1,4 @@
+use crate::module::module::MessageResponse;
 use crate::util::alert::alert;
 use crate::util::local_storage;
 use crate::{url, Route};
@@ -9,9 +10,8 @@ use std::sync::Arc;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew_router::prelude::*;
-use crate::module::module::MessageResponse;
 
-#[derive(Deserialize,Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct CreateResponse {
     #[serde(rename(serialize = "gameID", deserialize = "gameID"))]
     game_id: String,
@@ -254,12 +254,10 @@ async fn send_create_game_request(
             Ok(x) => Ok(x),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
-        StatusCode::BAD_REQUEST => {
-            match response.json::<MessageResponse>().await {
-                Ok(x) => Err(x.message.clone()),
-                _ => Err("Error: message from server had bad struct.".to_string()),
-            }
-        }
+        StatusCode::BAD_REQUEST => match response.json::<MessageResponse>().await {
+            Ok(x) => Err(x.message.clone()),
+            _ => Err("Error: message from server had bad struct.".to_string()),
+        },
         _ => Err("Undefined error occurred.".to_string()),
     };
 }
