@@ -7,7 +7,7 @@ use crate::repo::game_repo::InMemoryGameRepo;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use handler::{ws_connect::ws_connect, play_card::play_card};
-use std::sync::{Arc, Mutex};
+use std::{sync::{Arc, Mutex}};
 use actix_cors::Cors;
 use crate::repo::authorization_repo::AuthorizationRepo;
 
@@ -51,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
             .service(join_game)
             .service(play_card)
             .service(ws_connect)
+            .service(actix_files::Files::new("/", "./static").index_file("index.html"))
     })
         .bind(format!("127.0.0.1:{}", port))?
         .run()
