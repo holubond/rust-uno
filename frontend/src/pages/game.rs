@@ -184,9 +184,7 @@ impl Component for Game {
                 self.current_player = Some(response.next);
             }
 
-            Msg::SubmitSuccess => {
-                //todo render changes
-            }
+            Msg::SubmitSuccess => {}
             Msg::PlaySubmitSuccess(card) => {
                 let index = self.cards.iter().position(|c| c == &card.card).unwrap();
                 self.cards.remove(index);
@@ -264,12 +262,39 @@ impl Component for Game {
                 </main>
             };
         }
-
-        /*
-        //todo finish screen
         if self.status.eq(&GameState::Finished) {
-            return html!{}
-        }*/
+            return html! {
+                <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
+                    <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
+                        <div class="h-1/2">
+                            <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
+                            {
+                                if self.author == self.you {
+                                    html!{
+                                        <button class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white m-8 w-16 h-16 border border-red-500 hover:border-transparent rounded"
+                                            onclick={ctx.link().callback(|_| { Msg::SubmitStart })}>
+                                            {"Restart game"}
+                                        </button>
+                                    }
+                                } else {
+                                    html!{}
+                                }
+                            }
+                        </div>
+                        <div class="h-1/2">
+                            <p class="text-xl font-bold text-center">{"Rankings:"}</p>
+                            {
+                                self.finished_players.iter().enumerate().map(|(x,y)|{
+                                    html!{
+                                        <p class="text-l font-bold text-center">{format!{"{}.{}",x,&y}}</p>
+                                    }
+                                }).collect::<Html>()
+                            }
+                        </div>
+                    </div>
+                </main>
+            };
+        }
         return html! {
             <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                 <div class="w-screen flex flex-row justify-between">
