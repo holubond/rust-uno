@@ -89,7 +89,10 @@ impl Player {
     }
 
     pub fn message(&self, msg: WSMsg) {
-        self.connection.as_ref().unwrap().send(msg)
+        match &self.connection {
+            Some(x) => self.connection.as_ref().unwrap().send(msg),
+            None => ()
+        }
     }
 
     pub fn set_connection(&mut self, connection: WSConn) {
