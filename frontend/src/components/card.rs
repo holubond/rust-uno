@@ -104,7 +104,7 @@ impl Component for Card {
             }
             Msg::PlayWild(chosen_color) => {
                 log! {"wild card clicked"};
-                let mut props = ctx.props().clone();
+                let props = ctx.props().clone();
                 props.card_on_click.emit(PlayCardRequest {
                     card: props.card_info,
                     new_color: Some(chosen_color.to_str().to_string()),

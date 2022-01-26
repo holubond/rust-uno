@@ -1,4 +1,4 @@
-use crate::components::card::{CardInfo, Color};
+use crate::components::card::{CardInfo};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
