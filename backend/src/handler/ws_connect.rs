@@ -24,9 +24,9 @@ pub async fn ws_connect(r: HttpRequest, stream: web::Payload, params: web::Path<
         _ => return Err(ErrorBadRequest("Token si empty"))
     };
 
-    let (author_name, game_id) = match authorization_repo.user_from_token(&jwt) {
-        Some((author_name, game_id)) => (author_name, game_id),
-        None => return Err(ErrorBadRequest("Token is invalid"))
+    let (author_name, game_id) = match authorization_repo.extract_data(&r) {
+        Ok((author_name, game_id)) => (author_name, game_id),
+        Err(_) => return Err(ErrorBadRequest("Token is invalid"))
     };
 
     let mut game_mut: &mut Game = match game_repo_mut.find_game_by_id_mut(&game_id) {

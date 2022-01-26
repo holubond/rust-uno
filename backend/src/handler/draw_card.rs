@@ -50,7 +50,7 @@ pub async fn draw_card(
         Ok(repo) => repo,
     };
 
-    let game = match game_repo.find_game_by_id(&game_id) {
+    let game = match game_repo.find_game_by_id_mut(&game_id) {
         Some(game) => game,
         _ => {
             return HttpResponse::NotFound().json( ErrResp::new("Game not found") )

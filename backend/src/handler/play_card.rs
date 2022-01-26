@@ -42,7 +42,7 @@ pub async fn play_card(
     let said_uno = body.said_uno;
     let mut game_repo = game_repo.lock().unwrap();
 
-    let game = match game_repo.find_game_by_id(&game_id) {
+    let game = match game_repo.find_game_by_id_mut(&game_id) {
         Some(game) => game,
         _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
     };

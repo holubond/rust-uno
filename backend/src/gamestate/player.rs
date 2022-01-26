@@ -91,4 +91,8 @@ impl Player {
     pub fn message(&self, msg: WSMsg) {
         self.connection.as_ref().unwrap().send(msg)
     }
+
+    pub fn set_connection(&mut self, connection: WSConn) {
+        self.connection = Option::Some(connection)
+    }
 }
