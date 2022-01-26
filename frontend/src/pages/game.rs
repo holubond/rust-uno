@@ -1,9 +1,7 @@
 use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
-use crate::module::module::{
-    CardConflictMessageResponse, LobbyStatus, MessageResponse, PlayCardRequest,
-};
+use crate::module::module::{CardConflictMessageResponse, LobbyStatus, MessageResponse, PlayCardRequest, RunningStatus};
 use crate::sample_data::test_session;
 use crate::url::game_ws;
 use crate::util::alert::alert;
@@ -112,8 +110,9 @@ impl Component for Game {
             while let Some(msg) = read.next().await {
                 match msg {
                     Ok(x) => {
+                        log!(format!("got msg in ws: {:?}", x));
                         link.send_message(Msg::UpdateStatus(x.clone()));
-                        log!(format!("got msg in ws: {:?}", x))
+                        ()
                     }
                     Err(_) => (),
                 }
@@ -212,6 +211,15 @@ impl Component for Game {
                                 });
                             } else if text.contains("\"status\":\"RUNNING\"") {
                                 log!("contains status running");
+                                let running = serde_json::from_str::<RunningStatus>(&text).unwrap();
+                                self.status = GameState::Running;
+                                self.author = running.author;
+                                self.you = running.you;
+                                self.current_player = Some(running.current_player);
+                                self.players = running.players;
+                                self.cards = running.cards;
+                                self.discarted_card = running.top_card;
+                                self.clockwise = running.is_clockwise_direction;
                             }
                         }
                     }
