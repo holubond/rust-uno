@@ -1,5 +1,5 @@
-use crate::cards::card::CardColor;
-use crate::cards::deck::{random_color, Deck};
+use crate::cards::card::{CardColor, Card};
+use crate::cards::deck::{random_color, Deck, insert_number_cards, insert_colored_symbol_cards, insert_black_symbol_cards};
 
 #[test]
 fn test_card_symbol_eq() {
@@ -47,4 +47,20 @@ fn test_switch_piles() {
         true
     }));
     assert_eq!(deck.top_discard_card(), &leftover_card);
+}
+
+#[test]
+fn test_ser_de() {
+    let mut draw_pile = Vec::new();
+    let mut transmuted_pile: Vec<Card> = Vec::new();
+
+    insert_number_cards(&mut draw_pile);
+    insert_colored_symbol_cards(&mut draw_pile);
+    insert_black_symbol_cards(&mut draw_pile);
+
+    for card in draw_pile.iter() {
+        transmuted_pile.push(serde_json::from_str(&serde_json::to_string(&card.clone()).unwrap()).unwrap())
+    }
+
+    assert_eq!(draw_pile, transmuted_pile);
 }
