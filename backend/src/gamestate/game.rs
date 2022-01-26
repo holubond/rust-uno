@@ -124,7 +124,8 @@ impl Game {
     }
 
     pub fn add_player(&mut self, name: String) {
-        self.players.push(Player::new(name, false))
+        self.players.push(Player::new(name, false));
+        self.status_message_all();
     }
 
     pub fn get_finished_players(&self) -> Vec<&Player> {
@@ -181,7 +182,7 @@ impl Game {
     }
 
     /// Sends a personalized (==containing name) STATUS WSMessage to all players.
-    pub fn status_message_all(&self) -> Result<(), CreateStatusError> {
+    fn status_message_all(&self) -> Result<(), CreateStatusError> {
         for player in self.players.iter() {
             player.message(WSMsg::status(self, player.name())?);
         }

@@ -67,8 +67,6 @@ pub async fn join_game(
 
     let jwt = authorization_repo.generate_jwt(player_name, &game_id);
 
-    game.status_message_all();
-
     HttpResponse::Created().json(GameJoinResponse {
         server: address_repo.full_local_address(),
         token: jwt,
