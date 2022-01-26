@@ -28,6 +28,7 @@ pub enum Msg {
     DrawCard,
     DrawSuccess(DrawResponse),
     UpdateStatus(Message),
+    PlaySubmitSuccess(PlayCardRequest),
 }
 
 pub struct Game {
@@ -152,10 +153,10 @@ impl Component for Game {
                 let id = self.game.game_id.clone();
                 let token = self.game.token.clone();
                 let said_uno = self.uno_bool.clone();
-                log!("Start game sending");
+                log!("play game sending");
                 ctx.link().send_future(async move {
-                    match play_card_request(client, id, token, card, said_uno.clone()).await {
-                        Ok(_) => Msg::SubmitSuccess,
+                    match play_card_request(client, id, token, card.clone(), said_uno.clone()).await {
+                        Ok(_) => Msg::PlaySubmitSuccess(card),
                         Err(err) => Msg::SubmitFailure(err),
                     }
                 });
@@ -184,6 +185,10 @@ impl Component for Game {
 
             Msg::SubmitSuccess => {
                 //todo render changes
+            }
+            Msg::PlaySubmitSuccess(card) => {
+                let index = self.cards.iter().position(|c| c==&card.card).unwrap();
+                self.cards.remove(index);
             }
 
             Msg::SubmitFailure(err_msg) => {
@@ -413,6 +418,10 @@ async fn play_card_request(
     said_uno: bool,
 ) -> Result<(), String> {
     card.said_uno = said_uno;
+    match card.new_color {
+        Some(x) => card.new_color=Some(x.to_uppercase()),
+        None => ()
+    }
     let url = url::play_card(game_id);
     let response = client.post(url).json(&card).bearer_auth(token).send().await;
     let response = match response {
