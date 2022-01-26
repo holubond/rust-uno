@@ -12,7 +12,7 @@ use crate::err::play_card::PlayCardError;
 pub struct PlayCardData {
     card: Card,
     #[serde(rename(serialize = "newColor", deserialize = "newColor"))]
-    new_color: CardColor,
+    new_color: Option<CardColor>,
     #[serde(rename(serialize = "saidUno", deserialize = "saidUno"))]
     said_uno: bool
 }
@@ -73,7 +73,7 @@ pub async fn play_card(
     if game.status() != GameStatus::Running {
         return HttpResponse::Conflict().json(TypeMessageResponse{ type_of_error: "GAME_NOT_RUNNING".to_string(), message: "Game is not running".to_string() });
     }
-    return match game.play_card(username, card.clone(), Option::Some(new_color),said_uno) {
+    return match game.play_card(username, card.clone(), new_color,said_uno) {
         Err(PlayCardError::PlayerHasNoSuchCard(x)) =>
             HttpResponse::Conflict().json(TypeMessageResponse{ type_of_error: "CARD_NOT_IN_HAND".to_string(), message: PlayCardError::PlayerHasNoSuchCard(x).to_string()}),
         Err(PlayCardError::CardCannotBePlayed(x,y)) =>
