@@ -4,7 +4,7 @@ target = "index.html"
 # Build in release mode.
 release = false
 # The output dir for all final assets.
-dist = "dist"
+dist = "../backend/static"
 
 [serve]
 # The address to serve on.
