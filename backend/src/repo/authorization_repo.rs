@@ -1,6 +1,6 @@
 use std::fmt::Error;
 use actix::fut::result;
-use actix_web::error::ParseError;
+use actix_web::{error::ParseError, HttpResponse};
 use actix_web::http::header::Header;
 use actix_web::HttpRequest;
 use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
@@ -15,6 +15,20 @@ pub struct JwtData {
     player_name: String,
     game_id: String,
 }
+
+#[derive(Serialize, Debug)]
+pub struct ErrResp<'a> {
+    message: &'a str,
+}
+
+impl<'a> ErrResp<'a> {
+    pub fn new(message: &'a str) -> Self {
+        Self { message }
+    }
+}
+
+type GameID = String;
+type PlayerName = String;
 
 impl AuthorizationRepo {
     pub fn new() -> AuthorizationRepo { Self { key: HS256Key::generate() } }
@@ -54,5 +68,36 @@ impl AuthorizationRepo {
             chars.next();
         }
         chars.as_str().to_string()
+    }
+
+    fn remove_bearer_prefix(&self, auth_bearer: String) -> Result<String, HttpResponse> {
+        let parts = auth_bearer.split_whitespace().collect::<Vec<&str>>();
+        
+        if parts.len() != 2 {
+            return Err( HttpResponse::Unauthorized().json( ErrResp::new("Invalid content of authorization header")) );
+        }
+
+        if parts[0] != "Bearer" {
+            return Err( HttpResponse::Unauthorized().json( ErrResp::new("Missing 'Bearer' prefix in authorization header")) );
+        }
+
+        Ok(parts[1].into())
+    }
+
+    // Extracts and returns (game_id, player_name) from a request
+    pub fn extract_data(&self, request: &HttpRequest) -> Result<(GameID, PlayerName), HttpResponse> {
+        let auth_bearer = match Authorization::<Bearer>::parse(request) {
+            Err(_) => return Err( HttpResponse::BadRequest().json(
+                ErrResp::new("Request could not be parsed properly to extract authorisation header content"))
+            ),
+            Ok(x) => x.to_string(),
+        };
+
+        let token = self.remove_bearer_prefix(auth_bearer)?;
+
+        match self.key.verify_token::<JwtData>(&token, None) {
+            Err(_) => Err( HttpResponse::Unauthorized().json( ErrResp::new("Invalid JWT")) ),
+            Ok(data) => Ok((data.custom.game_id, data.custom.player_name)),
+        }    
     }
 }

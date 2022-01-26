@@ -57,25 +57,13 @@ pub async fn draw_card(
         }
     };
 
-    let jwt = authorization_repo.parse_jwt(request);
-
-    let jwt = match jwt {
-        Ok(jwt) => jwt.to_string(),
-        _ => {
-            return HttpResponse::Unauthorized().json( ErrResp::new("No auth token provided by the client") )
-        }
+    let (game_id_from_token, player_name) = match authorization_repo.extract_data(&request) {
+        Err(response) => return response,
+        Ok(data) => data,
     };
 
-    let claims = match authorization_repo.valid_jwt(&jwt) {
-        Ok(claims) => claims,
-        _ => {
-            return HttpResponse::Unauthorized().json( ErrResp::new("Token is not valid") )
-        }
-    };
-    let username = authorization_repo.user_from_claims(&claims);
-
-    if !authorization_repo.verify_jwt(username.clone(), game_id, claims) {
-        return HttpResponse::Forbidden().json( ErrResp::new("Token does not prove client is the Author") );
+    if game_id != game_id_from_token {
+        return HttpResponse::Forbidden().json( ErrResp::new("Game id in the url does not match the one in JWT") )
     }
 
     if game.status() != GameStatus::Running {
@@ -85,7 +73,7 @@ pub async fn draw_card(
         });
     }
 
-    return match game.draw_cards(username.clone()) {
+    return match game.draw_cards(player_name.clone()) {
         Ok(drawn_cards) => {
             let next_player = match game.get_current_player() {
                 None => {
