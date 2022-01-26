@@ -19,6 +19,7 @@ use std::sync::Arc;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
+use crate::module::ws::{handle_lobby, handle_running};
 
 pub enum Msg {
     UnoChanged,
@@ -199,27 +200,15 @@ impl Component for Game {
                             if text.contains("\"status\":\"LOBBY\"") {
                                 log!("contains status lobby");
                                 let lobby = serde_json::from_str::<LobbyStatus>(&text).unwrap();
-                                self.status = GameState::Lobby;
-                                self.author = lobby.author;
-                                self.you = lobby.you;
-                                self.players = vec![];
-                                lobby.players.iter().for_each(|p| {
-                                    self.players.push(Player {
-                                        name: p.to_string(),
-                                        cards: 0,
-                                    })
-                                });
+                                handle_lobby(self,lobby);
                             } else if text.contains("\"status\":\"RUNNING\"") {
                                 log!("contains status running");
                                 let running = serde_json::from_str::<RunningStatus>(&text).unwrap();
-                                self.status = GameState::Running;
-                                self.author = running.author;
-                                self.you = running.you;
-                                self.current_player = Some(running.current_player);
-                                self.players = running.players;
-                                self.cards = running.cards;
-                                self.discarted_card = running.top_card;
-                                self.clockwise = running.is_clockwise_direction;
+                                handle_running(self,running);
+                            } else if text.contains("\"status\":\"FINISHED\"") {
+                                log!("contains status finished");
+                                let finished = serde_json::from_str::<LobbyStatus>(&text).unwrap();
+                                handle_lobby(self,finished);
                             }
                         }
                     }
@@ -433,19 +422,14 @@ async fn play_card_request(
     client: Arc<Client>,
     game_id: String,
     token: String,
-    card: PlayCardRequest,
+    mut card: PlayCardRequest,
     said_uno: bool,
 ) -> Result<(), String> {
-    let mut request_body = HashMap::new();
-    request_body.insert("card", serde_json::to_string(&card.card).unwrap());
-    if card.new_color.is_some() {
-        request_body.insert("newColor", card.new_color.unwrap().to_uppercase());
-    }
-    request_body.insert("saidUno", said_uno.clone().to_string());
+    card.said_uno = said_uno;
     let url = url::play_card(game_id);
     let response = client
         .post(url)
-        .json(&request_body)
+        .json(&card)
         .bearer_auth(token)
         .send()
         .await;
