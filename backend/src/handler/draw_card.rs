@@ -3,7 +3,7 @@ use crate::err::draw_cards::DrawCardsError;
 use crate::gamestate::game::GameStatus;
 use crate::handler::util::response::ErrResp;
 use crate::handler::util::safe_lock::safe_lock;
-use crate::{AuthorizationRepo, InMemoryGameRepo};
+use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
@@ -43,7 +43,7 @@ pub struct MessageResponseType {
 #[post("/game/{gameID}/drawnCards")]
 pub async fn draw_card(
     game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
+    authorization_repo: web::Data<Arc<AuthService>>,
     request: HttpRequest,
     params: web::Path<String>,
 ) -> impl Responder {

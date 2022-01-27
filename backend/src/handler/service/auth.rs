@@ -6,7 +6,7 @@ use actix_web::HttpRequest;
 use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use jwt_simple::prelude::*;
 
-pub struct AuthorizationRepo {
+pub struct AuthService {
     pub key: HS256Key
 }
 
@@ -42,8 +42,8 @@ impl GameID {
 
 type PlayerName = String;
 
-impl AuthorizationRepo {
-    pub fn new() -> AuthorizationRepo { Self { key: HS256Key::generate() } }
+impl AuthService {
+    pub fn new() -> AuthService { Self { key: HS256Key::generate() } }
 
     pub fn generate_jwt(&self, player_name: &String, game_id: &String) -> String {
         let jwt_data = JwtData {

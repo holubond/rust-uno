@@ -1,5 +1,5 @@
 use crate::gamestate::game::Game;
-use crate::handler::service::auth::AuthorizationRepo;
+use crate::handler::service::auth::AuthService;
 use crate::repo::address_repo::AddressRepo;
 use crate::InMemoryGameRepo;
 use actix_web::{post, web, HttpResponse, Responder};
@@ -27,7 +27,7 @@ pub struct GameCreateResponse {
 #[post("/game")]
 pub async fn create_game(
     game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
+    authorization_repo: web::Data<Arc<AuthService>>,
     address_repo: web::Data<Arc<AddressRepo>>,
     body: web::Json<GameCreateData>,
 ) -> impl Responder {

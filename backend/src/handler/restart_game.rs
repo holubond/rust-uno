@@ -1,5 +1,5 @@
 use crate::gamestate::game::GameStatus;
-use crate::{AuthorizationRepo, InMemoryGameRepo};
+use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use std::sync::{Arc, Mutex};
@@ -15,7 +15,7 @@ pub struct MessageResponse {
 #[post("game/{gameID}/statusRunning")]
 pub async fn start_game(
     game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
+    authorization_repo: web::Data<Arc<AuthService>>,
     request: HttpRequest,
     params: web::Path<String>,
 ) -> impl Responder {

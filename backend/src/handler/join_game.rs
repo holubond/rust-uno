@@ -1,5 +1,5 @@
 use crate::gamestate::game::GameStatus;
-use crate::{AddressRepo, AuthorizationRepo, InMemoryGameRepo};
+use crate::{AddressRepo, AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
@@ -27,7 +27,7 @@ pub async fn join_game(
     game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
     body: web::Json<GameJoinData>,
     address_repo: web::Data<Arc<AddressRepo>>,
-    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
+    authorization_repo: web::Data<Arc<AuthService>>,
     params: web::Path<String>,
 ) -> impl Responder {
     let game_id = params.into_inner();

@@ -1,4 +1,4 @@
-use crate::handler::service::auth::AuthorizationRepo;
+use crate::handler::service::auth::AuthService;
 use crate::handler::{create_game::create_game};
 use crate::handler::restart_game::start_game;
 use crate::handler::draw_card::draw_card;
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
 
     let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new()));
     let address_repo = Arc::new(AddressRepo::new(port.clone()));
-    let authorization_repo = Arc::new(AuthorizationRepo::new());
+    let authorization_repo = Arc::new(AuthService::new());
 
     println!("Starting server on port {}", port);
 
