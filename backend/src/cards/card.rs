@@ -1,8 +1,6 @@
 use serde::ser::SerializeStruct;
-use serde::{Deserialize, Serialize, Serializer, de};
+use serde::{Deserialize, Serialize, Serializer, Deserializer, de};
 use std::fmt::{Display, Formatter};
-use jwt_simple::reexports::serde::de::Error;
-use jwt_simple::reexports::serde::Deserializer;
 use serde::de::{Visitor, MapAccess, SeqAccess};
 use std::fmt;
 
