@@ -75,7 +75,7 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
     game.you = new_data.you;
     game.current_player = Some(new_data.current_player);
     let mut players = new_data.players;
-    let player_position = players.iter().position(|x|x.name.eq(&game.you)).unwrap();
+    let player_position = players.iter().position(|x| x.name.eq(&game.you)).unwrap();
     let mut right_side = players.split_off(player_position);
     right_side.pop();
     players.append(&mut right_side);
