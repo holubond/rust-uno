@@ -71,7 +71,7 @@ impl<'de> Deserialize<'de> for Card {
         where
             D: Deserializer<'de>,
     {
-        enum Field { Color, Symbol, value }
+        enum Field { Color, Symbol, Value }
 
         // This part could also be generated independently by:
         //
@@ -99,7 +99,7 @@ impl<'de> Deserialize<'de> for Card {
                         match value {
                             "color" => Ok(Field::Color),
                             "type" => Ok(Field::Symbol),
-                            "value" => Ok(Field::value),
+                            "value" => Ok(Field::Value),
                             _ => Err(de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -162,7 +162,7 @@ impl<'de> Deserialize<'de> for Card {
                             }
                             symbol = Some(map.next_value()?);
                         }
-                        Field::value => {
+                        Field::Value => {
                             if value.is_some() {
                                 return Err(de::Error::duplicate_field("value"));
                             }
