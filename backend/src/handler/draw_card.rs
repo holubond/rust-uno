@@ -55,10 +55,8 @@ pub async fn draw_card(
     };
 
     let game = match game_repo.find_game_by_id_mut(&game_id) {
+        None => return ErrResp::game_not_found(game_id),
         Some(game) => game,
-        _ => {
-            return HttpResponse::NotFound().json( ErrResp::new("Game not found") )
-        }
     };
 
     let (game_id_from_token, player_name) = match authorization_repo.extract_data(&request) {
