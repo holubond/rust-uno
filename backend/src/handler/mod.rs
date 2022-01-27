@@ -4,4 +4,6 @@ pub mod play_card;
 pub mod draw_card;
 pub mod restart_game;
 pub mod join_game;
+pub mod service;
+
 mod util;

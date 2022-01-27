@@ -97,7 +97,7 @@ impl AuthorizationRepo {
     }
 
     // Extracts and returns (game_id, player_name) from a request
-    pub fn extract_data(&self, request: &HttpRequest) -> Result<(GameID, PlayerName), HttpResponse> {
+    pub(in crate::handler) fn extract_data(&self, request: &HttpRequest) -> Result<(GameID, PlayerName), HttpResponse> {
         let auth_bearer = match Authorization::<Bearer>::parse(request) {
             Err(_) => return Err( HttpResponse::BadRequest().json(
                 ErrResp::new("Request could not be parsed properly to extract authorisation header content"))
