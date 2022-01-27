@@ -131,8 +131,11 @@ impl<'de> Deserialize<'de> for Card {
                 } else {
                     symbol
                 };
-                // todo not unwrap
-                Ok(Card::new(color, symbol).unwrap())
+
+                match Card::new(color, symbol) {
+                    Ok(card) => Ok(card),
+                    Err(msg) => Err(de::Error::custom(msg))
+                }
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Card, V::Error>
@@ -176,8 +179,10 @@ impl<'de> Deserialize<'de> for Card {
                     symbol
                 };
 
-                // todo not unwrap
-                Ok(Card::new(color, symbol).unwrap())
+                match Card::new(color, symbol) {
+                    Ok(card) => Ok(card),
+                    Err(msg) => Err(de::Error::custom(msg))
+                }
             }
         }
 
