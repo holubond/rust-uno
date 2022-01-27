@@ -18,6 +18,8 @@ pub struct MessageResponse {
 pub enum TypeOfError {
     GameNotRunning,
     CannotDraw,
+    NotYourTurn,
+    PlayerExist,
 }
 
 impl TypeOfError {
@@ -25,6 +27,8 @@ impl TypeOfError {
         match self {
             TypeOfError::GameNotRunning => "GAME_NOT_RUNNING".to_string(),
             TypeOfError::CannotDraw => "CANNOT_DRAW".to_string(),
+            TypeOfError::NotYourTurn => "NOT_YOUR_TURN".to_string(),
+            TypeOfError::PlayerExist => "PLAYER_DOES_NOT_EXIST".to_string(),
         }
     }
 }
@@ -66,12 +70,6 @@ pub async fn draw_card(
         return HttpResponse::Forbidden().json( ErrResp::new("Game id in the url does not match the one in JWT") )
     }
 
-    if game.status() != GameStatus::Running {
-        return HttpResponse::Conflict().json(MessageResponseType {
-            type_of_error: TypeOfError::GameNotRunning.into_response_string(),
-            message: "Game is not running ".to_string(),
-        });
-    }
 
     return match game.draw_cards(player_name.clone()) {
         Ok(drawn_cards) => {
@@ -87,14 +85,12 @@ pub async fn draw_card(
                 next: next_player.name(),
             })
         }
+        Err(DrawCardsError::PlayerTurnError(e)) => HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::NotYourTurn.into_response_string(), message: e.to_string() }),
+        Err(DrawCardsError::PlayerExistError(e)) => HttpResponse::BadRequest().json(ErrResp::new(&format!("{}",DrawCardsError::PlayerExistError(e)))),
 
-        Err(DrawCardsError::PlayerCanPlayInstead)
-        | Err(DrawCardsError::PlayerMustPlayInstead(_)) => {
-            HttpResponse::Conflict().json(MessageResponseType {
+        Err(DrawCardsError::PlayerCanPlayInstead) => HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::CannotDraw.into_response_string(), message: format!("{}",DrawCardsError::PlayerCanPlayInstead) }),
+        Err(DrawCardsError::PlayerMustPlayInstead(e)) => HttpResponse::Conflict().json(MessageResponseType {
                 type_of_error: TypeOfError::CannotDraw.into_response_string(),
-                message: "Player has to play has to play card instead".to_string(),
-            })
-        }
-        _ => HttpResponse::InternalServerError().json( ErrResp::new("Error occurred during draw card") ),
+                message: format!("{}",DrawCardsError::PlayerMustPlayInstead(e))}),
     };
 }
