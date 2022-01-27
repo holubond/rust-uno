@@ -1,3 +1,4 @@
+use crate::components::card::CardType;
 use crate::module::module::{
     DrawCard, Finish, GainedCards, LobbyStatus, Penalty, PlayCard, RunningStatus,
 };
@@ -87,6 +88,9 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
         }
         None => (),
     };
+    if new_data.card._type == CardType::Reverse {
+        game.clockwise = !game.clockwise;
+    }
     game.current_player = Some(new_data.next);
     game.discarted_card = new_data.card;
 }
