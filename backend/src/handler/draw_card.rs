@@ -53,21 +53,21 @@ pub async fn draw_card(
         Err(response) => return response,
         Ok(repo) => repo,
     };
-
-    let game = match game_repo.find_game_by_id_mut(&game_id) {
-        None => return ErrResp::game_not_found(game_id),
-        Some(game) => game,
-    };
-
+ 
     let (game_id_from_token, player_name) = match authorization_repo.extract_data(&request) {
         Err(response) => return response,
         Ok(data) => data,
     };
 
-    if game_id != game_id_from_token {
-        return HttpResponse::Forbidden().json( ErrResp::new("Game id in the url does not match the one in JWT") )
-    }
-
+    let game_id = match game_id_from_token.check(game_id) {
+        Err(response) => return response,
+        Ok(id) => id,
+    };
+    
+    let game = match game_repo.find_game_by_id_mut(&game_id) {
+        None => return ErrResp::game_not_found(game_id),
+        Some(game) => game,
+    };
 
     return match game.draw_cards(player_name.clone()) {
         Ok(drawn_cards) => {

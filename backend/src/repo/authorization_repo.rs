@@ -27,7 +27,19 @@ impl<'a> ErrResp<'a> {
     }
 }
 
-type GameID = String;
+pub struct GameID {
+    id: String
+}
+
+impl GameID {
+    pub fn check(self, game_id: String) -> Result<String, HttpResponse> {
+        if self.id != game_id {
+            return Err(HttpResponse::Forbidden().json( ErrResp::new("Game id in the url does not match the one in JWT") ));
+        }
+        Ok(self.id)
+    }
+}
+
 type PlayerName = String;
 
 impl AuthorizationRepo {
@@ -97,11 +109,11 @@ impl AuthorizationRepo {
 
         match self.key.verify_token::<JwtData>(&token, None) {
             Err(_) => Err( HttpResponse::Unauthorized().json( ErrResp::new("Invalid JWT")) ),
-            Ok(data) => Ok((data.custom.game_id, data.custom.player_name)),
+            Ok(data) => Ok((GameID{id: data.custom.game_id}, data.custom.player_name)),
         }    
     }
 
-    pub fn extract_data_from_jwt(&self, jwt: String) -> Result<(GameID, PlayerName), HttpResponse> {
+    pub fn extract_data_from_jwt(&self, jwt: String) -> Result<(String, PlayerName), HttpResponse> {
 
         match self.key.verify_token::<JwtData>(&jwt, None) {
             Err(_) => Err( HttpResponse::Unauthorized().json( ErrResp::new("Invalid JWT")) ),
