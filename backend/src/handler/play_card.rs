@@ -58,16 +58,8 @@ pub async fn play_card(
     };
     let username = authorization_repo.user_from_claims(&claims);
 
-    let player = match game.find_player(username.clone()) {
-        Some(player) => player,
-        _ => return HttpResponse::InternalServerError().json(MessageResponse{message: "Game does not have player".to_string()})
-    };
     if !authorization_repo.verify_jwt(username.clone(),game_id, claims) {
         return HttpResponse::Forbidden().json(MessageResponse {message:"Token does not prove client is the Author".to_string()});
-    }
-
-    if said_uno && player.get_card_count() > 1{
-        return HttpResponse::BadRequest().json(MessageResponse{message: "Cannot play UNO".to_string()})
     }
 
     if game.status() != GameStatus::Running {
