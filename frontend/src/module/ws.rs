@@ -44,7 +44,7 @@ pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
             Ok(x) => handle_penalty(game, x),
             Err(_) => (),
         };
-    } else if msg.contains("\"type\":\"GAINED CARDS\"") {
+    } else if msg.contains("\"type\":\"GAINED CARD\"") {
         match serde_json::from_str::<GainedCards>(&msg) {
             Ok(x) => handle_gained_cards(game, x),
             Err(_) => (),
