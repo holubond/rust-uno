@@ -15,7 +15,7 @@ impl ErrResp {
         HttpResponse::NotFound().json( Self{ msg: format!("Game with id '{}' not found", id)})
     }
 
-    pub fn game_id_url_neq_jwt() -> HttpResponse {
+    pub fn jwt_game_id_does_not_match() -> HttpResponse {
         HttpResponse::Forbidden().json( ErrResp::new("Game id in the url does not match the one in JWT") )
     }
 }

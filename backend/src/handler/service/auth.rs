@@ -6,6 +6,8 @@ use actix_web::HttpRequest;
 use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use jwt_simple::prelude::*;
 
+use crate::handler::util::response::ErrResp;
+
 pub struct AuthService {
     pub key: HS256Key
 }
@@ -17,11 +19,11 @@ pub struct JwtData {
 }
 
 #[derive(Serialize, Debug)]
-pub struct ErrResp<'a> {
+pub struct ErrRespLocal<'a> {
     message: &'a str,
 }
 
-impl<'a> ErrResp<'a> {
+impl<'a> ErrRespLocal<'a> {
     pub fn new(message: &'a str) -> Self {
         Self { message }
     }
@@ -34,7 +36,7 @@ pub struct GameID {
 impl GameID {
     pub fn check(self, game_id: String) -> Result<String, HttpResponse> {
         if self.id != game_id {
-            return Err(HttpResponse::Forbidden().json( ErrResp::new("Game id in the url does not match the one in JWT") ));
+            return Err(ErrResp::jwt_game_id_does_not_match());
         }
         Ok(self.id)
     }
@@ -86,11 +88,11 @@ impl AuthService {
         let parts = auth_bearer.split_whitespace().collect::<Vec<&str>>();
         
         if parts.len() != 2 {
-            return Err( HttpResponse::Unauthorized().json( ErrResp::new("Invalid content of authorization header")) );
+            return Err( HttpResponse::Unauthorized().json( ErrRespLocal::new("Invalid content of authorization header")) );
         }
 
         if parts[0] != "Bearer" {
-            return Err( HttpResponse::Unauthorized().json( ErrResp::new("Missing 'Bearer' prefix in authorization header")) );
+            return Err( HttpResponse::Unauthorized().json( ErrRespLocal::new("Missing 'Bearer' prefix in authorization header")) );
         }
 
         Ok(parts[1].into())
@@ -100,7 +102,7 @@ impl AuthService {
     pub(in crate::handler) fn extract_data(&self, request: &HttpRequest) -> Result<(GameID, PlayerName), HttpResponse> {
         let auth_bearer = match Authorization::<Bearer>::parse(request) {
             Err(_) => return Err( HttpResponse::BadRequest().json(
-                ErrResp::new("Request could not be parsed properly to extract authorisation header content"))
+                ErrRespLocal::new("Request could not be parsed properly to extract authorisation header content"))
             ),
             Ok(x) => x.to_string(),
         };
@@ -108,7 +110,7 @@ impl AuthService {
         let token = self.remove_bearer_prefix(auth_bearer)?;
 
         match self.key.verify_token::<JwtData>(&token, None) {
-            Err(_) => Err( HttpResponse::Unauthorized().json( ErrResp::new("Invalid JWT")) ),
+            Err(_) => Err( HttpResponse::Unauthorized().json( ErrRespLocal::new("Invalid JWT")) ),
             Ok(data) => Ok((GameID{id: data.custom.game_id}, data.custom.player_name)),
         }    
     }
@@ -116,7 +118,7 @@ impl AuthService {
     pub fn extract_data_from_jwt(&self, jwt: String) -> Result<(String, PlayerName), HttpResponse> {
 
         match self.key.verify_token::<JwtData>(&jwt, None) {
-            Err(_) => Err( HttpResponse::Unauthorized().json( ErrResp::new("Invalid JWT")) ),
+            Err(_) => Err( HttpResponse::Unauthorized().json( ErrRespLocal::new("Invalid JWT")) ),
             Ok(data) => Ok((data.custom.game_id, data.custom.player_name)),
         }
     }
