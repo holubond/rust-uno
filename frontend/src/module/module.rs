@@ -89,5 +89,5 @@ pub struct GainedCards {
     #[serde(rename(serialize = "type", deserialize = "type"))]
     pub typee: String,
     pub who: String,
-    pub cards: u32,
+    pub number: u32,
 }

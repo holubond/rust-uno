@@ -74,7 +74,12 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
     game.author = new_data.author;
     game.you = new_data.you;
     game.current_player = Some(new_data.current_player);
-    game.players = new_data.players;
+    let mut players = new_data.players;
+    let player_position = players.iter().position(|x|x.name.eq(&game.you)).unwrap();
+    let mut right_side = players.split_off(player_position);
+    right_side.pop();
+    players.append(&mut right_side);
+    game.players = players;
     game.finished_players = new_data.finished_players;
     game.cards = new_data.cards;
     game.discarted_card = new_data.top_card;
@@ -118,7 +123,7 @@ pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
 pub fn handle_gained_cards(game: &mut Game, new_data: GainedCards) {
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
-            player.cards += new_data.cards;
+            player.cards += new_data.number;
         }
         None => (),
     };
