@@ -73,11 +73,6 @@ impl<'de> Deserialize<'de> for Card {
     {
         enum Field { Color, Symbol, Value }
 
-        // This part could also be generated independently by:
-        //
-        //    #[derive(Deserialize)]
-        //    #[serde(field_identifier, rename_all = "lowercase")]
-        //    enum Field { Secs, Nanos }
         impl<'de> Deserialize<'de> for Field {
             fn deserialize<D>(deserializer: D) -> Result<Field, D::Error>
                 where
