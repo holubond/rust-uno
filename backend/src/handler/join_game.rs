@@ -7,12 +7,12 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Mutex;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct RequestBody {
     name: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct SuccessResponse {
     server: String,
     token: String,

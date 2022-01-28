@@ -4,11 +4,10 @@ use crate::handler::util::response::{ErrMsg, ErrResp, TypedErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse};
-use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Mutex;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct SuccessResponse {
     cards: Vec<Card>,
     next: String,

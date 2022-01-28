@@ -9,12 +9,12 @@ use std::sync::Mutex;
 
 use super::util::safe_lock::safe_lock;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct RequestBody {
     name: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct SuccessResponse {
     #[serde(rename(serialize = "gameID", deserialize = "gameID"))]
     game_id: String,
