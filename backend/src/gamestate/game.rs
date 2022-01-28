@@ -125,9 +125,9 @@ impl Game {
         &self.deck
     }
 
-    pub fn add_player(&mut self, name: String) {
+    pub fn add_player(&mut self, name: String) -> Result<(), CreateStatusError> {
         self.players.push(Player::new(name, false));
-        self.status_message_all();
+        self.status_message_all()
     }
 
     pub fn get_finished_players(&self) -> Vec<&Player> {
