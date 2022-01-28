@@ -19,7 +19,8 @@ pub struct GameCreateData {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GameCreateResponse {
-    gameID: String,
+    #[serde(rename(serialize = "gameID", deserialize = "gameID"))]
+    game_id: String,
     server: String,
     token: String,
 }
@@ -46,7 +47,7 @@ pub async fn create_game(
     game_repo.lock().unwrap().add_game(game);
 
     HttpResponse::Created().json(GameCreateResponse {
-        gameID: game_id,
+        game_id: game_id,
         server: address_repo.full_local_address(),
         token: jwt,
     })
