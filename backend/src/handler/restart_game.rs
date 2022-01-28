@@ -14,8 +14,8 @@ pub struct MessageResponse {
 
 #[post("game/{gameID}/statusRunning")]
 pub async fn start_game(
-    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthService>>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
+    authorization_repo: web::Data<AuthService>,
     request: HttpRequest,
     params: web::Path<String>,
 ) -> impl Responder {

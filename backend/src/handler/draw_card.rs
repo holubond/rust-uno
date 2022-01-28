@@ -6,7 +6,7 @@ use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse};
 use serde::Deserialize;
 use serde::Serialize;
-use std::sync::{Arc, Mutex};
+use std::sync::{Mutex};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
@@ -23,8 +23,8 @@ pub struct MessageResponseType {
 
 #[post("/game/{gameID}/drawnCards")]
 pub async fn draw_card(
-    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthService>>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
+    authorization_repo: web::Data<AuthService>,
     request: HttpRequest,
     params: web::Path<String>,
 ) -> HttpResponse {
@@ -37,8 +37,8 @@ pub async fn draw_card(
 
 fn draw_card_response(
     game_id: String,
-    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthService>>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
+    authorization_repo: web::Data<AuthService>,
     request: HttpRequest,
 ) -> Result<HttpResponse, HttpResponse> {
     let mut game_repo = safe_lock(&game_repo)?;

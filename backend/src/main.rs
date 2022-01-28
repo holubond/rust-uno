@@ -38,9 +38,9 @@ async fn main() -> anyhow::Result<()> {
         Err(_) => Opts::parse().port,
     };
 
-    let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new()));
-    let address_repo = Arc::new(AddressRepo::new(port.clone()));
-    let authorization_repo = Arc::new(AuthService::new());
+    let game_repo = web::Data::new(InMemoryGameRepo::new());
+    let address_repo = web::Data::new(AddressRepo::new(port.clone()));
+    let auth_service = web::Data::new(AuthService::new());
 
     println!("Starting server on port {}", port);
 
@@ -52,9 +52,9 @@ async fn main() -> anyhow::Result<()> {
             
         App::new()
             .wrap(cors)
-            .app_data(web::Data::new(game_repo.clone()))
-            .app_data(web::Data::new(address_repo.clone()))
-            .app_data(web::Data::new(authorization_repo.clone()))
+            .app_data(game_repo.clone())
+            .app_data(address_repo.clone())
+            .app_data(auth_service.clone())
             .service(create_game)
             .service(start_game)
             .service(draw_card)

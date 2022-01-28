@@ -26,9 +26,9 @@ pub struct GameCreateResponse {
 
 #[post("/game")]
 pub async fn create_game(
-    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthService>>,
-    address_repo: web::Data<Arc<AddressRepo>>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
+    authorization_repo: web::Data<AuthService>,
+    address_repo: web::Data<AddressRepo>,
     body: web::Json<GameCreateData>,
 ) -> impl Responder {
 

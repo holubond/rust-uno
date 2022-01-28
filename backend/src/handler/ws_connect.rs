@@ -14,7 +14,7 @@ use crate::gamestate::player::Player;
 use crate::ws::{ws_conn::WSConn, ws_message::WSMsg};
 
 #[get("/ws/token/{token}")]
-pub async fn ws_connect(r: HttpRequest, stream: web::Payload, params: web::Path<String>, game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>, authorization_repo: web::Data<Arc<AuthService>>,) -> Result<HttpResponse, Error> {
+pub async fn ws_connect(r: HttpRequest, stream: web::Payload, params: web::Path<String>, game_repo: web::Data<Mutex<InMemoryGameRepo>>, authorization_repo: web::Data<AuthService>,) -> Result<HttpResponse, Error> {
     let jwt = params.into_inner();
 
     let mut game_repo_mut = game_repo.lock().unwrap();
