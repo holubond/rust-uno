@@ -16,10 +16,10 @@ pub struct SuccessResponse {
 
 #[post("/game/{gameID}/drawnCards")]
 pub async fn draw_card(
-    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    auth_service: web::Data<AuthService>,
-    request: HttpRequest,
     params: web::Path<String>,
+    request: HttpRequest,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> HttpResponse {
     let game_id = params.into_inner();
     match draw_card_response(game_id, game_repo, auth_service, request) {

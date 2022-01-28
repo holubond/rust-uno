@@ -23,10 +23,10 @@ pub struct MessageResponse {
 
 #[post("/game/{gameID}/player")]
 pub async fn join_game(
-    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    auth_service: web::Data<AuthService>,
-    request_body: web::Json<GameJoinData>,
     route_params: web::Path<String>,
+    request_body: web::Json<GameJoinData>,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
     let game_id = route_params.into_inner();
     let player_name = &request_body.name;

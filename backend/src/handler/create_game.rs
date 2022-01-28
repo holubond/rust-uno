@@ -24,9 +24,9 @@ pub struct SuccessResponse {
 
 #[post("/game")]
 pub async fn create_game(
-    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    auth_service: web::Data<AuthService>,
     request_body: web::Json<RequestBody>,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
     let author_name = &request_body.name;
 
