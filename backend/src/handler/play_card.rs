@@ -30,16 +30,16 @@ pub struct TypeMessageResponse {
 
 #[post("/game/{gameID}/playCard")]
 pub async fn play_card(
-    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    authorization_repo: web::Data<AuthService>,
-    body: web::Json<PlayCardData>,
+    route_params: web::Path<String>,
     request: HttpRequest,
-    params: web::Path<String>,
+    request_body: web::Json<PlayCardData>,
+    authorization_repo: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
-    let game_id = params.into_inner();
-    let card = &body.card;
-    let new_color = body.new_color;
-    let said_uno = body.said_uno;
+    let game_id = route_params.into_inner();
+    let card = &request_body.card;
+    let new_color = request_body.new_color;
+    let said_uno = request_body.said_uno;
     let mut game_repo = game_repo.lock().unwrap();
 
     let game = match game_repo.find_game_by_id_mut(&game_id) {
