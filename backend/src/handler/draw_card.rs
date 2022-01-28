@@ -75,9 +75,7 @@ pub async fn draw_card(
     };
 
     let next_player = match game.get_current_player() {
-        None => {
-            return HttpResponse::InternalServerError().json( ErrResp::new("Current player not found") )
-        }
+        None => return ErrResp::game_has_no_current_player(),
         Some(player) => player,
     };
 
