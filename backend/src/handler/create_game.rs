@@ -15,7 +15,7 @@ pub struct RequestBody {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GameCreateResponse {
+pub struct SuccessResponse {
     #[serde(rename(serialize = "gameID", deserialize = "gameID"))]
     game_id: String,
     server: String,
@@ -47,7 +47,7 @@ pub async fn create_game(
     
     game_repo.add_game(game);
 
-    HttpResponse::Created().json(GameCreateResponse {
+    HttpResponse::Created().json(SuccessResponse {
         game_id: game_id,
         server: "TODO: implement".to_string(),
         token: jwt,
