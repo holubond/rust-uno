@@ -12,12 +12,12 @@ pub struct MessageResponse {
 
 #[post("game/{gameID}/statusRunning")]
 pub async fn start_game(
-    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    authorization_repo: web::Data<AuthService>,
+    route_params: web::Path<String>,
     request: HttpRequest,
-    params: web::Path<String>,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
-    let game_id = params.into_inner();
+    let game_id = route_params.into_inner();
 
     let mut game_repo = game_repo.lock().unwrap();
 
@@ -30,7 +30,7 @@ pub async fn start_game(
         }
     };
 
-    let jwt = authorization_repo.parse_jwt(request);
+    let jwt = auth_service.parse_jwt(request);
 
     let jwt = match jwt {
         Ok(jwt) => jwt.to_string(),
@@ -41,7 +41,7 @@ pub async fn start_game(
         }
     };
 
-    let claims = match authorization_repo.valid_jwt(&jwt) {
+    let claims = match auth_service.valid_jwt(&jwt) {
         Ok(claims) => claims,
         _ => {
             return HttpResponse::Unauthorized().json(MessageResponse {
@@ -58,7 +58,7 @@ pub async fn start_game(
             })
         }
     };
-    if !authorization_repo.verify_jwt(author_name, game_id, claims) {
+    if !auth_service.verify_jwt(author_name, game_id, claims) {
         return HttpResponse::Forbidden().json(MessageResponse {
             message: "Token does not prove client is the Author".to_string(),
         });
