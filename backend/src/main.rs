@@ -1,17 +1,18 @@
-use crate::handler::service::auth::AuthService;
-use crate::handler::{create_game::create_game};
-use crate::handler::restart_game::start_game;
+use crate::handler::create_game::create_game;
 use crate::handler::draw_card::draw_card;
 use crate::handler::join_game::join_game;
+use crate::handler::restart_game::start_game;
+use crate::handler::service::auth::AuthService;
 use crate::repo::address_repo::AddressRepo;
 use crate::repo::game_repo::InMemoryGameRepo;
+use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
-use handler::{ws_connect::ws_connect, play_card::play_card};
-use std::{sync::{Arc, Mutex}, env};
-use actix_cors::Cors;
-
-
+use handler::{play_card::play_card, ws_connect::ws_connect};
+use std::{
+    env,
+    sync::{Arc, Mutex},
+};
 
 mod cards;
 mod err;
@@ -27,7 +28,7 @@ struct Opts {
     port: String,
 }
 
-async fn fallback_to_spa() -> actix_files::NamedFile{
+async fn fallback_to_spa() -> actix_files::NamedFile {
     actix_files::NamedFile::open("./static/index.html").unwrap()
 }
 
@@ -49,7 +50,7 @@ async fn main() -> anyhow::Result<()> {
             .allow_any_header()
             .allow_any_origin()
             .allow_any_method();
-            
+
         App::new()
             .wrap(cors)
             .app_data(game_repo.clone())
@@ -62,15 +63,11 @@ async fn main() -> anyhow::Result<()> {
             .service(play_card)
             .service(ws_connect)
             .service(actix_files::Files::new("/", "./static").index_file("index.html"))
-            .default_service(
-                web::resource("").route(
-                    web::get().to(fallback_to_spa)
-                )
-            )
+            .default_service(web::resource("").route(web::get().to(fallback_to_spa)))
     })
-        .bind(format!("0.0.0.0:{}", port))?
-        .run()
-        .await?;
+    .bind(format!("0.0.0.0:{}", port))?
+    .run()
+    .await?;
 
     Ok(())
 }

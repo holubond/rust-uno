@@ -1,8 +1,8 @@
+use serde::de::{MapAccess, SeqAccess, Visitor};
 use serde::ser::SerializeStruct;
-use serde::{Deserialize, Serialize, Serializer, Deserializer, de};
-use std::fmt::{Display, Formatter};
-use serde::de::{Visitor, MapAccess, SeqAccess};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Card {
@@ -51,8 +51,8 @@ impl Card {
 
 impl Serialize for Card {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         let mut state = serializer.serialize_struct("Card", 3)?;
         state.serialize_field("color", &self.color)?;
@@ -68,15 +68,19 @@ impl Serialize for Card {
 
 impl<'de> Deserialize<'de> for Card {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
-        enum Field { Color, Symbol, Value }
+        enum Field {
+            Color,
+            Symbol,
+            Value,
+        }
 
         impl<'de> Deserialize<'de> for Field {
             fn deserialize<D>(deserializer: D) -> Result<Field, D::Error>
-                where
-                    D: Deserializer<'de>,
+            where
+                D: Deserializer<'de>,
             {
                 struct FieldVisitor;
 
@@ -88,8 +92,8 @@ impl<'de> Deserialize<'de> for Card {
                     }
 
                     fn visit_str<E>(self, value: &str) -> Result<Field, E>
-                        where
-                            E: de::Error,
+                    where
+                        E: de::Error,
                     {
                         match value {
                             "color" => Ok(Field::Color),
@@ -114,12 +118,14 @@ impl<'de> Deserialize<'de> for Card {
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Card, V::Error>
-                where
-                    V: SeqAccess<'de>,
+            where
+                V: SeqAccess<'de>,
             {
-                let color = seq.next_element()?
+                let color = seq
+                    .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let symbol = seq.next_element()?
+                let symbol = seq
+                    .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
 
                 let symbol = if let Ok(maybe_value) = seq.next_element() {
@@ -134,13 +140,13 @@ impl<'de> Deserialize<'de> for Card {
 
                 match Card::new(color, symbol) {
                     Ok(card) => Ok(card),
-                    Err(msg) => Err(de::Error::custom(msg))
+                    Err(msg) => Err(de::Error::custom(msg)),
                 }
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Card, V::Error>
-                where
-                    V: MapAccess<'de>,
+            where
+                V: MapAccess<'de>,
             {
                 let mut color = None;
                 let mut symbol = None;
@@ -181,7 +187,7 @@ impl<'de> Deserialize<'de> for Card {
 
                 match Card::new(color, symbol) {
                     Ok(card) => Ok(card),
-                    Err(msg) => Err(de::Error::custom(msg))
+                    Err(msg) => Err(de::Error::custom(msg)),
                 }
             }
         }

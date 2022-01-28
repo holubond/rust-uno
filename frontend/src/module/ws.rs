@@ -81,7 +81,7 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
     right_side.remove(0);
     right_side.append(&mut players);
     game.players = right_side;
-    
+
     game.finished_players = new_data.finished_players;
     game.cards = new_data.cards;
     game.discarted_card = new_data.top_card;

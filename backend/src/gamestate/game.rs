@@ -9,12 +9,12 @@ use crate::err::status::CreateStatusError;
 use crate::gamestate::active_cards::ActiveCards;
 use crate::gamestate::player::Player;
 use crate::gamestate::{CARDS_DEALT_TO_PLAYERS, PENALTY_CARDS};
+use crate::ws::ws_conn::WSConn;
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use crate::ws::ws_conn::WSConn;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -106,7 +106,9 @@ impl Game {
     }
 
     pub fn find_player_mut(&mut self, name: &String) -> Option<&mut Player> {
-        self.players.iter_mut().find(|player| player.name() == *name)
+        self.players
+            .iter_mut()
+            .find(|player| player.name() == *name)
     }
 
     pub fn find_author(&self) -> Option<&Player> {
@@ -270,11 +272,7 @@ impl Game {
             self.active_cards.clear();
             self.message_all_but(
                 player_name.clone(),
-                WSMsg::draw(
-                    player_name,
-                    self.get_current_player().unwrap().name(),
-                    0,
-                ),
+                WSMsg::draw(player_name, self.get_current_player().unwrap().name(), 0),
             );
             return Ok(vec![]);
         }
@@ -462,12 +460,16 @@ impl Game {
         Ok(())
     }
 
-    pub fn set_connection_to_player(&mut self, name_of_player: &String, connection: WSConn) -> bool{
+    pub fn set_connection_to_player(
+        &mut self,
+        name_of_player: &String,
+        connection: WSConn,
+    ) -> bool {
         match self.find_player_mut(&name_of_player) {
             Some(player) => player.set_connection(connection),
-            _ => return false
+            _ => return false,
         };
-        return true
+        return true;
     }
 }
 

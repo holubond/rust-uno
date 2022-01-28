@@ -31,11 +31,12 @@ pub async fn create_game(
     address_repo: web::Data<AddressRepo>,
     body: web::Json<GameCreateData>,
 ) -> impl Responder {
-
     let author_name = &body.name;
-    
+
     if author_name.is_empty() {
-        return HttpResponse::BadRequest().json(MessageResponse{message: "Name of the player cannot be empty".to_string()});
+        return HttpResponse::BadRequest().json(MessageResponse {
+            message: "Name of the player cannot be empty".to_string(),
+        });
     }
 
     let game = Game::new(author_name.clone());

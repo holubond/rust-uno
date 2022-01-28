@@ -1,12 +1,12 @@
 use crate::cards::card::Card;
 use crate::err::draw_cards::DrawCardsError;
-use crate::handler::util::response::{ErrResp, TypedErrMsg, ErrMsg};
+use crate::handler::util::response::{ErrMsg, ErrResp, TypedErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse};
 use serde::Deserialize;
 use serde::Serialize;
-use std::sync::{Mutex};
+use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
@@ -31,7 +31,7 @@ pub async fn draw_card(
     let game_id = params.into_inner();
     match draw_card_response(game_id, game_repo, authorization_repo, request) {
         Ok(r) => r,
-        Err(r) => r
+        Err(r) => r,
     }
 }
 
@@ -46,7 +46,7 @@ fn draw_card_response(
     let (game_id_from_token, player_name) = authorization_repo.extract_data(&request)?;
 
     let game_id = game_id_from_token.check(game_id)?;
-    
+
     let game = match game_repo.find_game_by_id_mut(&game_id) {
         None => return Err(ErrResp::game_not_found(game_id)),
         Some(game) => game,
@@ -69,20 +69,11 @@ impl From<DrawCardsError> for HttpResponse {
     fn from(error: DrawCardsError) -> HttpResponse {
         use DrawCardsError::*;
         match error {
-            PlayerTurnError(e) => 
-                HttpResponse::Conflict().json( 
-                    TypedErrMsg::not_your_turn(e)
-                ),
+            PlayerTurnError(e) => HttpResponse::Conflict().json(TypedErrMsg::not_your_turn(e)),
 
-            PlayerExistError(e) => 
-                HttpResponse::BadRequest().json( 
-                    ErrMsg::from(e) 
-                ),
+            PlayerExistError(e) => HttpResponse::BadRequest().json(ErrMsg::from(e)),
 
-            PlayerCanPlayInstead => 
-                HttpResponse::Conflict().json( 
-                    TypedErrMsg::cannot_draw(error)
-                ),
+            PlayerCanPlayInstead => HttpResponse::Conflict().json(TypedErrMsg::cannot_draw(error)),
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::cards::card::Card;
 use crate::err::play_card::PlayCardError;
-use crate::ws::ws_message::WSMsg;
 use crate::ws::ws_conn::WSConn;
+use crate::ws::ws_message::WSMsg;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Player {
@@ -9,7 +9,7 @@ pub struct Player {
     pub is_author: bool,
     cards: Vec<Card>,
     position: Option<usize>,
-    connection: Option<WSConn>
+    connection: Option<WSConn>,
 }
 
 impl Player {
@@ -19,7 +19,7 @@ impl Player {
             is_author,
             cards: vec![],
             position: None,
-            connection: None
+            connection: None,
         }
     }
 
@@ -91,7 +91,7 @@ impl Player {
     pub fn message(&self, msg: WSMsg) {
         match &self.connection {
             Some(conn) => conn.send(msg),
-            None => ()
+            None => (),
         }
     }
 
