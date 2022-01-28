@@ -24,6 +24,14 @@ impl TypedErrMsg {
             message: error.to_string(),
         }
     }
+
+    pub fn game_not_running(game_id: String) -> Self {
+        Self {
+            type_of_error: "GAME_NOT_RUNNING".into(),
+            message: format!("The game with id '{}' is not running", game_id),
+        }
+    }
+
 }
 
 #[derive(Serialize, Debug)]
@@ -61,5 +69,9 @@ impl ErrResp {
 
     pub fn game_has_no_current_player() -> HttpResponse {
         HttpResponse::InternalServerError().json(ErrMsg::new("Current player not found"))
+    }
+
+    pub fn game_not_running(game_id: String) -> HttpResponse {
+        HttpResponse::Conflict().json( TypedErrMsg::game_not_running(game_id) )
     }
 }

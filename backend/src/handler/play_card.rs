@@ -1,7 +1,7 @@
 use crate::cards::card::{Card, CardColor};
 use crate::err::play_card::PlayCardError;
 use crate::gamestate::game::GameStatus;
-use crate::handler::util::response::ErrResp;
+use crate::handler::util::response::{ErrResp, TypedErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
@@ -64,11 +64,9 @@ pub async fn play_card(
     };
 
     if game.status() != GameStatus::Running {
-        return HttpResponse::Conflict().json(TypeMessageResponse {
-            type_of_error: "GAME_NOT_RUNNING".to_string(),
-            message: "Game is not running".to_string(),
-        });
+        return ErrResp::game_not_running(game_id);
     }
+
     return match game.play_card(player_name, card.clone(), new_color, said_uno) {
         Err(PlayCardError::PlayerHasNoSuchCard(x)) => {
             HttpResponse::Conflict().json(TypeMessageResponse {
