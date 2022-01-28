@@ -14,13 +14,6 @@ pub struct MessageResponse {
     next: String,
 }
 
-#[derive(Serialize)]
-pub struct MessageResponseType {
-    #[serde(rename(serialize = "type", deserialize = "type"))]
-    type_of_error: String,
-    message: String,
-}
-
 #[post("/game/{gameID}/drawnCards")]
 pub async fn draw_card(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
