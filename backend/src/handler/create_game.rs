@@ -1,15 +1,11 @@
 use crate::gamestate::game::Game;
 use crate::handler::service::auth::AuthService;
 use crate::InMemoryGameRepo;
+use crate::handler::util::response::ErrMsg;
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Mutex;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MessageResponse {
-    message: String,
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GameCreateData {
@@ -33,9 +29,9 @@ pub async fn create_game(
     let author_name = &body.name;
 
     if author_name.is_empty() {
-        return HttpResponse::BadRequest().json(MessageResponse {
-            message: "Name of the player cannot be empty".to_string(),
-        });
+        return HttpResponse::BadRequest().json(
+            ErrMsg::new("Name of the player cannot be empty")
+        );
     }
 
     let game = Game::new(author_name.clone());
