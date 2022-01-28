@@ -1,4 +1,5 @@
 use crate::gamestate::game::GameStatus;
+use crate::handler::util::response::{ErrMsg};
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
@@ -32,9 +33,9 @@ pub async fn join_game(
     let player_name = &request_body.name;
 
     if player_name.is_empty() {
-        return HttpResponse::BadRequest().json(MessageResponse {
-            message: "Name of the player cannot be empty.".to_string(),
-        });
+        return HttpResponse::BadRequest().json(
+            ErrMsg::new("Name of the player cannot be empty.")
+        );
     }
 
     let mut game_repo = match game_repo.lock() {
