@@ -46,7 +46,7 @@ pub async fn draw_card(
     authorization_repo: web::Data<Arc<AuthService>>,
     request: HttpRequest,
     params: web::Path<String>,
-) -> impl Responder {
+) -> HttpResponse {
     let game_id = params.into_inner();
 
     let mut game_repo = match safe_lock(&game_repo) {
