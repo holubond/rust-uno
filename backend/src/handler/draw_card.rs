@@ -1,7 +1,7 @@
 use crate::cards::card::Card;
 use crate::err::draw_cards::DrawCardsError;
 use crate::gamestate::game::GameStatus;
-use crate::handler::util::response::ErrResp;
+use crate::handler::util::response::{ErrResp, TypedMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
@@ -13,24 +13,6 @@ use std::sync::{Arc, Mutex};
 pub struct MessageResponse {
     cards: Vec<Card>,
     next: String,
-}
-
-pub enum TypeOfError {
-    GameNotRunning,
-    CannotDraw,
-    NotYourTurn,
-    PlayerExist,
-}
-
-impl TypeOfError {
-    fn into_response_string(&self) -> String {
-        match self {
-            TypeOfError::GameNotRunning => "GAME_NOT_RUNNING".to_string(),
-            TypeOfError::CannotDraw => "CANNOT_DRAW".to_string(),
-            TypeOfError::NotYourTurn => "NOT_YOUR_TURN".to_string(),
-            TypeOfError::PlayerExist => "PLAYER_DOES_NOT_EXIST".to_string(),
-        }
-    }
 }
 
 #[derive(Serialize)]
@@ -88,13 +70,25 @@ impl From<DrawCardsError> for HttpResponse {
     fn from(error: DrawCardsError) -> HttpResponse {
         use DrawCardsError::*;
         match error {
-            PlayerTurnError(e) => HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::NotYourTurn.into_response_string(), message: e.to_string() }),
-            PlayerExistError(e) => HttpResponse::BadRequest().json(ErrResp::new(&format!("{}",DrawCardsError::PlayerExistError(e)))),
+            PlayerTurnError(e) => 
+                HttpResponse::Conflict().json( 
+                    TypedMsg::not_your_turn(e)
+                ),
 
-            PlayerCanPlayInstead => HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::CannotDraw.into_response_string(), message: format!("{}",DrawCardsError::PlayerCanPlayInstead) }),
-            PlayerMustPlayInstead(e) => HttpResponse::Conflict().json(MessageResponseType {
-                type_of_error: TypeOfError::CannotDraw.into_response_string(),
-                message: format!("{}",DrawCardsError::PlayerMustPlayInstead(e))}),
+            PlayerExistError(e) => 
+                HttpResponse::BadRequest().json( 
+                    ErrResp::from(e) 
+                ),
+
+            PlayerCanPlayInstead => 
+                HttpResponse::Conflict().json( 
+                    TypedMsg::cannot_draw(error)
+                ),
+
+            PlayerMustPlayInstead(_) => 
+                HttpResponse::Conflict().json(
+                    TypedMsg::cannot_draw(error)    
+                ),
         }
     }
 }
