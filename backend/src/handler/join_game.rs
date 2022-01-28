@@ -50,7 +50,11 @@ pub async fn join_game(
         );
     }
 
-    game.add_player(player_name.clone());
+    if let Err(err) = game.add_player(player_name.clone()) {
+        return HttpResponse::InternalServerError().json(
+            ErrMsg::from(err)
+        )
+    };
 
     let jwt = auth_service.generate_jwt(player_name, &game_id);
 
