@@ -1,5 +1,5 @@
 use crate::gamestate::game::GameStatus;
-use crate::handler::util::response::{ErrMsg, ErrResp};
+use crate::handler::util::response::ErrMsg;
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpResponse, Responder};
@@ -39,9 +39,9 @@ pub async fn join_game(
         Ok(game_repo) => game_repo,
     };
 
-    let game = match game_repo.find_game_by_id_mut(&game_id) {
-        None => return ErrResp::game_not_found(game_id),
-        Some(game) => game,
+    let game = match game_repo.get_game_by_id_mut(game_id.clone()) {
+        Err(response) => return response.into(),
+        Ok(game) => game,
     };
 
     if game.status() != GameStatus::Lobby {

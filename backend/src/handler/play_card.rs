@@ -1,7 +1,7 @@
 use crate::cards::card::{Card, CardColor};
 use crate::err::play_card::PlayCardError;
 use crate::gamestate::game::GameStatus;
-use crate::handler::util::response::{ErrResp, TypedErrMsg, ErrMsg};
+use crate::handler::util::response::{TypedErrMsg, ErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
@@ -58,9 +58,9 @@ pub async fn play_card(
         Ok(repo) => repo,
     };
 
-    let game = match game_repo.find_game_by_id_mut(&game_id) {
-        None => return ErrResp::game_not_found(game_id),
-        Some(game) => game,
+    let game = match game_repo.get_game_by_id_mut(game_id.clone()) {
+        Err(response) => return response.into(),
+        Ok(game) => game,
     };
 
     if game.status() != GameStatus::Running {

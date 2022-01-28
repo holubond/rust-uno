@@ -1,12 +1,9 @@
-use actix::fut::result;
 use actix_web::http::header::Header;
 use actix_web::HttpRequest;
 use actix_web::{error::ParseError, HttpResponse};
 use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use jwt_simple::prelude::*;
-use std::fmt::Error;
-
-use crate::handler::util::response::{ErrResp, ErrMsg};
+use crate::handler::util::response::ErrMsg;
 
 pub struct AuthService {
     pub key: HS256Key,

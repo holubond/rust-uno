@@ -13,7 +13,6 @@ pub struct TypedErrMsg {
 }
 
 impl TypedErrMsg {
-
     pub fn new(type_of_error: &str, error: impl Error) -> Self {
         Self {
             type_of_error: type_of_error.into(),
@@ -45,15 +44,6 @@ impl ErrMsg {
         Self {
             msg: err.to_string(),
         }
-    }
-}
-
-pub struct ErrResp {}
-impl ErrResp {
-    pub fn game_not_found(id: String) -> HttpResponse {
-        HttpResponse::NotFound().json(ErrMsg {
-            msg: format!("Game with id '{}' not found", id),
-        })
     }
 }
 
