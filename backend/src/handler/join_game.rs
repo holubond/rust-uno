@@ -1,5 +1,6 @@
 use crate::gamestate::game::GameStatus;
 use crate::handler::util::response::{ErrMsg};
+use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
@@ -38,12 +39,8 @@ pub async fn join_game(
         );
     }
 
-    let mut game_repo = match game_repo.lock() {
-        Err(_) => {
-            return HttpResponse::InternalServerError().json(MessageResponse {
-                message: "Cannot acquire lock on the game repo".to_string(),
-            })
-        }
+    let mut game_repo = match safe_lock(&game_repo) {
+        Err(response) => return response,
         Ok(game_repo) => game_repo,
     };
 
