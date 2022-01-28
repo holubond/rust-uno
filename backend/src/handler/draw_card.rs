@@ -1,10 +1,9 @@
 use crate::cards::card::Card;
 use crate::err::draw_cards::DrawCardsError;
-use crate::gamestate::game::GameStatus;
 use crate::handler::util::response::{ErrResp, TypedErrMsg, ErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
-use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{post, web, HttpRequest, HttpResponse};
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
