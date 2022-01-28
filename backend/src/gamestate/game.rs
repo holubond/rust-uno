@@ -16,6 +16,10 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+#[path = "../tests/game_test.rs"]
+mod tests;
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum GameStatus {
@@ -472,7 +476,3 @@ impl Game {
         return true;
     }
 }
-
-#[cfg(test)]
-#[path = "../tests/game_test.rs"]
-mod tests;
