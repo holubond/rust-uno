@@ -1,4 +1,5 @@
 use crate::gamestate::game::GameStatus;
+use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
@@ -19,7 +20,10 @@ pub async fn start_game(
 ) -> impl Responder {
     let game_id = route_params.into_inner();
 
-    let mut game_repo = game_repo.lock().unwrap();
+    let mut game_repo = match safe_lock(&game_repo) {
+        Err(response) => return response,
+        Ok(repo) => repo,
+    };
 
     let game = match game_repo.find_game_by_id_mut(&game_id) {
         Some(game) => game,
