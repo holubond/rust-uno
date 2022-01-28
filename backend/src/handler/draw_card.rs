@@ -17,12 +17,12 @@ pub struct SuccessResponse {
 #[post("/game/{gameID}/drawnCards")]
 pub async fn draw_card(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    authorization_repo: web::Data<AuthService>,
+    auth_service: web::Data<AuthService>,
     request: HttpRequest,
     params: web::Path<String>,
 ) -> HttpResponse {
     let game_id = params.into_inner();
-    match draw_card_response(game_id, game_repo, authorization_repo, request) {
+    match draw_card_response(game_id, game_repo, auth_service, request) {
         Ok(r) => r,
         Err(r) => r,
     }
@@ -31,12 +31,12 @@ pub async fn draw_card(
 fn draw_card_response(
     game_id: String,
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    authorization_repo: web::Data<AuthService>,
+    auth_service: web::Data<AuthService>,
     request: HttpRequest,
 ) -> Result<HttpResponse, HttpResponse> {
     let mut game_repo = safe_lock(&game_repo)?;
 
-    let (game_id_from_token, player_name) = authorization_repo.extract_data(&request)?;
+    let (game_id_from_token, player_name) = auth_service.extract_data(&request)?;
 
     let game_id = game_id_from_token.check(game_id)?;
 
