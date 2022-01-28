@@ -1,6 +1,7 @@
 use crate::cards::card::{Card, CardColor};
 use crate::err::play_card::PlayCardError;
 use crate::gamestate::game::GameStatus;
+use crate::handler::util::response::ErrResp;
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
@@ -48,12 +49,8 @@ pub async fn play_card(
     };
 
     let game = match game_repo.find_game_by_id_mut(&game_id) {
+        None => return ErrResp::game_not_found(game_id),
         Some(game) => game,
-        _ => {
-            return HttpResponse::NotFound().json(MessageResponse {
-                message: "Game not found".to_string(),
-            })
-        }
     };
 
     let jwt = authorization_repo.parse_jwt(request);
