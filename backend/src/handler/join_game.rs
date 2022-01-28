@@ -25,11 +25,11 @@ pub struct MessageResponse {
 pub async fn join_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
     auth_service: web::Data<AuthService>,
-    body: web::Json<GameJoinData>,
-    params: web::Path<String>,
+    request_body: web::Json<GameJoinData>,
+    route_params: web::Path<String>,
 ) -> impl Responder {
-    let game_id = params.into_inner();
-    let player_name = &body.name;
+    let game_id = route_params.into_inner();
+    let player_name = &request_body.name;
 
     if player_name.is_empty() {
         return HttpResponse::BadRequest().json(MessageResponse {
