@@ -25,13 +25,9 @@ pub async fn start_game(
         Ok(repo) => repo,
     };
 
-    let game = match game_repo.find_game_by_id_mut(&game_id) {
-        Some(game) => game,
-        _ => {
-            return HttpResponse::NotFound().json(MessageResponse {
-                message: "Game not found".to_string(),
-            })
-        }
+    let game = match game_repo.get_game_by_id_mut(game_id.clone()) {
+        Err(error) => return error.into(),
+        Ok(game) => game,
     };
 
     let jwt = auth_service.parse_jwt(request);
