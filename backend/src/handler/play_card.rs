@@ -40,7 +40,7 @@ pub async fn play_card(
 ) -> impl Responder {
     let game_id = route_params.into_inner();
     let card = &request_body.card;
-    let new_color = request_body.new_color;
+    let maybe_new_color = request_body.new_color;
     let said_uno = request_body.said_uno;
 
     let (game_id_from_token, player_name) = match auth_service.extract_data(&request) {
@@ -72,7 +72,7 @@ pub async fn play_card(
         )
     }
 
-    if let Err(error) = game.play_card(player_name, card.clone(), new_color, said_uno) {
+    if let Err(error) = game.play_card(player_name, card.clone(), maybe_new_color, said_uno) {
         return error.into();
     };
 
