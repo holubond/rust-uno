@@ -1,6 +1,6 @@
 use crate::cards::card::Card;
 use crate::err::draw_cards::DrawCardsError;
-use crate::handler::util::response::{ErrMsg, ErrResp, TypedErrMsg};
+use crate::handler::util::response::{ErrMsg, TypedErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse};
@@ -39,15 +39,16 @@ fn draw_card_response(
 
     let game_id = game_id_from_token.check(game_id)?;
 
-    let game = match game_repo.find_game_by_id_mut(&game_id) {
-        None => return Err(ErrResp::game_not_found(game_id)),
-        Some(game) => game,
-    };
+    let game = game_repo.get_game_by_id_mut(game_id)?;
 
     let drawn_cards = game.draw_cards(player_name.clone())?;
 
     let next_player = match game.get_current_player() {
-        None => return Err(ErrResp::game_has_no_current_player()),
+        None => return Err(
+            HttpResponse::InternalServerError().json(
+                ErrMsg::new("Current player not found")
+            )
+        ),
         Some(player) => player,
     };
 

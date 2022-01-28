@@ -3,6 +3,8 @@ use std::error::Error;
 use actix_web::HttpResponse;
 use serde::Serialize;
 
+use crate::repo::game_repo::GameRepoError;
+
 #[derive(Serialize)]
 pub struct TypedErrMsg {
     #[serde(rename(serialize = "type", deserialize = "type"))]
@@ -53,14 +55,16 @@ impl ErrResp {
             msg: format!("Game with id '{}' not found", id),
         })
     }
+}
 
-    pub fn jwt_game_id_does_not_match() -> HttpResponse {
-        HttpResponse::Forbidden().json(ErrMsg::new(
-            "Game id in the url does not match the one in JWT",
-        ))
-    }
-
-    pub fn game_has_no_current_player() -> HttpResponse {
-        HttpResponse::InternalServerError().json(ErrMsg::new("Current player not found"))
+impl From<GameRepoError> for HttpResponse {
+    fn from(error: GameRepoError) -> HttpResponse {
+        use GameRepoError::*;
+        match error {
+            GameNotFound(_) =>
+                HttpResponse::NotFound().json(
+                    ErrMsg::from(error)
+                ),
+        }
     }
 }

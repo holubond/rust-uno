@@ -6,7 +6,7 @@ use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use jwt_simple::prelude::*;
 use std::fmt::Error;
 
-use crate::handler::util::response::ErrResp;
+use crate::handler::util::response::{ErrResp, ErrMsg};
 
 pub struct AuthService {
     pub key: HS256Key,
@@ -36,7 +36,11 @@ pub struct GameID {
 impl GameID {
     pub fn check(self, game_id: String) -> Result<String, HttpResponse> {
         if self.id != game_id {
-            return Err(ErrResp::jwt_game_id_does_not_match());
+            return Err(
+                HttpResponse::Forbidden().json(
+                    ErrMsg::new("Game id in the url does not match the one in JWT")
+                )
+            );
         }
         Ok(self.id)
     }
