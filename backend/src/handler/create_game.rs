@@ -26,9 +26,9 @@ pub struct SuccessResponse {
 pub async fn create_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
     auth_service: web::Data<AuthService>,
-    body: web::Json<RequestBody>,
+    request_body: web::Json<RequestBody>,
 ) -> impl Responder {
-    let author_name = &body.name;
+    let author_name = &request_body.name;
 
     if author_name.is_empty() {
         return HttpResponse::BadRequest().json(
