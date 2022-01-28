@@ -48,41 +48,40 @@ pub async fn draw_card(
     params: web::Path<String>,
 ) -> HttpResponse {
     let game_id = params.into_inner();
+    match draw_card_response(game_id, game_repo, authorization_repo, request) {
+        Ok(r) => r,
+        Err(r) => r
+    }
+}
 
-    let mut game_repo = match safe_lock(&game_repo) {
-        Err(response) => return response,
-        Ok(repo) => repo,
-    };
- 
-    let (game_id_from_token, player_name) = match authorization_repo.extract_data(&request) {
-        Err(response) => return response,
-        Ok(data) => data,
-    };
+fn draw_card_response(
+    game_id: String,
+    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
+    authorization_repo: web::Data<Arc<AuthService>>,
+    request: HttpRequest,
+) -> Result<HttpResponse, HttpResponse> {
+    let mut game_repo = safe_lock(&game_repo)?;
 
-    let game_id = match game_id_from_token.check(game_id) {
-        Err(response) => return response,
-        Ok(id) => id,
-    };
+    let (game_id_from_token, player_name) = authorization_repo.extract_data(&request)?;
+
+    let game_id = game_id_from_token.check(game_id)?;
     
     let game = match game_repo.find_game_by_id_mut(&game_id) {
-        None => return ErrResp::game_not_found(game_id),
+        None => return Err(ErrResp::game_not_found(game_id)),
         Some(game) => game,
     };
 
-    let drawn_cards = match game.draw_cards(player_name.clone()) {
-        Err(err) => return HttpResponse::from(err),
-        Ok(drawn_cards) => drawn_cards,
-    };
+    let drawn_cards = game.draw_cards(player_name.clone())?;
 
     let next_player = match game.get_current_player() {
-        None => return ErrResp::game_has_no_current_player(),
+        None => return Err(ErrResp::game_has_no_current_player()),
         Some(player) => player,
     };
 
-    HttpResponse::Ok().json(MessageResponse {
+    Ok(HttpResponse::Ok().json(MessageResponse {
         cards: drawn_cards,
         next: next_player.name(),
-    })
+    }))
 }
 
 impl From<DrawCardsError> for HttpResponse {
