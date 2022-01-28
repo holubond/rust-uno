@@ -38,45 +38,44 @@ pub async fn play_card(
     auth_service: web::Data<AuthService>,
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
+    match play_card_response(route_params, request, request_body, auth_service, game_repo) {
+        Err(response) => response,
+        Ok(response) => response,
+    }
+}
+
+fn play_card_response(
+    route_params: web::Path<String>,
+    request: HttpRequest,
+    request_body: web::Json<RequestBody>,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
+) -> Result<HttpResponse, HttpResponse> {
     let game_id = route_params.into_inner();
     let card = &request_body.card;
     let maybe_new_color = request_body.new_color;
     let said_uno = request_body.said_uno;
 
-    let (game_id_from_token, player_name) = match auth_service.extract_data(&request) {
-        Err(response) => return response,
-        Ok(data) => data,
-    };
+    let (game_id_from_token, player_name) = auth_service.extract_data(&request)?;
 
-    let game_id = match game_id_from_token.check(game_id) {
-        Err(response) => return response,
-        Ok(id) => id,
-    };
+    let game_id = game_id_from_token.check(game_id)?;
 
-    let mut game_repo = match safe_lock(&game_repo) {
-        Err(response) => return response,
-        Ok(repo) => repo,
-    };
+    let mut game_repo = safe_lock(&game_repo)?;
 
-    let game = match game_repo.get_game_by_id_mut(game_id.clone()) {
-        Err(response) => return response.into(),
-        Ok(game) => game,
-    };
+    let game = game_repo.get_game_by_id_mut(game_id.clone())?;
 
     if game.status() != GameStatus::Running {
-        return HttpResponse::Conflict().json( 
+        return Err( HttpResponse::Conflict().json( 
             TypedErrMsg::new_from_scratch(
                 "GAME_NOT_RUNNING", 
                 format!("The game with id '{}' is not running", game_id)
             )
-        )
+        ))
     }
 
-    if let Err(error) = game.play_card(player_name, card.clone(), maybe_new_color, said_uno) {
-        return error.into();
-    };
+    game.play_card(player_name, card.clone(), maybe_new_color, said_uno)?;
 
-    HttpResponse::NoContent().finish()
+    Ok(HttpResponse::NoContent().finish())
 }
 
 impl From<PlayCardError> for HttpResponse {
