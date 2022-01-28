@@ -11,6 +11,14 @@ pub struct TypedErrMsg {
 }
 
 impl TypedErrMsg {
+
+    pub fn new(type_of_error: &str, error: impl Error) -> Self {
+        Self {
+            type_of_error: type_of_error.into(),
+            message: error.to_string(),
+        }
+    }
+    
     pub fn not_your_turn(error: impl Error) -> Self {
         Self {
             type_of_error: "NOT_YOUR_TURN".into(),

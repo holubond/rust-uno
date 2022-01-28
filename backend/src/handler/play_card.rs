@@ -1,7 +1,7 @@
 use crate::cards::card::{Card, CardColor};
 use crate::err::play_card::PlayCardError;
 use crate::gamestate::game::GameStatus;
-use crate::handler::util::response::{ErrResp, TypedErrMsg};
+use crate::handler::util::response::{ErrResp, TypedErrMsg, ErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
@@ -67,38 +67,41 @@ pub async fn play_card(
         return ErrResp::game_not_running(game_id);
     }
 
-    return match game.play_card(player_name, card.clone(), new_color, said_uno) {
-        Err(PlayCardError::PlayerHasNoSuchCard(x)) => {
-            HttpResponse::Conflict().json(TypeMessageResponse {
-                type_of_error: "CARD_NOT_IN_HAND".to_string(),
-                message: PlayCardError::PlayerHasNoSuchCard(x).to_string(),
-            })
-        }
-        Err(PlayCardError::CardCannotBePlayed(x, y)) => {
-            HttpResponse::Conflict().json(TypeMessageResponse {
-                type_of_error: "CANNOT_PLAY_THIS".to_string(),
-                message: PlayCardError::CardCannotBePlayed(x, y).to_string(),
-            })
-        }
-        Err(PlayCardError::PlayerTurnError(x)) => {
-            HttpResponse::Conflict().json(TypeMessageResponse {
-                type_of_error: "NOT_YOUR_TURN".to_string(),
-                message: PlayCardError::PlayerTurnError(x).to_string(),
-            })
-        }
-        Err(PlayCardError::PlayerExistError(x)) => HttpResponse::NotFound().json(MessageResponse {
-            message: PlayCardError::PlayerExistError(x).to_string(),
-        }),
-        Err(PlayCardError::CreateStatusError(x)) => {
-            HttpResponse::InternalServerError().json(MessageResponse {
-                message: x.to_string(),
-            })
-        }
-        Err(PlayCardError::SaidUnoWhenShouldNotHave) => {
-            HttpResponse::BadRequest().json(MessageResponse {
-                message: "Cannot say UNO".to_string(),
-            })
-        }
-        Ok(_) => HttpResponse::NoContent().finish(),
+    if let Err(error) = game.play_card(player_name, card.clone(), new_color, said_uno) {
+        return error.into();
     };
+
+    HttpResponse::NoContent().finish()
+}
+
+impl From<PlayCardError> for HttpResponse {
+    fn from(error: PlayCardError) -> HttpResponse {
+        use PlayCardError::*;
+        match error {
+            PlayerHasNoSuchCard(_) =>
+                HttpResponse::Conflict().json(
+                    TypedErrMsg::new("CARD_NOT_IN_HAND", error)
+                ),
+            CardCannotBePlayed(_, _) =>
+                HttpResponse::Conflict().json(
+                    TypedErrMsg::new("CANNOT_PLAY_THIS", error)
+                ),
+            PlayerTurnError(_) =>
+                HttpResponse::Conflict().json(
+                    TypedErrMsg::new("NOT_YOUR_TURN", error)
+                ),
+            PlayerExistError(_) => 
+                HttpResponse::NotFound().json(
+                    ErrMsg::from(error)
+                ),
+            CreateStatusError(_) =>
+                HttpResponse::InternalServerError().json(
+                    ErrMsg::from(error)
+                ),
+            SaidUnoWhenShouldNotHave =>
+                HttpResponse::BadRequest().json(
+                    ErrMsg::from(error)
+                )
+        }
+    }
 }
