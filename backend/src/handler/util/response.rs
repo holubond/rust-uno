@@ -4,13 +4,13 @@ use actix_web::HttpResponse;
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub struct TypedMsg {
+pub struct TypedErrMsg {
     #[serde(rename(serialize = "type", deserialize = "type"))]
     type_of_error: String,
     message: String,
 }
 
-impl TypedMsg {
+impl TypedErrMsg {
     pub fn not_your_turn(error: impl Error) -> Self {
         Self{type_of_error: "NOT_YOUR_TURN".into(), message: error.to_string()}
     }
@@ -21,12 +21,11 @@ impl TypedMsg {
 }
 
 #[derive(Serialize, Debug)]
-pub struct ErrResp {
+pub struct ErrMsg {
     msg: String,
 }
 
-
-impl ErrResp {
+impl ErrMsg {
     pub fn new(message: &str) -> Self {
         Self { msg: message.into() }
     }
@@ -34,16 +33,19 @@ impl ErrResp {
     pub fn from(err: impl Error) -> Self {
         Self {msg: err.to_string()}
     }
+}
 
+pub struct ErrResp {}
+impl ErrResp {
     pub fn game_not_found(id: String) -> HttpResponse {
-        HttpResponse::NotFound().json( Self{ msg: format!("Game with id '{}' not found", id)})
+        HttpResponse::NotFound().json( ErrMsg { msg: format!("Game with id '{}' not found", id)})
     }
 
     pub fn jwt_game_id_does_not_match() -> HttpResponse {
-        HttpResponse::Forbidden().json( ErrResp::new("Game id in the url does not match the one in JWT") )
+        HttpResponse::Forbidden().json( ErrMsg::new("Game id in the url does not match the one in JWT") )
     }
 
     pub fn game_has_no_current_player() -> HttpResponse {
-        HttpResponse::InternalServerError().json( ErrResp::new("Current player not found") )
+        HttpResponse::InternalServerError().json( ErrMsg::new("Current player not found") )
     }
 }

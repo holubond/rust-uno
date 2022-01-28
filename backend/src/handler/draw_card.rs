@@ -1,7 +1,7 @@
 use crate::cards::card::Card;
 use crate::err::draw_cards::DrawCardsError;
 use crate::gamestate::game::GameStatus;
-use crate::handler::util::response::{ErrResp, TypedMsg};
+use crate::handler::util::response::{ErrResp, TypedErrMsg, ErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
@@ -72,22 +72,22 @@ impl From<DrawCardsError> for HttpResponse {
         match error {
             PlayerTurnError(e) => 
                 HttpResponse::Conflict().json( 
-                    TypedMsg::not_your_turn(e)
+                    TypedErrMsg::not_your_turn(e)
                 ),
 
             PlayerExistError(e) => 
                 HttpResponse::BadRequest().json( 
-                    ErrResp::from(e) 
+                    ErrMsg::from(e) 
                 ),
 
             PlayerCanPlayInstead => 
                 HttpResponse::Conflict().json( 
-                    TypedMsg::cannot_draw(error)
+                    TypedErrMsg::cannot_draw(error)
                 ),
 
             PlayerMustPlayInstead(_) => 
                 HttpResponse::Conflict().json(
-                    TypedMsg::cannot_draw(error)    
+                    TypedErrMsg::cannot_draw(error)    
                 ),
         }
     }
