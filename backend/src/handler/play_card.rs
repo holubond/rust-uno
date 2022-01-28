@@ -5,7 +5,7 @@ use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PlayCardData {
