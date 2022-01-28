@@ -18,28 +18,13 @@ impl TypedErrMsg {
             message: error.to_string(),
         }
     }
-    
-    pub fn not_your_turn(error: impl Error) -> Self {
+
+    pub fn new_from_scratch(type_of_error: &str, message: String) -> Self {
         Self {
-            type_of_error: "NOT_YOUR_TURN".into(),
-            message: error.to_string(),
+            type_of_error: type_of_error.into(),
+            message,
         }
     }
-
-    pub fn cannot_draw(error: impl Error) -> Self {
-        Self {
-            type_of_error: "CANNOT_DRAW".into(),
-            message: error.to_string(),
-        }
-    }
-
-    pub fn game_not_running(game_id: String) -> Self {
-        Self {
-            type_of_error: "GAME_NOT_RUNNING".into(),
-            message: format!("The game with id '{}' is not running", game_id),
-        }
-    }
-
 }
 
 #[derive(Serialize, Debug)]
@@ -77,9 +62,5 @@ impl ErrResp {
 
     pub fn game_has_no_current_player() -> HttpResponse {
         HttpResponse::InternalServerError().json(ErrMsg::new("Current player not found"))
-    }
-
-    pub fn game_not_running(game_id: String) -> HttpResponse {
-        HttpResponse::Conflict().json( TypedErrMsg::game_not_running(game_id) )
     }
 }

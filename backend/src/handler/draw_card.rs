@@ -61,11 +61,18 @@ impl From<DrawCardsError> for HttpResponse {
     fn from(error: DrawCardsError) -> HttpResponse {
         use DrawCardsError::*;
         match error {
-            PlayerTurnError(e) => HttpResponse::Conflict().json(TypedErrMsg::not_your_turn(e)),
-
-            PlayerExistError(e) => HttpResponse::BadRequest().json(ErrMsg::from(e)),
-
-            PlayerCanPlayInstead => HttpResponse::Conflict().json(TypedErrMsg::cannot_draw(error)),
+            PlayerTurnError(_) =>
+                HttpResponse::Conflict().json(
+                    TypedErrMsg::new("NOT_YOUR_TURN", error)
+                ),
+            PlayerExistError(_) => 
+                HttpResponse::BadRequest().json(
+                    ErrMsg::from(error)
+                ),
+            PlayerCanPlayInstead => 
+                HttpResponse::Conflict().json(
+                    TypedErrMsg::new("CANNOT_DRAW", error)
+                ),
         }
     }
 }

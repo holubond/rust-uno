@@ -64,7 +64,12 @@ pub async fn play_card(
     };
 
     if game.status() != GameStatus::Running {
-        return ErrResp::game_not_running(game_id);
+        return HttpResponse::Conflict().json( 
+            TypedErrMsg::new_from_scratch(
+                "GAME_NOT_RUNNING", 
+                format!("The game with id '{}' is not running", game_id)
+            )
+        )
     }
 
     if let Err(error) = game.play_card(player_name, card.clone(), new_color, said_uno) {
