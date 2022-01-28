@@ -8,12 +8,12 @@ use serde::Serialize;
 use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GameJoinData {
+pub struct RequestBody {
     name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct GameJoinResponse {
+pub struct SuccessResponse {
     server: String,
     token: String,
 }
@@ -21,7 +21,7 @@ pub struct GameJoinResponse {
 #[post("/game/{gameID}/player")]
 pub async fn join_game(
     route_params: web::Path<String>,
-    request_body: web::Json<GameJoinData>,
+    request_body: web::Json<RequestBody>,
     auth_service: web::Data<AuthService>,
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
@@ -58,7 +58,7 @@ pub async fn join_game(
 
     let jwt = auth_service.generate_jwt(player_name, &game_id);
 
-    HttpResponse::Created().json(GameJoinResponse {
+    HttpResponse::Created().json(SuccessResponse {
         server: "TODO: implement".to_string(),
         token: jwt,
     })
