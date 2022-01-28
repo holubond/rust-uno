@@ -1,11 +1,9 @@
 use crate::gamestate::game::GameStatus;
 use crate::{AuthService, InMemoryGameRepo};
-use actix_web::http::header::Header;
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
-use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use serde::Deserialize;
 use serde::Serialize;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
