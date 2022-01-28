@@ -1,4 +1,3 @@
-use crate::cards::card::Card;
 use crate::err::player_exist::PlayerExistError;
 use crate::err::player_turn::PlayerTurnError;
 use std::error::Error;
@@ -9,7 +8,6 @@ pub enum DrawCardsError {
     PlayerTurnError(PlayerTurnError),
     PlayerExistError(PlayerExistError),
     PlayerCanPlayInstead,
-    PlayerMustPlayInstead(Card),
 }
 
 impl Error for DrawCardsError {}
@@ -22,9 +20,6 @@ impl Display for DrawCardsError {
             PlayerTurnError(err) => write!(f, "{}", err),
             PlayerExistError(err) => write!(f, "{}", err),
             PlayerCanPlayInstead => write!(f, "No need to draw, playing a card is possible"),
-            PlayerMustPlayInstead(top_card) => {
-                write!(f, "Cannot draw, must respond to the {}", top_card)
-            }
         }
     }
 }

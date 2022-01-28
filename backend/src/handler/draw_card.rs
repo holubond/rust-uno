@@ -84,11 +84,6 @@ impl From<DrawCardsError> for HttpResponse {
                 HttpResponse::Conflict().json( 
                     TypedErrMsg::cannot_draw(error)
                 ),
-
-            PlayerMustPlayInstead(_) => 
-                HttpResponse::Conflict().json(
-                    TypedErrMsg::cannot_draw(error)    
-                ),
         }
     }
 }
