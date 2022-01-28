@@ -69,23 +69,22 @@ pub async fn draw_card(
         Some(game) => game,
     };
 
-    return match game.draw_cards(player_name.clone()) {
-        Ok(drawn_cards) => {
-            let next_player = match game.get_current_player() {
-                None => {
-                    return HttpResponse::InternalServerError().json( ErrResp::new("Current player not found") )
-                }
-                Some(player) => player,
-            };
-
-            HttpResponse::Ok().json(MessageResponse {
-                cards: drawn_cards,
-                next: next_player.name(),
-            })
-        }
-
-        Err(err) => HttpResponse::from(err),
+    let drawn_cards = match game.draw_cards(player_name.clone()) {
+        Err(err) => return HttpResponse::from(err),
+        Ok(drawn_cards) => drawn_cards,
     };
+
+    let next_player = match game.get_current_player() {
+        None => {
+            return HttpResponse::InternalServerError().json( ErrResp::new("Current player not found") )
+        }
+        Some(player) => player,
+    };
+
+    HttpResponse::Ok().json(MessageResponse {
+        cards: drawn_cards,
+        next: next_player.name(),
+    })
 }
 
 impl From<DrawCardsError> for HttpResponse {
