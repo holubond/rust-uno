@@ -18,11 +18,6 @@ pub struct GameJoinResponse {
     token: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MessageResponse {
-    message: String,
-}
-
 #[post("/game/{gameID}/player")]
 pub async fn join_game(
     route_params: web::Path<String>,
@@ -50,9 +45,9 @@ pub async fn join_game(
     };
 
     if game.status() != GameStatus::Lobby {
-        return HttpResponse::Gone().json(MessageResponse {
-            message: "Game does not accept any new players.".to_string(),
-        });
+        return HttpResponse::Gone().json( 
+            ErrMsg::new("Game does not accept any new players.")
+        );
     }
 
     game.add_player(player_name.clone());
