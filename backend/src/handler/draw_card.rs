@@ -83,12 +83,22 @@ pub async fn draw_card(
                 next: next_player.name(),
             })
         }
-        Err(DrawCardsError::PlayerTurnError(e)) => HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::NotYourTurn.into_response_string(), message: e.to_string() }),
-        Err(DrawCardsError::PlayerExistError(e)) => HttpResponse::BadRequest().json(ErrResp::new(&format!("{}",DrawCardsError::PlayerExistError(e)))),
 
-        Err(DrawCardsError::PlayerCanPlayInstead) => HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::CannotDraw.into_response_string(), message: format!("{}",DrawCardsError::PlayerCanPlayInstead) }),
-        Err(DrawCardsError::PlayerMustPlayInstead(e)) => HttpResponse::Conflict().json(MessageResponseType {
+        Err(err) => HttpResponse::from(err),
+    };
+}
+
+impl From<DrawCardsError> for HttpResponse {
+    fn from(error: DrawCardsError) -> HttpResponse {
+        use DrawCardsError::*;
+        match error {
+            PlayerTurnError(e) => HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::NotYourTurn.into_response_string(), message: e.to_string() }),
+            PlayerExistError(e) => HttpResponse::BadRequest().json(ErrResp::new(&format!("{}",DrawCardsError::PlayerExistError(e)))),
+
+            PlayerCanPlayInstead => HttpResponse::Conflict().json(MessageResponseType{ type_of_error: TypeOfError::CannotDraw.into_response_string(), message: format!("{}",DrawCardsError::PlayerCanPlayInstead) }),
+            PlayerMustPlayInstead(e) => HttpResponse::Conflict().json(MessageResponseType {
                 type_of_error: TypeOfError::CannotDraw.into_response_string(),
                 message: format!("{}",DrawCardsError::PlayerMustPlayInstead(e))}),
-    };
+        }
+    }
 }
