@@ -9,7 +9,7 @@ use serde::Serialize;
 use std::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MessageResponse {
+pub struct SuccessResponse {
     cards: Vec<Card>,
     next: String,
 }
@@ -52,7 +52,7 @@ fn draw_card_response(
         Some(player) => player,
     };
 
-    Ok(HttpResponse::Ok().json(MessageResponse {
+    Ok(HttpResponse::Ok().json(SuccessResponse {
         cards: drawn_cards,
         next: next_player.name(),
     }))
