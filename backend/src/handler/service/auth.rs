@@ -42,7 +42,7 @@ impl GameID {
     }
 }
 
-type PlayerName = String;
+pub type PlayerName = String;
 
 impl AuthService {
     pub fn new() -> AuthService {

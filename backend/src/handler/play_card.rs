@@ -35,13 +35,23 @@ pub async fn play_card(
     route_params: web::Path<String>,
     request: HttpRequest,
     request_body: web::Json<RequestBody>,
-    authorization_repo: web::Data<AuthService>,
+    auth_service: web::Data<AuthService>,
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
     let game_id = route_params.into_inner();
     let card = &request_body.card;
     let new_color = request_body.new_color;
     let said_uno = request_body.said_uno;
+
+    let (game_id_from_token, player_name) = match auth_service.extract_data(&request) {
+        Err(response) => return response,
+        Ok(data) => data,
+    };
+
+    let game_id = match game_id_from_token.check(game_id) {
+        Err(response) => return response,
+        Ok(id) => id,
+    };
 
     let mut game_repo = match safe_lock(&game_repo) {
         Err(response) => return response,
@@ -53,38 +63,13 @@ pub async fn play_card(
         Some(game) => game,
     };
 
-    let jwt = authorization_repo.parse_jwt(request);
-    let jwt = match jwt {
-        Ok(jwt) => jwt.to_string(),
-        _ => {
-            return HttpResponse::Unauthorized().json(MessageResponse {
-                message: "No auth token provided by the client".to_string(),
-            })
-        }
-    };
-    let claims = match authorization_repo.valid_jwt(&jwt) {
-        Ok(claims) => claims,
-        _ => {
-            return HttpResponse::Unauthorized().json(MessageResponse {
-                message: "Token is not valid".to_string(),
-            })
-        }
-    };
-    let username = authorization_repo.user_from_claims(&claims);
-
-    if !authorization_repo.verify_jwt(username.clone(), game_id, claims) {
-        return HttpResponse::Forbidden().json(MessageResponse {
-            message: "Token does not prove client is the Author".to_string(),
-        });
-    }
-
     if game.status() != GameStatus::Running {
         return HttpResponse::Conflict().json(TypeMessageResponse {
             type_of_error: "GAME_NOT_RUNNING".to_string(),
             message: "Game is not running".to_string(),
         });
     }
-    return match game.play_card(username, card.clone(), new_color, said_uno) {
+    return match game.play_card(player_name, card.clone(), new_color, said_uno) {
         Err(PlayCardError::PlayerHasNoSuchCard(x)) => {
             HttpResponse::Conflict().json(TypeMessageResponse {
                 type_of_error: "CARD_NOT_IN_HAND".to_string(),
