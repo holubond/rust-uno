@@ -7,6 +7,8 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Mutex;
 
+use super::util::safe_lock::safe_lock;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RequestBody {
     name: String,
@@ -38,7 +40,12 @@ pub async fn create_game(
     let game_id = game.id.clone();
     let jwt = authorization_repo.generate_jwt(author_name, &game_id);
 
-    game_repo.lock().unwrap().add_game(game);
+    let mut game_repo = match safe_lock(&game_repo) {
+        Err(response) => return response,
+        Ok(repo) => repo,
+    };
+    
+    game_repo.add_game(game);
 
     HttpResponse::Created().json(GameCreateResponse {
         game_id: game_id,
