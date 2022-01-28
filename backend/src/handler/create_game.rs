@@ -25,7 +25,7 @@ pub struct GameCreateResponse {
 #[post("/game")]
 pub async fn create_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    authorization_repo: web::Data<AuthService>,
+    auth_service: web::Data<AuthService>,
     body: web::Json<RequestBody>,
 ) -> impl Responder {
     let author_name = &body.name;
@@ -38,7 +38,7 @@ pub async fn create_game(
 
     let game = Game::new(author_name.clone());
     let game_id = game.id.clone();
-    let jwt = authorization_repo.generate_jwt(author_name, &game_id);
+    let jwt = auth_service.generate_jwt(author_name, &game_id);
 
     let mut game_repo = match safe_lock(&game_repo) {
         Err(response) => return response,
