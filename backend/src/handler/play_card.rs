@@ -97,15 +97,15 @@ impl From<PlayCardError> for HttpResponse {
                 ),
             PlayerExistError(_) => 
                 HttpResponse::NotFound().json(
-                    ErrMsg::from(error)
+                    ErrMsg::new(error)
                 ),
             CreateStatusError(_) =>
                 HttpResponse::InternalServerError().json(
-                    ErrMsg::from(error)
+                    ErrMsg::new(error)
                 ),
             SaidUnoWhenShouldNotHave =>
                 HttpResponse::BadRequest().json(
-                    ErrMsg::from(error)
+                    ErrMsg::new(error)
                 )
         }
     }

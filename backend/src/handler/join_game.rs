@@ -30,7 +30,7 @@ pub async fn join_game(
 
     if player_name.is_empty() {
         return HttpResponse::BadRequest().json(
-            ErrMsg::new("Name of the player cannot be empty.")
+            ErrMsg::new_from_scratch("Name of the player cannot be empty.")
         );
     }
 
@@ -46,13 +46,13 @@ pub async fn join_game(
 
     if game.status() != GameStatus::Lobby {
         return HttpResponse::Gone().json( 
-            ErrMsg::new("Game does not accept any new players.")
+            ErrMsg::new_from_scratch("Game does not accept any new players.")
         );
     }
 
     if let Err(err) = game.add_player(player_name.clone()) {
         return HttpResponse::InternalServerError().json(
-            ErrMsg::from(err)
+            ErrMsg::new(err)
         )
     };
 

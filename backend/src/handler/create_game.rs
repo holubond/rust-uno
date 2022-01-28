@@ -32,7 +32,7 @@ pub async fn create_game(
 
     if author_name.is_empty() {
         return HttpResponse::BadRequest().json(
-            ErrMsg::new("Name of the player cannot be empty")
+            ErrMsg::new_from_scratch("Name of the player cannot be empty")
         );
     }
 

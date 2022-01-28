@@ -34,15 +34,15 @@ pub struct ErrMsg {
 }
 
 impl ErrMsg {
-    pub fn new(message: &str) -> Self {
+    pub fn new(err: impl Error) -> Self {
         Self {
-            msg: message.into(),
+            msg: err.to_string(),
         }
     }
 
-    pub fn from(err: impl Error) -> Self {
+    pub fn new_from_scratch(message: &str) -> Self {
         Self {
-            msg: err.to_string(),
+            msg: message.into(),
         }
     }
 }
@@ -53,7 +53,7 @@ impl From<GameRepoError> for HttpResponse {
         match error {
             GameNotFound(_) =>
                 HttpResponse::NotFound().json(
-                    ErrMsg::from(error)
+                    ErrMsg::new(error)
                 ),
         }
     }

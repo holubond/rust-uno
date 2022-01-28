@@ -35,7 +35,7 @@ impl GameID {
         if self.id != game_id {
             return Err(
                 HttpResponse::Forbidden().json(
-                    ErrMsg::new("Game id in the url does not match the one in JWT")
+                    ErrMsg::new_from_scratch("Game id in the url does not match the one in JWT")
                 )
             );
         }

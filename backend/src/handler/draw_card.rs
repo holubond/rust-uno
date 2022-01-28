@@ -46,7 +46,7 @@ fn draw_card_response(
     let next_player = match game.get_current_player() {
         None => return Err(
             HttpResponse::InternalServerError().json(
-                ErrMsg::new("Current player not found")
+                ErrMsg::new_from_scratch("Current player not found")
             )
         ),
         Some(player) => player,
@@ -68,7 +68,7 @@ impl From<DrawCardsError> for HttpResponse {
                 ),
             PlayerExistError(_) => 
                 HttpResponse::BadRequest().json(
-                    ErrMsg::from(error)
+                    ErrMsg::new(error)
                 ),
             PlayerCanPlayInstead => 
                 HttpResponse::Conflict().json(
