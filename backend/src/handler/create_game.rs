@@ -1,6 +1,5 @@
 use crate::gamestate::game::Game;
 use crate::handler::service::auth::AuthService;
-use crate::repo::address_repo::AddressRepo;
 use crate::InMemoryGameRepo;
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
@@ -29,7 +28,6 @@ pub struct GameCreateResponse {
 pub async fn create_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
     authorization_repo: web::Data<AuthService>,
-    address_repo: web::Data<AddressRepo>,
     body: web::Json<GameCreateData>,
 ) -> impl Responder {
     let author_name = &body.name;
@@ -48,7 +46,7 @@ pub async fn create_game(
 
     HttpResponse::Created().json(GameCreateResponse {
         game_id: game_id,
-        server: address_repo.full_local_address(),
+        server: "TODO: implement".to_string(),
         token: jwt,
     })
 }

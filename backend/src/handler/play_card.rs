@@ -1,7 +1,7 @@
 use crate::cards::card::{Card, CardColor};
 use crate::err::play_card::PlayCardError;
 use crate::gamestate::game::GameStatus;
-use crate::{AddressRepo, AuthService, InMemoryGameRepo};
+use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;

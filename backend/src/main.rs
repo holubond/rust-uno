@@ -3,7 +3,6 @@ use crate::handler::draw_card::draw_card;
 use crate::handler::join_game::join_game;
 use crate::handler::restart_game::start_game;
 use crate::handler::service::auth::AuthService;
-use crate::repo::address_repo::AddressRepo;
 use crate::repo::game_repo::InMemoryGameRepo;
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
@@ -40,7 +39,6 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let game_repo = web::Data::new(InMemoryGameRepo::new());
-    let address_repo = web::Data::new(AddressRepo::new(port.clone()));
     let auth_service = web::Data::new(AuthService::new());
 
     println!("Starting server on port {}", port);
@@ -54,7 +52,6 @@ async fn main() -> anyhow::Result<()> {
         App::new()
             .wrap(cors)
             .app_data(game_repo.clone())
-            .app_data(address_repo.clone())
             .app_data(auth_service.clone())
             .service(create_game)
             .service(start_game)

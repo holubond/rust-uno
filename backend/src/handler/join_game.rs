@@ -1,6 +1,6 @@
 use crate::gamestate::game::GameStatus;
 use crate::ws::ws_message::WSMsg;
-use crate::{AddressRepo, AuthService, InMemoryGameRepo};
+use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
@@ -26,7 +26,6 @@ pub struct MessageResponse {
 pub async fn join_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
     body: web::Json<GameJoinData>,
-    address_repo: web::Data<AddressRepo>,
     authorization_repo: web::Data<AuthService>,
     params: web::Path<String>,
 ) -> impl Responder {
@@ -68,7 +67,7 @@ pub async fn join_game(
     let jwt = authorization_repo.generate_jwt(player_name, &game_id);
 
     HttpResponse::Created().json(GameJoinResponse {
-        server: address_repo.full_local_address(),
+        server: "TODO: implement".to_string(),
         token: jwt,
     })
 }
