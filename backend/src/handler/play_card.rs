@@ -7,8 +7,8 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Mutex;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PlayCardData {
+#[derive(Deserialize, Debug)]
+pub struct RequestBody {
     card: Card,
     #[serde(rename(serialize = "newColor", deserialize = "newColor"))]
     new_color: Option<CardColor>,
@@ -32,7 +32,7 @@ pub struct TypeMessageResponse {
 pub async fn play_card(
     route_params: web::Path<String>,
     request: HttpRequest,
-    request_body: web::Json<PlayCardData>,
+    request_body: web::Json<RequestBody>,
     authorization_repo: web::Data<AuthService>,
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
