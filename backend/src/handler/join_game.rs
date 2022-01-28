@@ -25,7 +25,7 @@ pub struct MessageResponse {
 pub async fn join_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
     body: web::Json<GameJoinData>,
-    authorization_repo: web::Data<AuthService>,
+    auth_service: web::Data<AuthService>,
     params: web::Path<String>,
 ) -> impl Responder {
     let game_id = params.into_inner();
@@ -63,7 +63,7 @@ pub async fn join_game(
 
     game.add_player(player_name.clone());
 
-    let jwt = authorization_repo.generate_jwt(player_name, &game_id);
+    let jwt = auth_service.generate_jwt(player_name, &game_id);
 
     HttpResponse::Created().json(GameJoinResponse {
         server: "TODO: implement".to_string(),
