@@ -17,11 +17,11 @@ pub async fn start_game(
     request: HttpRequest,
     params: web::Path<String>,
 ) -> impl Responder {
-    let gameID = params.into_inner();
+    let game_id = params.into_inner();
 
     let mut game_repo = game_repo.lock().unwrap();
 
-    let game = match game_repo.find_game_by_id_mut(&gameID) {
+    let game = match game_repo.find_game_by_id_mut(&game_id) {
         Some(game) => game,
         _ => {
             return HttpResponse::NotFound().json(MessageResponse {
@@ -58,7 +58,7 @@ pub async fn start_game(
             })
         }
     };
-    if !authorization_repo.verify_jwt(author_name, gameID, claims) {
+    if !authorization_repo.verify_jwt(author_name, game_id, claims) {
         return HttpResponse::Forbidden().json(MessageResponse {
             message: "Token does not prove client is the Author".to_string(),
         });
