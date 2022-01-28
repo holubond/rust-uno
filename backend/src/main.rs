@@ -38,7 +38,7 @@ async fn main() -> anyhow::Result<()> {
         Err(_) => Opts::parse().port,
     };
 
-    let game_repo = web::Data::new(InMemoryGameRepo::new());
+    let game_repo = web::Data::new(Mutex::new(InMemoryGameRepo::new()));
     let auth_service = web::Data::new(AuthService::new());
 
     println!("Starting server on port {}", port);
