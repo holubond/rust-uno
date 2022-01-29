@@ -1,6 +1,7 @@
 use crate::gamestate::game::Game;
 use crate::gamestate::player::Player;
 use crate::handler::util::response::ErrMsg;
+use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use std::sync::Mutex;
@@ -21,10 +22,12 @@ pub async fn ws_connect(
         Err(response) => return response,
         Ok(data) => data,
     };
-
     let author_name = author_name.into_inner();
 
-    let mut game_repo_mut = game_repo.lock().unwrap();
+    let mut game_repo_mut = match safe_lock(&game_repo) {
+        Err(response) => return response,
+        Ok(repo) => repo,
+    };
 
     let game_mut: &mut Game = match game_repo_mut.get_game_by_id_mut(game_id.into_inner()) {
         Err(response) => return response.into(),
