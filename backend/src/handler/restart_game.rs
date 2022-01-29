@@ -45,14 +45,6 @@ pub fn start_game_response(
     
     player_name_from_token.check(&author_name)?;
 
-    if game.status() == GameStatus::Running {
-        return Err(
-            HttpResponse::Conflict().json(
-                ErrMsg::new_from_scratch("Game cannot be (re)started, its status is RUNNING")
-            )
-        );
-    }
-
     game.start()?;
 
     Ok(HttpResponse::NoContent().finish())
