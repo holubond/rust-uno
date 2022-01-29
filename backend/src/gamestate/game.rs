@@ -108,10 +108,10 @@ impl Game {
         self.players.iter().find(|player| player.name() == name)
     }
 
-    pub fn find_player_mut(&mut self, name: &String) -> Option<&mut Player> {
+    pub fn find_player_mut(&mut self, name: &str) -> Option<&mut Player> {
         self.players
             .iter_mut()
-            .find(|player| player.name() == *name)
+            .find(|player| player.name() == name)
     }
 
     pub fn find_author(&self) -> Option<&Player> {
