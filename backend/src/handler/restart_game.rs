@@ -32,7 +32,7 @@ pub fn start_game_response(
 
     let mut game_repo = safe_lock(&game_repo)?;
 
-    let game = game_repo.get_game_by_id_mut(game_id.clone())?;
+    let game = game_repo.get_game_by_id_mut(game_id)?;
 
     let author_name = match game.find_author() {
         None => return Err(
