@@ -1,6 +1,8 @@
 use crate::gamestate::players::player::Player;
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::random_color;
+use std::time::Duration;
+use rand::Rng;
 
 pub fn decide_new_color(card: &Card) -> Option<CardColor> {
     if card.should_be_black() {
@@ -8,6 +10,10 @@ pub fn decide_new_color(card: &Card) -> Option<CardColor> {
     } else {
         None
     }
+}
+
+pub fn decide_sleep_time() -> Duration {
+    Duration::from_secs(rand::thread_rng().gen_range(1..=4))
 }
 
 pub fn first_card_of_symbol(player: &Player, symbol: CardSymbol) -> Option<Card> {

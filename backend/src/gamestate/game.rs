@@ -9,13 +9,14 @@ use crate::err::player_turn::PlayerTurnError;
 use crate::err::status::CreateStatusError;
 use crate::gamestate::active_cards::ActiveCards;
 use crate::gamestate::players::player::Player;
+use crate::gamestate::players::ai::{first_card_of_symbol, first_playable_card_against, decide_new_color, decide_sleep_time};
 use crate::gamestate::{CARDS_DEALT_TO_PLAYERS, PENALTY_CARDS};
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use crate::gamestate::players::ai::{first_card_of_symbol, first_playable_card_against, decide_new_color};
+use std::thread;
 
 #[cfg(test)]
 #[path = "../tests/game_test.rs"]
@@ -489,6 +490,8 @@ impl Game {
         let current_player = maybe_current_player.unwrap();
 
         if !current_player.is_human() {
+            thread::sleep(decide_sleep_time());
+
             let ai_name = current_player.name();
 
             if let Some(card) = match self.active_cards.are_cards_active() {
