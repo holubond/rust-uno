@@ -24,12 +24,12 @@ pub async fn ws_connect(
     };
     let author_name = author_name.into_inner();
 
-    let mut game_repo_mut = match safe_lock(&game_repo) {
+    let mut game_repo = match safe_lock(&game_repo) {
         Err(response) => return response,
         Ok(repo) => repo,
     };
 
-    let game_mut: &mut Game = match game_repo_mut.get_game_by_id_mut(game_id.into_inner()) {
+    let game_mut: &mut Game = match game_repo.get_game_by_id_mut(game_id.into_inner()) {
         Err(response) => return response.into(),
         Ok(game) => game,
     };
