@@ -18,57 +18,44 @@ pub async fn start_game(
     auth_service: web::Data<AuthService>,
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
+    match start_game_response(route_params, request, auth_service, game_repo) {
+        Err(response) => return response,
+        Ok(response) => return response,
+    }
+}
+
+pub fn start_game_response(
+    route_params: web::Path<String>,
+    request: HttpRequest,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
+) -> Result<HttpResponse, HttpResponse> {
     let game_id = route_params.into_inner();
 
-    let mut game_repo = match safe_lock(&game_repo) {
-        Err(response) => return response,
-        Ok(repo) => repo,
-    };
+    let (game_id_from_token, player_name_from_token) = auth_service.extract_data(&request)?;
 
-    let game = match game_repo.get_game_by_id_mut(game_id.clone()) {
-        Err(error) => return error.into(),
-        Ok(game) => game,
-    };
+    let game_id = game_id_from_token.check(game_id)?;
 
-    let jwt = auth_service.parse_jwt(request);
+    let mut game_repo = safe_lock(&game_repo)?;
 
-    let jwt = match jwt {
-        Ok(jwt) => jwt.to_string(),
-        _ => {
-            return HttpResponse::Unauthorized().json(MessageResponse {
-                message: "No auth token provided by the client".to_string(),
-            })
-        }
-    };
-
-    let claims = match auth_service.valid_jwt(&jwt) {
-        Ok(claims) => claims,
-        _ => {
-            return HttpResponse::Unauthorized().json(MessageResponse {
-                message: "Token is not valid".to_string(),
-            })
-        }
-    };
+    let game = game_repo.get_game_by_id_mut(game_id.clone())?;
 
     let author_name = match game.find_author() {
         Some(player) => player.name(),
         _ => {
-            return HttpResponse::InternalServerError().json(MessageResponse {
+            return Err(HttpResponse::InternalServerError().json(MessageResponse {
                 message: "Game does not have player".to_string(),
-            })
+            }))
         }
     };
-    if !auth_service.verify_jwt(author_name, game_id, claims) {
-        return HttpResponse::Forbidden().json(MessageResponse {
-            message: "Token does not prove client is the Author".to_string(),
-        });
-    }
+    
+    player_name_from_token.check(&author_name)?;
 
     if game.status() == GameStatus::Running {
-        return HttpResponse::Conflict().json(MessageResponse {message:"Game cannot be started ((re)start is available to games with status LOBBY or FINISHED".to_string()});
+        return Err(HttpResponse::Conflict().json(MessageResponse {message:"Game cannot be started ((re)start is available to games with status LOBBY or FINISHED".to_string()}));
     }
 
     game.start();
 
-    HttpResponse::NoContent().finish()
+    Ok(HttpResponse::NoContent().finish())
 }

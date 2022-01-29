@@ -73,7 +73,7 @@ fn play_card_response(
         ))
     }
 
-    game.play_card(player_name, card.clone(), maybe_new_color, said_uno)?;
+    game.play_card(player_name.into_inner(), card.clone(), maybe_new_color, said_uno)?;
 
     Ok(HttpResponse::NoContent().finish())
 }

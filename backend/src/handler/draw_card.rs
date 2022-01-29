@@ -41,7 +41,7 @@ fn draw_card_response(
 
     let game = game_repo.get_game_by_id_mut(game_id)?;
 
-    let drawn_cards = game.draw_cards(player_name.clone())?;
+    let drawn_cards = game.draw_cards(player_name.into_inner())?;
 
     let next_player = match game.get_current_player() {
         None => return Err(

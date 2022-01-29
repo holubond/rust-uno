@@ -43,7 +43,26 @@ impl GameID {
     }
 }
 
-pub type PlayerName = String;
+pub struct PlayerName {
+    name: String,
+}
+
+impl PlayerName {
+    pub fn check(&self, author: &String) -> Result<(), HttpResponse> {
+        if &self.name != author {
+            return Err(
+                HttpResponse::Forbidden().json(
+                    ErrMsg::new_from_scratch("This action can be done only by the author of the game")
+                )
+            );
+        }
+        Ok(())
+    }
+
+    pub fn into_inner(self) -> String {
+        self.name
+    }
+}
 
 impl AuthService {
     pub fn new() -> AuthService {
@@ -131,12 +150,14 @@ impl AuthService {
                 GameID {
                     id: data.custom.game_id,
                 },
-                data.custom.player_name,
+                PlayerName {
+                    name: data.custom.player_name,
+                }
             )),
         }
     }
 
-    pub fn extract_data_from_jwt(&self, jwt: String) -> Result<(String, PlayerName), HttpResponse> {
+    pub fn extract_data_from_jwt(&self, jwt: String) -> Result<(String, String), HttpResponse> {
         match self.key.verify_token::<JwtData>(&jwt, None) {
             Err(_) => Err(HttpResponse::Unauthorized().json(ErrRespLocal::new("Invalid JWT"))),
             Ok(data) => Ok((data.custom.game_id, data.custom.player_name)),
