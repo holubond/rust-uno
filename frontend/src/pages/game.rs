@@ -2,17 +2,17 @@ use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
 use crate::module::module::{CardConflictMessageResponse, MessageResponse, PlayCardRequest};
-use crate::sample_data::test_session;
+use crate::module::ws::ws_msg_handler;
 use crate::url::game_ws;
 use crate::util::alert::alert;
-use crate::{sample_data, url};
+use crate::url;
 use futures::StreamExt;
 use gloo_console::log;
 use gloo_storage::Storage;
 use reqwasm::websocket::futures::WebSocket;
+use reqwasm::websocket::Message;
 use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
@@ -26,6 +26,8 @@ pub enum Msg {
     PlayCard(PlayCardRequest),
     DrawCard,
     DrawSuccess(DrawResponse),
+    UpdateStatus(Message),
+    PlaySubmitSuccess(PlayCardRequest),
 }
 
 pub struct Game {
@@ -37,7 +39,7 @@ pub struct Game {
     pub(crate) cards: Vec<CardInfo>,
     pub(crate) players: Vec<Player>,
     pub(crate) current_player: Option<String>,
-    pub(crate) finished_players: Option<Vec<String>>,
+    pub(crate) finished_players: Vec<String>,
     pub(crate) clockwise: bool,
     pub(crate) uno_bool: bool,
     pub(crate) discarted_card: CardInfo, //todo discarted card
@@ -59,7 +61,7 @@ pub enum GameState {
     Loading,
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct Player {
     pub name: String,
     pub cards: u32,
@@ -80,20 +82,12 @@ impl Component for Game {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        let game: GameStore = gloo_storage::LocalStorage::get("timestampPH").unwrap();
-        let ws = WebSocket::open(&game_ws(&game.token)).unwrap();
-        let (mut _write, mut read) = ws.split();
-        spawn_local(async move {
-            while let Some(msg) = read.next().await {
-                log!(format!("1. {:?}", msg))
-            }
-            log!("WebSocket Closed")
-        });
-        //test purposes data
-        //test_session(game,)
-
-        Self {
+    fn create(ctx: &Context<Self>) -> Self {
+        let game: GameStore = gloo_storage::LocalStorage::get("lastGame").unwrap();
+        let link = ctx.link().clone();
+        let mut ws = WebSocket::open(&game_ws(&game.token.clone())).unwrap();
+        let (_write, mut read) = ws.split();
+        let default_data = Self {
             client: Arc::new(Client::new()),
             game,
             status: GameState::Loading,
@@ -102,7 +96,7 @@ impl Component for Game {
             cards: vec![],
             players: vec![],
             current_player: None,
-            finished_players: None,
+            finished_players: vec![],
             clockwise: true,
             uno_bool: false,
             discarted_card: CardInfo {
@@ -110,7 +104,25 @@ impl Component for Game {
                 _type: CardType::Value,
                 value: Some(1),
             },
-        }
+        };
+        spawn_local(async move {
+            while let Some(msg) = read.next().await {
+                match msg {
+                    Ok(x) => {
+                        log!(format!("got msg in ws: {:?}", x));
+                        link.send_message(Msg::UpdateStatus(x.clone()));
+                        ()
+                    }
+                    Err(_) => (),
+                }
+            }
+            log!("WebSocket Closed")
+        });
+
+        //test purposes data
+        //test_session(game,)
+
+        return default_data;
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -140,10 +152,11 @@ impl Component for Game {
                 let id = self.game.game_id.clone();
                 let token = self.game.token.clone();
                 let said_uno = self.uno_bool.clone();
-                log!("Start game sending");
+                log!("play game sending");
                 ctx.link().send_future(async move {
-                    match play_card_request(client, id, token, card, said_uno.clone()).await {
-                        Ok(_) => Msg::SubmitSuccess,
+                    match play_card_request(client, id, token, card.clone(), said_uno.clone()).await
+                    {
+                        Ok(_) => Msg::PlaySubmitSuccess(card),
                         Err(err) => Msg::SubmitFailure(err),
                     }
                 });
@@ -170,13 +183,31 @@ impl Component for Game {
                 self.current_player = Some(response.next);
             }
 
-            Msg::SubmitSuccess => {
-                //todo render changes
+            Msg::SubmitSuccess => {}
+            Msg::PlaySubmitSuccess(card) => {
+                let index = self.cards.iter().position(|c| c == &card.card).unwrap();
+                self.cards.remove(index);
+                if self.uno_bool {
+                    self.uno_bool = false;
+                }
             }
 
             Msg::SubmitFailure(err_msg) => {
                 alert(&err_msg);
                 log!("Got Err response sending create");
+            }
+
+            Msg::UpdateStatus(msg) => {
+                match msg {
+                    Message::Text(text) => {
+                        match ws_msg_handler(self, text) {
+                            Ok(_) => (),
+                            Err(x) => alert(&x),
+                        };
+                    }
+                    Message::Bytes(bytes) => (),
+                }
+                log!("Updating status msg");
             }
         }
         true
@@ -206,7 +237,6 @@ impl Component for Game {
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
                         <div class="h-1/2">
                             <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
-                            //todo start button
                             {
                                 if self.author == self.you {
                                     html!{
@@ -220,7 +250,7 @@ impl Component for Game {
                                 }
                             }
                         </div>
-                        <div class="h-1/6">
+                        <div class="h-1/2">
                             <p class="text-xl font-bold text-center">{"Joined players:"}</p>
                             {
                                 self.players.iter().map(|x|{
@@ -234,12 +264,39 @@ impl Component for Game {
                 </main>
             };
         }
-
-        /*
-        //todo finish screen
         if self.status.eq(&GameState::Finished) {
-            return html!{}
-        }*/
+            return html! {
+                <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
+                    <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
+                        <div class="h-1/2">
+                            <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
+                            {
+                                if self.author == self.you {
+                                    html!{
+                                        <button class="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white m-8 w-16 h-16 border border-red-500 hover:border-transparent rounded"
+                                            onclick={ctx.link().callback(|_| { Msg::SubmitStart })}>
+                                            {"Restart game"}
+                                        </button>
+                                    }
+                                } else {
+                                    html!{}
+                                }
+                            }
+                        </div>
+                        <div class="h-1/2">
+                            <p class="text-xl font-bold text-center">{"Rankings:"}</p>
+                            {
+                                self.finished_players.iter().enumerate().map(|(x,y)|{
+                                    html!{
+                                        <p class="text-l font-bold text-center">{format!{"{}.{}",x,&y}}</p>
+                                    }
+                                }).collect::<Html>()
+                            }
+                        </div>
+                    </div>
+                </main>
+            };
+        }
         return html! {
             <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                 <div class="w-screen flex flex-row justify-between">
@@ -385,22 +442,16 @@ async fn play_card_request(
     client: Arc<Client>,
     game_id: String,
     token: String,
-    card: PlayCardRequest,
+    mut card: PlayCardRequest,
     said_uno: bool,
 ) -> Result<(), String> {
-    let mut request_body = HashMap::new();
-    request_body.insert("card", serde_json::to_string(&card.card).unwrap());
-    if card.new_color.is_some() {
-        request_body.insert("newColor", card.new_color.unwrap().to_uppercase());
+    card.said_uno = said_uno;
+    match card.new_color {
+        Some(x) => card.new_color = Some(x.to_uppercase()),
+        None => (),
     }
-    request_body.insert("saidUno", said_uno.clone().to_string());
     let url = url::play_card(game_id);
-    let response = client
-        .post(url)
-        .json(&request_body)
-        .bearer_auth(token)
-        .send()
-        .await;
+    let response = client.post(url).json(&card).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
         _ => return Err("Server is not responding.".to_string()),

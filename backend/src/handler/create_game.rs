@@ -1,52 +1,55 @@
 use crate::gamestate::game::Game;
-use crate::repo::address_repo::AddressRepo;
+use crate::handler::service::auth::AuthService;
 use crate::InMemoryGameRepo;
+use crate::handler::util::response::ErrMsg;
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
-use std::sync::{Arc, Mutex};
-use crate::repo::authorization_repo::AuthorizationRepo;
+use std::sync::Mutex;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MessageResponse {
-    message: String,
-}
+use super::util::safe_lock::safe_lock;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct GameCreateData {
+#[derive(Deserialize, Debug)]
+pub struct RequestBody {
     name: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct GameCreateResponse {
-    gameID: String,
+#[derive(Serialize, Debug)]
+pub struct SuccessResponse {
+    #[serde(rename(serialize = "gameID", deserialize = "gameID"))]
+    game_id: String,
     server: String,
     token: String,
 }
 
 #[post("/game")]
 pub async fn create_game(
-    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
-    address_repo: web::Data<Arc<AddressRepo>>,
-    body: web::Json<GameCreateData>,
+    request_body: web::Json<RequestBody>,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
+    let author_name = &request_body.name;
 
-    let author_name = &body.name;
-    
     if author_name.is_empty() {
-        return HttpResponse::BadRequest().json(MessageResponse{message: "Name of the player cannot be empty".to_string()});
+        return HttpResponse::BadRequest().json(
+            ErrMsg::new_from_scratch("Name of the player cannot be empty")
+        );
     }
 
     let game = Game::new(author_name.clone());
     let game_id = game.id.clone();
-    let jwt = authorization_repo.generate_jwt(author_name, &game_id);
+    let jwt = auth_service.generate_jwt(author_name, &game_id);
 
-    game_repo.lock().unwrap().add_game(game);
+    let mut game_repo = match safe_lock(&game_repo) {
+        Err(response) => return response,
+        Ok(repo) => repo,
+    };
+    
+    game_repo.add_game(game);
 
-    HttpResponse::Created().json(GameCreateResponse {
-        gameID: game_id,
-        server: address_repo.full_local_address(),
+    HttpResponse::Created().json(SuccessResponse {
+        game_id,
+        server: "TODO: implement".to_string(),
         token: jwt,
     })
 }

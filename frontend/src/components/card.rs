@@ -19,6 +19,7 @@ pub enum Msg {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all(serialize = "UPPERCASE", deserialize = "UPPERCASE"))]
 pub enum Color {
     Red,
     Yellow,
@@ -40,6 +41,7 @@ impl Color {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all(serialize = "UPPERCASE", deserialize = "UPPERCASE"))]
 pub enum CardType {
     Value,
     Skip,
@@ -103,7 +105,7 @@ impl Component for Card {
                 });
             }
             Msg::PlayWild(chosen_color) => {
-                log! {"wild card clicked"};
+                log! {"colored card clicked"};
                 let props = ctx.props().clone();
                 props.card_on_click.emit(PlayCardRequest {
                     card: props.card_info,
@@ -118,8 +120,8 @@ impl Component for Card {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
 
-        if props.card_info._type == CardType::Wild {
-            return print_wild_card(props.card_info.value_to_string(), ctx.link().clone());
+        if props.card_info._type == CardType::Wild || props.card_info._type == CardType::Draw4 {
+            return print_colorful_card(props.card_info.value_to_string(), ctx.link().clone());
         }
 
         print_card(
@@ -137,21 +139,21 @@ fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
             onclick={link.callback(|_: MouseEvent| { Msg::PlayCard })}
         >
             <div class="h-1/3 w-40">
-                <p class="text-6xl text-left text-White-500 font-bold">{format!("{}",value)}</p>
+                <p class="text-6xl text-left text-White-500 font-bold">{value.to_string()}</p>
             </div>
 
             <div class="h-1/3 w-40 flex justify-center">
-                <p class="text-6xl text-center bg-gray-300 text-Black-500 font-bold">{format!("{}",value)}</p>
+                <p class="text-6xl text-center bg-gray-300 text-Black-500 font-bold">{value.to_string()}</p>
             </div>
 
             <div class="h-1/3 w-40">
-                <p class="text-6xl text-right text-White-500 font-bold">{format!{"{}",value}}</p>
+                <p class="text-6xl text-right text-White-500 font-bold">{value.to_string()}</p>
             </div>
         </div>
     };
 }
 
-fn print_wild_card(value: String, link: Scope<Card>) -> Html {
+fn print_colorful_card(value: String, link: Scope<Card>) -> Html {
     return html! {
         <div class="w-40 h-full flex flex-col bg-black rounded-lg shadow-md">
             <div class="h-1/3 w-full flex flex-row rounded-lg">
@@ -170,7 +172,7 @@ fn print_wild_card(value: String, link: Scope<Card>) -> Html {
 
             <div class="h-1/3 w-40 flex justify-center">
                 <p class="text-5xl text-center bg-gray-300 text-Black-500 font-bold">
-                    {format!("{}",value)}
+                    {value.to_string()}
                 </p>
             </div>
 

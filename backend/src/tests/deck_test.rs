@@ -1,5 +1,7 @@
-use crate::cards::card::{CardColor, Card};
-use crate::cards::deck::{random_color, Deck, insert_number_cards, insert_colored_symbol_cards, insert_black_symbol_cards};
+use crate::cards::card::{Card, CardColor};
+use crate::cards::deck::{
+    insert_black_symbol_cards, insert_colored_symbol_cards, insert_number_cards, random_color, Deck,
+};
 
 #[test]
 fn test_card_symbol_eq() {
@@ -59,7 +61,8 @@ fn test_ser_de() {
     insert_black_symbol_cards(&mut draw_pile);
 
     for card in draw_pile.iter() {
-        transmuted_pile.push(serde_json::from_str(&serde_json::to_string(&card.clone()).unwrap()).unwrap())
+        transmuted_pile
+            .push(serde_json::from_str(&serde_json::to_string(&card.clone()).unwrap()).unwrap())
     }
 
     assert_eq!(draw_pile, transmuted_pile);

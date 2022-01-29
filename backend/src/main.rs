@@ -1,15 +1,17 @@
 use crate::handler::create_game::create_game;
-use crate::handler::restart_game::start_game;
 use crate::handler::draw_card::draw_card;
 use crate::handler::join_game::join_game;
-use crate::repo::address_repo::AddressRepo;
+use crate::handler::restart_game::start_game;
+use crate::handler::service::auth::AuthService;
 use crate::repo::game_repo::InMemoryGameRepo;
+use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
-use handler::{ws_connect::ws_connect, play_card::play_card};
-use std::sync::{Arc, Mutex};
-use actix_cors::Cors;
-use crate::repo::authorization_repo::AuthorizationRepo;
+use handler::{play_card::play_card, ws_connect::ws_connect};
+use std::{
+    env,
+    sync::Mutex,
+};
 
 mod cards;
 mod err;
@@ -25,36 +27,44 @@ struct Opts {
     port: String,
 }
 
+async fn fallback_to_spa() -> actix_files::NamedFile {
+    actix_files::NamedFile::open("./static/index.html").unwrap()
+}
+
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
-    let opts = Opts::parse();
-    let port = opts.port;
+    let port = match env::var("PORT") {
+        Ok(p) => p,
+        Err(_) => Opts::parse().port,
+    };
 
-    let game_repo = Arc::new(Mutex::new(InMemoryGameRepo::new()));
-    let address_repo = Arc::new(AddressRepo::new(port.clone()));
-    let authorization_repo = Arc::new(AuthorizationRepo::new());
+    let game_repo = web::Data::new(Mutex::new(InMemoryGameRepo::new()));
+    let auth_service = web::Data::new(AuthService::new());
+
+    println!("Starting server on port {}", port);
 
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_header()
             .allow_any_origin()
             .allow_any_method();
-            
+
         App::new()
             .wrap(cors)
-            .app_data(web::Data::new(game_repo.clone()))
-            .app_data(web::Data::new(address_repo.clone()))
-            .app_data(web::Data::new(authorization_repo.clone()))
+            .app_data(game_repo.clone())
+            .app_data(auth_service.clone())
             .service(create_game)
             .service(start_game)
             .service(draw_card)
             .service(join_game)
             .service(play_card)
             .service(ws_connect)
+            .service(actix_files::Files::new("/", "./static").index_file("index.html"))
+            .default_service(web::resource("").route(web::get().to(fallback_to_spa)))
     })
-        .bind(format!("127.0.0.1:{}", port))?
-        .run()
-        .await?;
+    .bind(format!("0.0.0.0:{}", port))?
+    .run()
+    .await?;
 
     Ok(())
 }

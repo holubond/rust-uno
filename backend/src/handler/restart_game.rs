@@ -1,58 +1,70 @@
-use crate::gamestate::game::GameStatus;
-use crate::{AuthorizationRepo, InMemoryGameRepo};
+use crate::err::game_start::GameStartError;
+use crate::handler::util::safe_lock::safe_lock;
+use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
-use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
-use std::sync::{Arc, Mutex};
-use actix_web::http::header::Header;
-use serde::Deserialize;
-use serde::Serialize;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MessageResponse {
-    message: String,
-}
+use std::sync::Mutex;
+use super::util::response::ErrMsg;
 
 #[post("game/{gameID}/statusRunning")]
 pub async fn start_game(
-    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
+    route_params: web::Path<String>,
     request: HttpRequest,
-    params: web::Path<String>,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
-    let gameID = params.into_inner();
+    match start_game_response(route_params, request, auth_service, game_repo) {
+        Err(response) => response,
+        Ok(response) => response,
+    }
+}
 
-    let mut game_repo = game_repo.lock().unwrap();
+pub fn start_game_response(
+    route_params: web::Path<String>,
+    request: HttpRequest,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
+) -> Result<HttpResponse, HttpResponse> {
+    let game_id = route_params.into_inner();
 
-    let game = match game_repo.find_game_by_id(&gameID) {
-        Some(game) => game,
-        _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
-    };
+    let (game_id_from_token, player_name_from_token) = auth_service.extract_data(&request)?;
 
-    let jwt = authorization_repo.parse_jwt(request);
+    let game_id = game_id_from_token.check(game_id)?;
 
-    let jwt = match jwt {
-        Ok(jwt) => jwt.to_string(),
-        _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"No auth token provided by the client".to_string()})
-    };
+    let mut game_repo = safe_lock(&game_repo)?;
 
-    let claims = match authorization_repo.valid_jwt(&jwt)  {
-        Ok(claims) => claims,
-        _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"Token is not valid".to_string()})
-    };
+    let game = game_repo.get_game_by_id_mut(game_id)?;
 
     let author_name = match game.find_author() {
-        Some(player) => player.name(),
-        _ => return HttpResponse::InternalServerError().json(MessageResponse{message: "Game does not have player".to_string()})
+        None => return Err(
+            HttpResponse::InternalServerError().json(
+                ErrMsg::new_from_scratch("Author of the game not found")
+            ) ),
+        Some(author) => author.name(),
     };
-    if !authorization_repo.verify_jwt(author_name,gameID, claims) {
-        return HttpResponse::Forbidden().json(MessageResponse {message:"Token does not prove client is the Author".to_string()});
+    
+    player_name_from_token.check(&author_name)?;
+
+    game.start()?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+impl From<GameStartError> for HttpResponse {
+    fn from(error: GameStartError) -> Self {
+        use GameStartError::*;
+        match error {
+            DeckEmptyWhenStartingGame => 
+                HttpResponse::InternalServerError().json(
+                    ErrMsg::new(error)
+                ),
+            GameAlreadyStarted => 
+                HttpResponse::Conflict().json(
+                    ErrMsg::new(error)
+                ),
+            CreateStatusError(_) =>
+                HttpResponse::InternalServerError().json(
+                    ErrMsg::new(error)
+                ),
+        }
     }
-
-    if game.status() == GameStatus::Running {
-        return HttpResponse::Conflict().json(MessageResponse {message:"Game cannot be started ((re)start is available to games with status LOBBY or FINISHED".to_string()});
-    }
-
-    //TODO start game
-
-    HttpResponse::NoContent().finish()
 }

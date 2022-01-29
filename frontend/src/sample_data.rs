@@ -17,7 +17,7 @@ pub fn test_session(game: GameStore) -> Game {
         cards: cards(),
         players: players(),
         current_player: Some("Holy".to_string()),
-        finished_players: None,
+        finished_players: vec![],
         clockwise: true,
         uno_bool: false,
         discarted_card: CardInfo {

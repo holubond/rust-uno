@@ -1,14 +1,15 @@
 use crate::cards::card::Card;
 use crate::err::play_card::PlayCardError;
+use crate::ws::ws_conn::WSConn;
 use crate::ws::ws_message::WSMsg;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Player {
     name: String,
     pub is_author: bool,
     cards: Vec<Card>,
     position: Option<usize>,
+    connection: Option<WSConn>,
 }
 
 impl Player {
@@ -18,6 +19,7 @@ impl Player {
             is_author,
             cards: vec![],
             position: None,
+            connection: None,
         }
     }
 
@@ -87,6 +89,13 @@ impl Player {
     }
 
     pub fn message(&self, msg: WSMsg) {
-        // todo!("self.ws.send(msg);")
+        match &self.connection {
+            Some(conn) => conn.send(msg),
+            None => (),
+        }
+    }
+
+    pub fn set_connection(&mut self, connection: WSConn) {
+        self.connection = Option::Some(connection)
     }
 }

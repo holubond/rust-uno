@@ -8,7 +8,7 @@ static CARDS_TOTAL_IN_GAME: usize = 108;
 #[test]
 fn test_find_player() {
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
+    game.add_player("Bob".into()).unwrap();
 
     assert!(game.find_player("Andy".into()).is_some());
     assert!(game.find_player("Alice".into()).is_none());
@@ -17,7 +17,7 @@ fn test_find_player() {
 #[test]
 fn test_current_next_players() {
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
+    game.add_player("Bob".into()).unwrap();
 
     let current_player = game.get_current_player();
     assert!(current_player.is_some());
@@ -49,8 +49,8 @@ fn test_play_card() {
 #[test]
 fn test_finished_players() {
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
-    game.add_player("Danny".into());
+    game.add_player("Bob".into()).unwrap();
+    game.add_player("Danny".into()).unwrap();
 
     assert!(game.get_finished_players().is_empty());
 
@@ -70,7 +70,7 @@ fn test_finished_players() {
 // prerequisite for some other tests
 #[test]
 fn test_author_is_first_before_start() {
-    let mut game = Game::new("Andy".into());
+    let game = Game::new("Andy".into());
     assert_eq!(
         game.get_current_player().unwrap().name(),
         "Andy".to_string()
@@ -83,7 +83,7 @@ fn test_draw_cards_errors() {
 
     assert!(game.draw_cards("Bobby".into()).is_err()); // nonexistent player
 
-    game.add_player("Bobby".into());
+    game.add_player("Bobby".into()).unwrap();
     assert!(game.draw_cards("Bobby".into()).is_err()); // not the current player
 
     let top_card = game.deck.top_discard_card().clone();
@@ -127,8 +127,8 @@ fn test_draw_cards_draws() {
 #[test]
 fn test_is_clockwise() {
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
-    game.add_player("Candace".into());
+    game.add_player("Bob".into()).unwrap();
+    game.add_player("Candace".into()).unwrap();
     assert!(game.is_clockwise);
 
     assert_eq!(
@@ -247,8 +247,8 @@ fn test_can_play_card_with_context() {
 #[test]
 fn test_start_game() {
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
-    game.add_player("Candace".into());
+    game.add_player("Bob".into()).unwrap();
+    game.add_player("Candace".into()).unwrap();
 
     assert!(game.start().is_ok());
     for player in game.players() {
@@ -264,8 +264,8 @@ fn test_start_game() {
 #[test]
 fn test_start_game_errors() {
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
-    game.add_player("Candace".into());
+    game.add_player("Bob".into()).unwrap();
+    game.add_player("Candace".into()).unwrap();
 
     game.status = GameStatus::Running;
     assert!(game.start().is_err()); // cannot start running game
@@ -273,7 +273,7 @@ fn test_start_game_errors() {
     game.status = GameStatus::Lobby; // reset
     for _ in 0..106 {
         // simulate cards leaving deck completely
-        let card = game.deck.draw().unwrap();
+        let _card = game.deck.draw().unwrap();
     }
     assert!(game.start().is_ok()); // game creates a completely new deck, does not rely on previous one
 }
@@ -364,11 +364,11 @@ fn test_active_cards() {
 #[test]
 fn test_end_turn() {
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
-    game.add_player("Candace".into());
-    game.add_player("Danny".into());
-    game.add_player("Eli".into());
-    game.add_player("Farquaad".into());
+    game.add_player("Bob".into()).unwrap();
+    game.add_player("Candace".into()).unwrap();
+    game.add_player("Danny".into()).unwrap();
+    game.add_player("Eli".into()).unwrap();
+    game.add_player("Farquaad".into()).unwrap();
 
     assert!(game.is_clockwise);
     assert_eq!(
@@ -469,9 +469,9 @@ fn test_say_uno() {
     use CardSymbol::*;
 
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
-    game.add_player("Candace".into());
-    game.add_player("Danny".into());
+    game.add_player("Bob".into()).unwrap();
+    game.add_player("Candace".into()).unwrap();
+    game.add_player("Danny".into()).unwrap();
     let eight = Card::new(Blue, Value(8)).unwrap();
     game.deck.play(eight.clone());
 
@@ -518,8 +518,8 @@ fn test_skip() {
     use CardSymbol::*;
 
     let mut game = Game::new("Andy".into());
-    game.add_player("Bob".into());
-    game.add_player("Candace".into());
+    game.add_player("Bob".into()).unwrap();
+    game.add_player("Candace".into()).unwrap();
 
     // give some starting cards to players to not trigger endgame
     for player in game.players.iter_mut() {

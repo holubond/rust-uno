@@ -1,26 +1,28 @@
-use std::sync::{Arc, Mutex};
-use actix_web::{HttpResponse, Responder, web, post, HttpRequest};
-use crate::{AddressRepo, AuthorizationRepo, InMemoryGameRepo};
 use crate::cards::card::{Card, CardColor};
+use crate::err::play_card::PlayCardError;
 use crate::gamestate::game::GameStatus;
+use crate::handler::util::response::{TypedErrMsg, ErrMsg};
+use crate::handler::util::safe_lock::safe_lock;
+use crate::{AuthService, InMemoryGameRepo};
+use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
-use crate::err::play_card::PlayCardError;
+use std::sync::Mutex;
 
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PlayCardData {
+#[derive(Deserialize, Debug)]
+pub struct RequestBody {
     card: Card,
     #[serde(rename(serialize = "newColor", deserialize = "newColor"))]
-    new_color: CardColor,
+    new_color: Option<CardColor>,
     #[serde(rename(serialize = "saidUno", deserialize = "saidUno"))]
-    said_uno: bool
+    said_uno: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
     message: String,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TypeMessageResponse {
     #[serde(rename(serialize = "type", deserialize = "type"))]
@@ -30,63 +32,80 @@ pub struct TypeMessageResponse {
 
 #[post("/game/{gameID}/playCard")]
 pub async fn play_card(
-    game_repo: web::Data<Arc<Mutex<InMemoryGameRepo>>>,
-    authorization_repo: web::Data<Arc<AuthorizationRepo>>,
-    body: web::Json<PlayCardData>,
+    route_params: web::Path<String>,
     request: HttpRequest,
-    params: web::Path<String>,
+    request_body: web::Json<RequestBody>,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
-    let game_id = params.into_inner();
-    let card = &body.card;
-    let new_color = body.new_color;
-    let said_uno = body.said_uno;
-    let mut game_repo = game_repo.lock().unwrap();
-
-    let game = match game_repo.find_game_by_id(&game_id) {
-        Some(game) => game,
-        _=> return HttpResponse::NotFound().json(MessageResponse {message:"Game not found".to_string()})
-    };
-
-    let jwt = authorization_repo.parse_jwt(request);
-    let jwt = match jwt {
-        Ok(jwt) => jwt.to_string(),
-        _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"No auth token provided by the client".to_string()})
-    };
-    let claims = match authorization_repo.valid_jwt(&jwt)  {
-        Ok(claims) => claims,
-        _ => return HttpResponse::Unauthorized().json(MessageResponse {message:"Token is not valid".to_string()})
-    };
-    let username = authorization_repo.user_from_claims(&claims);
-
-    let player = match game.find_player(username.clone()) {
-        Some(player) => player,
-        _ => return HttpResponse::InternalServerError().json(MessageResponse{message: "Game does not have player".to_string()})
-    };
-    if !authorization_repo.verify_jwt(username.clone(),game_id, claims) {
-        return HttpResponse::Forbidden().json(MessageResponse {message:"Token does not prove client is the Author".to_string()});
+    match play_card_response(route_params, request, request_body, auth_service, game_repo) {
+        Err(response) => response,
+        Ok(response) => response,
     }
+}
 
-    if said_uno && player.get_card_count() > 1{
-        return HttpResponse::BadRequest().json(MessageResponse{message: "Cannot play UNO".to_string()})
-    }
+fn play_card_response(
+    route_params: web::Path<String>,
+    request: HttpRequest,
+    request_body: web::Json<RequestBody>,
+    auth_service: web::Data<AuthService>,
+    game_repo: web::Data<Mutex<InMemoryGameRepo>>,
+) -> Result<HttpResponse, HttpResponse> {
+    let game_id = route_params.into_inner();
+    let card = &request_body.card;
+    let maybe_new_color = request_body.new_color;
+    let said_uno = request_body.said_uno;
+
+    let (game_id_from_token, player_name) = auth_service.extract_data(&request)?;
+
+    let game_id = game_id_from_token.check(game_id)?;
+
+    let mut game_repo = safe_lock(&game_repo)?;
+
+    let game = game_repo.get_game_by_id_mut(game_id.clone())?;
 
     if game.status() != GameStatus::Running {
-        return HttpResponse::Conflict().json(TypeMessageResponse{ type_of_error: "GAME_NOT_RUNNING".to_string(), message: "Game is not running".to_string() });
-    }
-    return match game.play_card(username, card.clone(), Option::Some(new_color),said_uno) {
-        Err(PlayCardError::PlayerHasNoSuchCard(x)) =>
-            HttpResponse::Conflict().json(TypeMessageResponse{ type_of_error: "CARD_NOT_IN_HAND".to_string(), message: PlayCardError::PlayerHasNoSuchCard(x).to_string()}),
-        Err(PlayCardError::CardCannotBePlayed(x,y)) =>
-            HttpResponse::Conflict().json(TypeMessageResponse{ type_of_error: "CANNOT_PLAY_THIS".to_string(), message: PlayCardError::CardCannotBePlayed(x,y).to_string()}),
-        Err(PlayCardError::PlayerTurnError(x)) =>
-            HttpResponse::Conflict().json(TypeMessageResponse{ type_of_error: "NOT_YOUR_TURN".to_string(), message: PlayCardError::PlayerTurnError(x).to_string()}),
-        Err(PlayCardError::PlayerExistError(x)) =>
-            HttpResponse::NotFound().json(MessageResponse{ message: PlayCardError::PlayerExistError(x).to_string()}),
-        Err(PlayCardError::CreateStatusError(x)) =>
-            HttpResponse::InternalServerError().json(MessageResponse{ message: x.to_string() }),
-        Err(PlayCardError::SaidUnoWhenShouldNotHave) =>
-            HttpResponse::BadRequest().json(MessageResponse{ message: "Cannot say UNO".to_string()}),
-        Ok(_) => HttpResponse::NoContent().finish(),
+        return Err( HttpResponse::Conflict().json( 
+            TypedErrMsg::new_from_scratch(
+                "GAME_NOT_RUNNING", 
+                format!("The game with id '{}' is not running", game_id)
+            )
+        ))
     }
 
+    game.play_card(player_name.into_inner(), card.clone(), maybe_new_color, said_uno)?;
+
+    Ok(HttpResponse::NoContent().finish())
+}
+
+impl From<PlayCardError> for HttpResponse {
+    fn from(error: PlayCardError) -> HttpResponse {
+        use PlayCardError::*;
+        match error {
+            PlayerHasNoSuchCard(_) =>
+                HttpResponse::Conflict().json(
+                    TypedErrMsg::new("CARD_NOT_IN_HAND", error)
+                ),
+            CardCannotBePlayed(_, _) =>
+                HttpResponse::Conflict().json(
+                    TypedErrMsg::new("CANNOT_PLAY_THIS", error)
+                ),
+            PlayerTurnError(_) =>
+                HttpResponse::Conflict().json(
+                    TypedErrMsg::new("NOT_YOUR_TURN", error)
+                ),
+            PlayerExistError(_) => 
+                HttpResponse::NotFound().json(
+                    ErrMsg::new(error)
+                ),
+            CreateStatusError(_) =>
+                HttpResponse::InternalServerError().json(
+                    ErrMsg::new(error)
+                ),
+            SaidUnoWhenShouldNotHave =>
+                HttpResponse::BadRequest().json(
+                    ErrMsg::new(error)
+                )
+        }
+    }
 }

@@ -11,6 +11,7 @@ const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Actor representing a WebSocket connection
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct WSActor {
     /// Heartbeat to keep the connection alive
     hb: Instant,

@@ -1,6 +1,6 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
-use crate::err::draw_cards::DrawCardsError;
+use crate::err::draw_cards::PlayerDrawError;
 use crate::err::game_start::GameStartError;
 use crate::err::play_card::PlayCardError;
 use crate::err::player_exist::PlayerExistError;
@@ -14,6 +14,10 @@ use nanoid::nanoid;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+
+#[cfg(test)]
+#[path = "../tests/game_test.rs"]
+mod tests;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "UPPERCASE")]
@@ -104,6 +108,12 @@ impl Game {
         self.players.iter().find(|player| player.name() == name)
     }
 
+    pub fn find_player_mut(&mut self, name: &str) -> Option<&mut Player> {
+        self.players
+            .iter_mut()
+            .find(|player| player.name() == name)
+    }
+
     pub fn find_author(&self) -> Option<&Player> {
         self.players.iter().find(|player| player.is_author)
     }
@@ -118,8 +128,9 @@ impl Game {
         &self.deck
     }
 
-    pub fn add_player(&mut self, name: String) {
-        self.players.push(Player::new(name, false))
+    pub fn add_player(&mut self, name: String) -> Result<(), CreateStatusError> {
+        self.players.push(Player::new(name, false));
+        self.status_message_all()
     }
 
     pub fn get_finished_players(&self) -> Vec<&Player> {
@@ -239,12 +250,12 @@ impl Game {
     }
 
     /// Performs immutable checks whether the player is eligible to draw a card.
-    fn can_player_draw(&self, player_name: String) -> Result<(), DrawCardsError> {
+    fn can_player_draw(&self, player_name: String) -> Result<(), PlayerDrawError> {
         let player = self.does_player_exist(player_name)?;
         self.is_player_at_turn(player)?;
 
         if player.cards().iter().any(|card| self.can_play_card(card)) {
-            return Err(DrawCardsError::PlayerCanPlayInstead);
+            return Err(PlayerDrawError::CanPlayInstead);
         }
 
         Ok(())
@@ -253,7 +264,7 @@ impl Game {
     /// Returns a cloned vector of what the player received as drawn cards.
     /// Returns an error if the player does not exist, is not the current player, or has a valid card to play.
     /// Should get called whenever a player clicks the draw card pile.
-    pub fn draw_cards(&mut self, player_name: String) -> Result<Vec<Card>, DrawCardsError> {
+    pub fn draw_cards(&mut self, player_name: String) -> Result<Vec<Card>, PlayerDrawError> {
         self.can_player_draw(player_name.clone())?;
 
         // Skip turn
@@ -262,6 +273,10 @@ impl Game {
         {
             self.end_turn();
             self.active_cards.clear();
+            self.message_all_but(
+                player_name.clone(),
+                WSMsg::draw(player_name, self.get_current_player().unwrap().name(), 0),
+            );
             return Ok(vec![]);
         }
 
@@ -448,7 +463,3 @@ impl Game {
         Ok(())
     }
 }
-
-#[cfg(test)]
-#[path = "../tests/game_test.rs"]
-mod tests;
