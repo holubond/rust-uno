@@ -78,10 +78,14 @@ impl Deck {
         self.discard_pile.last().unwrap()
     }
 
+    // Used in a test
+    #[allow(dead_code)]
     pub fn draw_pile_size(&self) -> usize {
         self.draw_pile.len()
     }
 
+    // Used in a test
+    #[allow(dead_code)]
     pub fn discard_pile_size(&self) -> usize {
         self.discard_pile.len()
     }
