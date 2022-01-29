@@ -2,16 +2,8 @@ use crate::gamestate::game::GameStatus;
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
-use serde::Deserialize;
-use serde::Serialize;
 use std::sync::Mutex;
-
 use super::util::response::ErrMsg;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MessageResponse {
-    message: String,
-}
 
 #[post("game/{gameID}/statusRunning")]
 pub async fn start_game(
@@ -53,7 +45,11 @@ pub fn start_game_response(
     player_name_from_token.check(&author_name)?;
 
     if game.status() == GameStatus::Running {
-        return Err(HttpResponse::Conflict().json(MessageResponse {message:"Game cannot be started ((re)start is available to games with status LOBBY or FINISHED".to_string()}));
+        return Err(
+            HttpResponse::Conflict().json(
+                ErrMsg::new_from_scratch("Game cannot be (re)started, its status is RUNNING")
+            )
+        );
     }
 
     game.start();
