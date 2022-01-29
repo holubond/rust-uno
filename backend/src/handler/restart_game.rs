@@ -1,5 +1,4 @@
 use crate::err::game_start::GameStartError;
-use crate::gamestate::game::GameStatus;
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
