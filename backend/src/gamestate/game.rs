@@ -9,7 +9,6 @@ use crate::err::status::CreateStatusError;
 use crate::gamestate::active_cards::ActiveCards;
 use crate::gamestate::player::Player;
 use crate::gamestate::{CARDS_DEALT_TO_PLAYERS, PENALTY_CARDS};
-use crate::ws::ws_conn::WSConn;
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
 use rand::seq::SliceRandom;
@@ -462,17 +461,5 @@ impl Game {
         }
 
         Ok(())
-    }
-
-    pub fn set_connection_to_player(
-        &mut self,
-        name_of_player: &String,
-        connection: WSConn,
-    ) -> bool {
-        match self.find_player_mut(&name_of_player) {
-            Some(player) => player.set_connection(connection),
-            _ => return false,
-        };
-        return true;
     }
 }
