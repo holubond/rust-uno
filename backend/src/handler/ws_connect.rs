@@ -1,5 +1,3 @@
-use crate::gamestate::game::Game;
-use crate::gamestate::player::Player;
 use crate::handler::util::response::ErrMsg;
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
@@ -56,7 +54,6 @@ pub async fn ws_connect(
     };
     
     player.set_connection(conn);
-    
     player.message(msg);
 
     response
