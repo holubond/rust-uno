@@ -6,6 +6,8 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Mutex;
 
+use super::util::response::ErrMsg;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageResponse {
     message: String,
@@ -41,12 +43,11 @@ pub fn start_game_response(
     let game = game_repo.get_game_by_id_mut(game_id.clone())?;
 
     let author_name = match game.find_author() {
-        Some(player) => player.name(),
-        _ => {
-            return Err(HttpResponse::InternalServerError().json(MessageResponse {
-                message: "Game does not have player".to_string(),
-            }))
-        }
+        None => return Err(
+            HttpResponse::InternalServerError().json(
+                ErrMsg::new_from_scratch("Author of the game not found")
+            ) ),
+        Some(author) => author.name(),
     };
     
     player_name_from_token.check(&author_name)?;
