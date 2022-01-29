@@ -27,7 +27,7 @@ pub async fn ws_connect(
 
     let mut game_repo_mut = game_repo.lock().unwrap();
 
-    let mut game_mut: &mut Game = match game_repo_mut.get_game_by_id_mut(game_id.into_inner()) {
+    let game_mut: &mut Game = match game_repo_mut.get_game_by_id_mut(game_id.into_inner()) {
         Err(response) => return response.into(),
         Ok(game) => game,
     };
