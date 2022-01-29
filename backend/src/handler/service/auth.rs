@@ -52,8 +52,8 @@ pub struct PlayerName {
 }
 
 impl PlayerName {
-    pub fn check(&self, author: &String) -> Result<(), HttpResponse> {
-        if &self.name != author {
+    pub fn check(&self, author: &str) -> Result<(), HttpResponse> {
+        if self.name != author {
             return Err(
                 HttpResponse::Forbidden().json(
                     ErrMsg::new_from_scratch("This action can be done only by the author of the game")
@@ -75,10 +75,10 @@ impl AuthService {
         }
     }
 
-    pub fn generate_jwt(&self, player_name: &String, game_id: &String) -> String {
+    pub fn generate_jwt(&self, player_name: &str, game_id: &str) -> String {
         let jwt_data = JwtData {
-            player_name: player_name.clone(),
-            game_id: game_id.clone(),
+            player_name: player_name.to_string(),
+            game_id: game_id.to_string(),
         };
         let claims = Claims::with_custom_claims(jwt_data, Duration::from_days(9000));
         self.key.authenticate(claims).unwrap()
