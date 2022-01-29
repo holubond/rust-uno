@@ -13,8 +13,8 @@ pub async fn start_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
     match start_game_response(route_params, request, auth_service, game_repo) {
-        Err(response) => return response,
-        Ok(response) => return response,
+        Err(response) => response,
+        Ok(response) => response,
     }
 }
 
