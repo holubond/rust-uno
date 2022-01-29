@@ -41,6 +41,10 @@ impl GameID {
         }
         Ok(self.id)
     }
+
+    pub fn into_inner(self) -> String {
+        self.id
+    }
 }
 
 pub struct PlayerName {
@@ -144,6 +148,10 @@ impl AuthService {
 
         let token = self.remove_bearer_prefix(auth_bearer)?;
 
+        self.extract_data_from_token(token)
+    }
+
+    pub fn extract_data_from_token(&self, token: String) -> Result<(GameID, PlayerName), HttpResponse> {
         match self.key.verify_token::<JwtData>(&token, None) {
             Err(_) => Err(HttpResponse::Unauthorized().json(ErrRespLocal::new("Invalid JWT"))),
             Ok(data) => Ok((
@@ -154,13 +162,6 @@ impl AuthService {
                     name: data.custom.player_name,
                 }
             )),
-        }
-    }
-
-    pub fn extract_data_from_jwt(&self, jwt: String) -> Result<(String, String), HttpResponse> {
-        match self.key.verify_token::<JwtData>(&jwt, None) {
-            Err(_) => Err(HttpResponse::Unauthorized().json(ErrRespLocal::new("Invalid JWT"))),
-            Ok(data) => Ok((data.custom.game_id, data.custom.player_name)),
         }
     }
 }
