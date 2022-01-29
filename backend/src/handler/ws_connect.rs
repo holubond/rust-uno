@@ -29,7 +29,7 @@ pub async fn ws_connect(
         Ok(repo) => repo,
     };
 
-    let game_mut: &mut Game = match game_repo.get_game_by_id_mut(game_id.into_inner()) {
+    let game = match game_repo.get_game_by_id_mut(game_id.into_inner()) {
         Err(response) => return response.into(),
         Ok(game) => game,
     };
@@ -41,14 +41,14 @@ pub async fn ws_connect(
         Ok(data) => data,
     };
 
-    if !game_mut.set_connection_to_player(&author_name, conn) {
+    if !game.set_connection_to_player(&author_name, conn) {
         return HttpResponse::BadRequest().json(
             ErrMsg::new_from_scratch("Player with given name does not exist")
         );
     }
 
-    let msg = WSMsg::status(game_mut, author_name.clone()).unwrap();
-    let mut player: &mut Player = match game_mut.find_player_mut(&author_name) {
+    let msg = WSMsg::status(game, author_name.clone()).unwrap();
+    let mut player: &mut Player = match game.find_player_mut(&author_name) {
         Some(player) => player,
         _ => return HttpResponse::BadRequest().json(
             ErrMsg::new_from_scratch("Player with given name does not exist")
