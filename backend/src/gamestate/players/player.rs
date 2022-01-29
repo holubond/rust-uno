@@ -6,7 +6,7 @@ use crate::ws::ws_message::WSMsg;
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Player {
     name: String,
-    pub is_author: bool,
+    is_author: bool,
     cards: Vec<Card>,
     position: Option<usize>,
     connection: Option<WSConn>,
@@ -86,6 +86,10 @@ impl Player {
     /// Clones the name of the player.
     pub fn name(&self) -> String {
         self.name.clone()
+    }
+
+    pub fn is_author(&self) -> bool {
+        self.is_author
     }
 
     pub fn message(&self, msg: WSMsg) {

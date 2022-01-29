@@ -113,7 +113,7 @@ impl Game {
     }
 
     pub fn find_author(&self) -> Option<&Player> {
-        self.players.iter().find(|player| player.is_author)
+        self.players.iter().find(|player| player.is_author())
     }
 
     /// Convenience method for accessing the reference to the game's Players.
