@@ -84,23 +84,6 @@ impl AuthService {
         self.key.authenticate(claims).unwrap()
     }
 
-    fn remove_bearer_prefix(&self, auth_bearer: String) -> Result<String, HttpResponse> {
-        let parts = auth_bearer.split_whitespace().collect::<Vec<&str>>();
-
-        if parts.len() != 2 {
-            return Err(HttpResponse::Unauthorized()
-                .json(ErrRespLocal::new("Invalid content of authorization header")));
-        }
-
-        if parts[0] != "Bearer" {
-            return Err(HttpResponse::Unauthorized().json(ErrRespLocal::new(
-                "Missing 'Bearer' prefix in authorization header",
-            )));
-        }
-
-        Ok(parts[1].into())
-    }
-
     // Extracts and returns (game_id, player_name) from a request
     pub(in crate::handler) fn extract_data(
         &self,
@@ -131,5 +114,22 @@ impl AuthService {
                 }
             )),
         }
+    }
+
+    fn remove_bearer_prefix(&self, auth_bearer: String) -> Result<String, HttpResponse> {
+        let parts = auth_bearer.split_whitespace().collect::<Vec<&str>>();
+
+        if parts.len() != 2 {
+            return Err(HttpResponse::Unauthorized()
+                .json(ErrRespLocal::new("Invalid content of authorization header")));
+        }
+
+        if parts[0] != "Bearer" {
+            return Err(HttpResponse::Unauthorized().json(ErrRespLocal::new(
+                "Missing 'Bearer' prefix in authorization header",
+            )));
+        }
+
+        Ok(parts[1].into())
     }
 }
