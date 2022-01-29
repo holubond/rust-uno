@@ -2,8 +2,7 @@ use crate::gamestate::game::Game;
 use crate::gamestate::player::Player;
 use crate::handler::util::response::ErrMsg;
 use crate::{AuthService, InMemoryGameRepo};
-use actix_web::error::ErrorBadRequest;
-use actix_web::{get, web, Error, HttpRequest, HttpResponse, ResponseError};
+use actix_web::{get, web, HttpRequest, HttpResponse};
 use std::sync::Mutex;
 
 use crate::ws::{ws_conn::WSConn, ws_message::WSMsg};
