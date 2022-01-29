@@ -3,7 +3,7 @@ use std::sync::{Mutex, MutexGuard};
 
 use super::response::ErrMsg;
 
-pub fn safe_lock<'a, T>(obj: &'a web::Data<Mutex<T>>) -> Result<MutexGuard<'a, T>, HttpResponse> {
+pub fn safe_lock<T>(obj: &web::Data<Mutex<T>>) -> Result<MutexGuard<'_, T>, HttpResponse> {
     match obj.lock() {
         Err(_) => {
             Err(HttpResponse::InternalServerError().json(
