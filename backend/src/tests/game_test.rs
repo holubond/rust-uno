@@ -1,6 +1,6 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::gamestate::game::{Game, GameStatus};
-use crate::gamestate::player::Player;
+use crate::gamestate::players::player::Player;
 use crate::gamestate::CARDS_DEALT_TO_PLAYERS;
 
 static CARDS_TOTAL_IN_GAME: usize = 108;

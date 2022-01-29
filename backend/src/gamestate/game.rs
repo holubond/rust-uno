@@ -7,7 +7,7 @@ use crate::err::player_exist::PlayerExistError;
 use crate::err::player_turn::PlayerTurnError;
 use crate::err::status::CreateStatusError;
 use crate::gamestate::active_cards::ActiveCards;
-use crate::gamestate::player::Player;
+use crate::gamestate::players::player::Player;
 use crate::gamestate::{CARDS_DEALT_TO_PLAYERS, PENALTY_CARDS};
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
