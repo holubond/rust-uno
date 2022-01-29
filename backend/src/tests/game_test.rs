@@ -70,7 +70,7 @@ fn test_finished_players() {
 // prerequisite for some other tests
 #[test]
 fn test_author_is_first_before_start() {
-    let mut game = Game::new("Andy".into());
+    let game = Game::new("Andy".into());
     assert_eq!(
         game.get_current_player().unwrap().name(),
         "Andy".to_string()
@@ -273,7 +273,7 @@ fn test_start_game_errors() {
     game.status = GameStatus::Lobby; // reset
     for _ in 0..106 {
         // simulate cards leaving deck completely
-        let card = game.deck.draw().unwrap();
+        let _card = game.deck.draw().unwrap();
     }
     assert!(game.start().is_ok()); // game creates a completely new deck, does not rely on previous one
 }
