@@ -18,11 +18,11 @@ pub async fn ws_connect(
 ) -> HttpResponse {
     let jwt = route_params.into_inner();
 
-    let (game_id, author_name) = match auth_service.extract_data_from_token(jwt) {
+    let (game_id, player_name) = match auth_service.extract_data_from_token(jwt) {
         Err(response) => return response,
         Ok(data) => data,
     };
-    let author_name = author_name.into_inner();
+    let player_name = player_name.into_inner();
 
     let mut game_repo = match safe_lock(&game_repo) {
         Err(response) => return response,
@@ -41,14 +41,14 @@ pub async fn ws_connect(
         Ok(data) => data,
     };
 
-    if !game.set_connection_to_player(&author_name, conn) {
+    if !game.set_connection_to_player(&player_name, conn) {
         return HttpResponse::BadRequest().json(
             ErrMsg::new_from_scratch("Player with given name does not exist")
         );
     }
 
-    let msg = WSMsg::status(game, author_name.clone()).unwrap();
-    let player = match game.find_player_mut(&author_name) {
+    let msg = WSMsg::status(game, player_name.clone()).unwrap();
+    let player = match game.find_player_mut(&player_name) {
         Some(player) => player,
         _ => return HttpResponse::BadRequest().json(
             ErrMsg::new_from_scratch("Player with given name does not exist")
