@@ -2,6 +2,7 @@ use crate::cards::card::Card;
 use crate::err::play_card::PlayCardError;
 use crate::ws::ws_conn::WSConn;
 use crate::ws::ws_message::WSMsg;
+use crate::gamestate::players::name_generation::get_random_name;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Player {
@@ -23,6 +24,10 @@ impl Player {
             position: None,
             connection: None,
         }
+    }
+
+    pub fn new_ai() -> Player {
+        Player::new(get_random_name(), false, false)
     }
 
     /// Function returns Err if index is out of bounds

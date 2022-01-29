@@ -52,6 +52,12 @@ impl Game {
         }
     }
 
+    pub fn new_with_ai(author_name: String, ai_count: usize) -> Game {
+        let mut game = Game::new(author_name);
+        (0..ai_count).for_each(|_| game.add_ai());
+        game
+    }
+
     /// Randomizes player order and start, clears positions from previous games, resets the deck and deals cards to players.
     /// Returns Err is the game is already Running.
     pub fn start(&mut self) -> Result<(), GameStartError> {
@@ -129,6 +135,10 @@ impl Game {
     pub fn add_player(&mut self, name: String) -> Result<(), CreateStatusError> {
         self.players.push(Player::new(name, false, true));
         self.status_message_all()
+    }
+
+    pub fn add_ai(&mut self) {
+        self.players.push(Player::new_ai())
     }
 
     pub fn get_finished_players(&self) -> Vec<&Player> {
