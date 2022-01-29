@@ -1,7 +1,8 @@
 use crate::cards::card::{Card, CardColor};
 use crate::cards::deck::{
-    insert_black_symbol_cards, insert_colored_symbol_cards, insert_number_cards, random_color, Deck,
+    insert_black_symbol_cards, insert_colored_symbol_cards, insert_number_cards, Deck,
 };
+use crate::cards::random_color;
 
 #[test]
 fn test_card_symbol_eq() {

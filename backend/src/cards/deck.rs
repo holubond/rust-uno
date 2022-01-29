@@ -1,7 +1,6 @@
-use crate::cards::card::CardColor::{Blue, Green, Red, Yellow};
 use crate::cards::card::{Card, CardColor, CardSymbol};
+use crate::cards::random_color;
 use rand::seq::SliceRandom;
-use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub struct Deck {
@@ -124,12 +123,3 @@ fn insert_black_symbol_cards(card_stack: &mut Vec<Card>) {
 #[cfg(test)]
 #[path = "../tests/deck_test.rs"]
 mod tests;
-
-fn random_color() -> CardColor {
-    match rand::thread_rng().gen_range(0..4) {
-        0 => Red,
-        1 => Blue,
-        2 => Green,
-        _ => Yellow,
-    }
-}
