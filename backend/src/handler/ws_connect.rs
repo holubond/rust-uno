@@ -9,13 +9,13 @@ use crate::ws::{ws_conn::WSConn, ws_message::WSMsg};
 
 #[get("/ws/token/{token}")]
 pub async fn ws_connect(
-    r: HttpRequest,
+    route_params: web::Path<String>,
+    request: HttpRequest,
     stream: web::Payload,
-    params: web::Path<String>,
+    auth_service: web::Data<AuthService>,
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
-    authorization_repo: web::Data<AuthService>,
 ) -> Result<HttpResponse, Error> {
-    let jwt = params.into_inner();
+    let jwt = route_params.into_inner();
 
     let mut game_repo_mut = game_repo.lock().unwrap();
 
@@ -24,7 +24,7 @@ pub async fn ws_connect(
         _ => return Err(ErrorBadRequest("Token si empty")),
     };
 
-    let (game_id, author_name) = match authorization_repo.extract_data_from_jwt(jwt) {
+    let (game_id, author_name) = match auth_service.extract_data_from_jwt(jwt) {
         Ok((author_name, game_id)) => (author_name, game_id),
         Err(_) => return Err(ErrorBadRequest("Token is invalid")),
     };
@@ -34,7 +34,7 @@ pub async fn ws_connect(
         _ => return Err(ErrorBadRequest("Game with given id does not exist")),
     };
 
-    let (conn, response) = WSConn::new(&r, stream)?;
+    let (conn, response) = WSConn::new(&request, stream)?;
     if !game_mut.set_connection_to_player(&author_name, conn) {
         return Err(ErrorBadRequest("Player with given name does not exist"));
     }
