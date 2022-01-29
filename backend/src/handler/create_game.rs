@@ -48,7 +48,7 @@ pub async fn create_game(
     game_repo.add_game(game);
 
     HttpResponse::Created().json(SuccessResponse {
-        game_id: game_id,
+        game_id,
         server: "TODO: implement".to_string(),
         token: jwt,
     })
