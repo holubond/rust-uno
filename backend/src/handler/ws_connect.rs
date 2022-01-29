@@ -48,7 +48,7 @@ pub async fn ws_connect(
     }
 
     let msg = WSMsg::status(game, author_name.clone()).unwrap();
-    let mut player: &mut Player = match game.find_player_mut(&author_name) {
+    let player = match game.find_player_mut(&author_name) {
         Some(player) => player,
         _ => return HttpResponse::BadRequest().json(
             ErrMsg::new_from_scratch("Player with given name does not exist")
