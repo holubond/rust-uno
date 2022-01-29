@@ -188,7 +188,7 @@ impl<'de> Deserialize<'de> for Card {
             }
         }
 
-        const FIELDS: &'static [&'static str] = &["color", "symbol"];
+        const FIELDS: &[&str] = &["color", "symbol"];
         deserializer.deserialize_struct("Card", FIELDS, CardVisitor)
     }
 }
