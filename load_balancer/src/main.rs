@@ -5,6 +5,10 @@ use std::{
     env,
 };
 
+use crate::game_server_repo::GameServerRepo;
+
+mod game_server_repo;
+
 #[derive(Parser)]
 #[clap(version = "1.0", author = "Ondrej Holub")]
 struct Opts {
@@ -25,6 +29,8 @@ async fn main() -> Result<(), Error> {
 
     println!("Starting server on port {}", port);
 
+    let game_server_repo = web::Data::new(GameServerRepo::new());
+
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_header()
@@ -33,6 +39,7 @@ async fn main() -> Result<(), Error> {
 
         App::new()
             .wrap(cors)
+            .app_data(game_server_repo.clone())
             .service(actix_files::Files::new("/", "./static").index_file("index.html"))
             .default_service(web::resource("").route(web::get().to(fallback_to_spa)))
     })
