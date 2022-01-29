@@ -1,3 +1,4 @@
+use crate::err::game_start::GameStartError;
 use crate::gamestate::game::GameStatus;
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
@@ -52,7 +53,27 @@ pub fn start_game_response(
         );
     }
 
-    game.start();
+    game.start()?;
 
     Ok(HttpResponse::NoContent().finish())
+}
+
+impl From<GameStartError> for HttpResponse {
+    fn from(error: GameStartError) -> Self {
+        use GameStartError::*;
+        match error {
+            DeckEmptyWhenStartingGame => 
+                HttpResponse::InternalServerError().json(
+                    ErrMsg::new(error)
+                ),
+            GameAlreadyStarted => 
+                HttpResponse::Conflict().json(
+                    ErrMsg::new(error)
+                ),
+            CreateStatusError(_) =>
+                HttpResponse::InternalServerError().json(
+                    ErrMsg::new(error)
+                ),
+        }
+    }
 }
