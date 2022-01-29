@@ -128,12 +128,8 @@ impl<'de> Deserialize<'de> for Card {
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
 
-                let symbol = if let Ok(maybe_value) = seq.next_element() {
-                    if let Some(value) = maybe_value {
-                        CardSymbol::Value(value)
-                    } else {
-                        symbol
-                    }
+                let symbol = if let Ok(Some(value)) = seq.next_element() {
+                    CardSymbol::Value(value)
                 } else {
                     symbol
                 };
