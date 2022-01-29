@@ -3,6 +3,7 @@ use crate::err::play_card::PlayCardError;
 use crate::gamestate::players::name_generation::get_random_name;
 use crate::ws::ws_conn::WSConn;
 use crate::ws::ws_message::WSMsg;
+use crate::gamestate::players::name_generation::get_random_name;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Player {
