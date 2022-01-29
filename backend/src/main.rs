@@ -10,7 +10,7 @@ use clap::Parser;
 use handler::{play_card::play_card, ws_connect::ws_connect};
 use std::{
     env,
-    sync::{Arc, Mutex},
+    sync::Mutex,
 };
 
 mod cards;
