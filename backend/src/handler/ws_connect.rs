@@ -1,15 +1,9 @@
 use crate::gamestate::game::Game;
 use crate::gamestate::player::Player;
 use crate::{AuthService, InMemoryGameRepo};
-use actix::fut::err;
-use actix_web::error::{ErrorBadGateway, ErrorBadRequest};
-use actix_web::web::Path;
+use actix_web::error::ErrorBadRequest;
 use actix_web::{get, web, Error, HttpRequest, HttpResponse};
-use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
-use std::borrow::{Borrow, BorrowMut};
-use std::ops::Deref;
-use std::option::Option;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use crate::ws::{ws_conn::WSConn, ws_message::WSMsg};
 
