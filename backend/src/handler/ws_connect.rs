@@ -34,7 +34,12 @@ pub async fn ws_connect(
         Ok(game) => game,
     };
 
-    let msg = WSMsg::status(game, player_name.clone()).unwrap();
+    let msg = match WSMsg::status(game, player_name.clone()) {
+        Err(error) => return HttpResponse::InternalServerError().json(
+            ErrMsg::new(error)
+        ),
+        Ok(msg) => msg,
+    };
 
     let player = match game.find_player_mut(&player_name) {
         None => return HttpResponse::NotFound().json(
