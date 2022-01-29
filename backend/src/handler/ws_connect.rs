@@ -34,26 +34,24 @@ pub async fn ws_connect(
         Ok(game) => game,
     };
 
+    let msg = WSMsg::status(game, player_name.clone()).unwrap();
+
+    let player = match game.find_player_mut(&player_name) {
+        None => return HttpResponse::NotFound().json(
+            ErrMsg::new_from_scratch("Player with this name does not exist")
+        ),
+        Some(player) => player,
+    };
+    
     let (conn, response) = match WSConn::new(&request, stream) {
         Err(error) => return HttpResponse::InternalServerError().json(
             ErrMsg::new(error)
         ),
         Ok(data) => data,
     };
-
-    if !game.set_connection_to_player(&player_name, conn) {
-        return HttpResponse::BadRequest().json(
-            ErrMsg::new_from_scratch("Player with given name does not exist")
-        );
-    }
-
-    let msg = WSMsg::status(game, player_name.clone()).unwrap();
-    let player = match game.find_player_mut(&player_name) {
-        Some(player) => player,
-        _ => return HttpResponse::BadRequest().json(
-            ErrMsg::new_from_scratch("Player with given name does not exist")
-        ),
-    };
+    
+    player.set_connection(conn);
+    
     player.message(msg);
 
     response
