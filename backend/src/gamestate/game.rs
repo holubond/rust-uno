@@ -1,5 +1,6 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
+use crate::err::add_player::AddPlayerError;
 use crate::err::ai::AiError;
 use crate::err::draw_cards::PlayerDrawError;
 use crate::err::game_start::GameStartError;
@@ -139,9 +140,15 @@ impl Game {
         &self.deck
     }
 
-    pub fn add_player(&mut self, name: String) -> Result<(), CreateStatusError> {
+    pub fn add_player(&mut self, name: String) -> Result<(), AddPlayerError> {
+        if self.find_player(name.clone()).is_some() {
+            return Err(AddPlayerError::AlreadyExists(name.clone()));
+        }
+
         self.players.push(Player::new(name, false, true));
-        self.status_message_all()
+        self.status_message_all()?;
+
+        Ok(())
     }
 
     pub fn add_ai(&mut self) {

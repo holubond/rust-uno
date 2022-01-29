@@ -2,6 +2,7 @@ use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::gamestate::game::{Game, GameStatus};
 use crate::gamestate::players::player::Player;
 use crate::gamestate::CARDS_DEALT_TO_PLAYERS;
+use crate::err::add_player::AddPlayerError;
 
 static CARDS_TOTAL_IN_GAME: usize = 108;
 
@@ -567,6 +568,14 @@ fn test_skip() {
     assert!(game.active_cards.active_symbol().is_none());
     assert!(!game.active_cards.are_cards_active());
     assert_eq!(game.get_current_player().unwrap().name(), "Andy"); // candice gets skipped
+}
+
+#[test]
+fn test_add_player() {
+    let mut game = Game::new("Andy".into());
+    assert!(game.add_player("Bob".into()).is_ok());
+    assert!(game.add_player("Bob".into()).is_err());
+    assert_eq!(game.add_player("Bob".into()), Err(AddPlayerError::AlreadyExists("Bob".into())));
 }
 
 #[test]
