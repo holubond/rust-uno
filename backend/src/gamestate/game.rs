@@ -1,6 +1,6 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
-use crate::err::draw_cards::DrawCardsError;
+use crate::err::draw_cards::PlayerDrawError;
 use crate::err::game_start::GameStartError;
 use crate::err::play_card::PlayCardError;
 use crate::err::player_exist::PlayerExistError;
@@ -250,12 +250,12 @@ impl Game {
     }
 
     /// Performs immutable checks whether the player is eligible to draw a card.
-    fn can_player_draw(&self, player_name: String) -> Result<(), DrawCardsError> {
+    fn can_player_draw(&self, player_name: String) -> Result<(), PlayerDrawError> {
         let player = self.does_player_exist(player_name)?;
         self.is_player_at_turn(player)?;
 
         if player.cards().iter().any(|card| self.can_play_card(card)) {
-            return Err(DrawCardsError::PlayerCanPlayInstead);
+            return Err(PlayerDrawError::CanPlayInstead);
         }
 
         Ok(())
@@ -264,7 +264,7 @@ impl Game {
     /// Returns a cloned vector of what the player received as drawn cards.
     /// Returns an error if the player does not exist, is not the current player, or has a valid card to play.
     /// Should get called whenever a player clicks the draw card pile.
-    pub fn draw_cards(&mut self, player_name: String) -> Result<Vec<Card>, DrawCardsError> {
+    pub fn draw_cards(&mut self, player_name: String) -> Result<Vec<Card>, PlayerDrawError> {
         self.can_player_draw(player_name.clone())?;
 
         // Skip turn

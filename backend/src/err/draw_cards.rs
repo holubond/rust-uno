@@ -4,34 +4,34 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
-pub enum DrawCardsError {
-    PlayerTurnError(PlayerTurnError),
+pub enum PlayerDrawError {
+    TurnError(PlayerTurnError),
     PlayerExistError(PlayerExistError),
-    PlayerCanPlayInstead,
+    CanPlayInstead,
 }
 
-impl Error for DrawCardsError {}
+impl Error for PlayerDrawError {}
 
-impl Display for DrawCardsError {
+impl Display for PlayerDrawError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        use DrawCardsError::*;
+        use PlayerDrawError::*;
 
         match self {
-            PlayerTurnError(err) => write!(f, "{}", err),
+            TurnError(err) => write!(f, "{}", err),
             PlayerExistError(err) => write!(f, "{}", err),
-            PlayerCanPlayInstead => write!(f, "No need to draw, playing a card is possible"),
+            CanPlayInstead => write!(f, "No need to draw, playing a card is possible"),
         }
     }
 }
 
-impl From<PlayerTurnError> for DrawCardsError {
+impl From<PlayerTurnError> for PlayerDrawError {
     fn from(e: PlayerTurnError) -> Self {
-        DrawCardsError::PlayerTurnError(e)
+        PlayerDrawError::TurnError(e)
     }
 }
 
-impl From<PlayerExistError> for DrawCardsError {
+impl From<PlayerExistError> for PlayerDrawError {
     fn from(e: PlayerExistError) -> Self {
-        DrawCardsError::PlayerExistError(e)
+        PlayerDrawError::PlayerExistError(e)
     }
 }

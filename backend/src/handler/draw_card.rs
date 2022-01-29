@@ -1,5 +1,5 @@
 use crate::cards::card::Card;
-use crate::err::draw_cards::DrawCardsError;
+use crate::err::draw_cards::PlayerDrawError;
 use crate::handler::util::response::{ErrMsg, TypedErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
@@ -58,11 +58,11 @@ fn draw_card_response(
     }))
 }
 
-impl From<DrawCardsError> for HttpResponse {
-    fn from(error: DrawCardsError) -> HttpResponse {
-        use DrawCardsError::*;
+impl From<PlayerDrawError> for HttpResponse {
+    fn from(error: PlayerDrawError) -> HttpResponse {
+        use PlayerDrawError::*;
         match error {
-            PlayerTurnError(_) =>
+            TurnError(_) =>
                 HttpResponse::Conflict().json(
                     TypedErrMsg::new("NOT_YOUR_TURN", error)
                 ),
@@ -70,7 +70,7 @@ impl From<DrawCardsError> for HttpResponse {
                 HttpResponse::BadRequest().json(
                     ErrMsg::new(error)
                 ),
-            PlayerCanPlayInstead => 
+            CanPlayInstead => 
                 HttpResponse::Conflict().json(
                     TypedErrMsg::new("CANNOT_DRAW", error)
                 ),
