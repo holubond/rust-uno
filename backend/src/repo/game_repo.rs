@@ -33,10 +33,6 @@ impl InMemoryGameRepo {
         self.games.push(game);
     }
 
-    pub fn find_game_by_id_mut(&mut self, game_id: &String) -> Option<&mut Game> {
-        self.games.iter_mut().find(|game| &game.id == game_id)
-    }
-
     pub fn get_game_by_id_mut(&mut self, game_id: String) -> Result<&mut Game, GameRepoError> {
         match self.games.iter_mut().find(|game| game.id == game_id) {
             None => Err(GameRepoError::GameNotFound(game_id)),
