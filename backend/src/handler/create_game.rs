@@ -18,7 +18,6 @@ pub struct RequestBody {
 pub struct SuccessResponse {
     #[serde(rename(serialize = "gameID", deserialize = "gameID"))]
     game_id: String,
-    server: String,
     token: String,
 }
 
@@ -49,7 +48,6 @@ pub async fn create_game(
 
     HttpResponse::Created().json(SuccessResponse {
         game_id,
-        server: "TODO: implement".to_string(),
         token: jwt,
     })
 }
