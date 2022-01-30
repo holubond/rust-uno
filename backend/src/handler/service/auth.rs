@@ -1,9 +1,9 @@
+use crate::handler::util::response::ErrMsg;
 use actix_web::http::header::Header;
 use actix_web::HttpRequest;
 use actix_web::HttpResponse;
 use actix_web_httpauth::headers::authorization::{Authorization, Bearer};
 use jwt_simple::prelude::*;
-use crate::handler::util::response::ErrMsg;
 
 pub struct AuthService {
     pub key: HS256Key,
@@ -33,11 +33,9 @@ pub struct GameID {
 impl GameID {
     pub fn check(self, game_id: String) -> Result<String, HttpResponse> {
         if self.id != game_id {
-            return Err(
-                HttpResponse::Forbidden().json(
-                    ErrMsg::new_from_scratch("Game id in the url does not match the one in JWT")
-                )
-            );
+            return Err(HttpResponse::Forbidden().json(ErrMsg::new_from_scratch(
+                "Game id in the url does not match the one in JWT",
+            )));
         }
         Ok(self.id)
     }
@@ -54,11 +52,9 @@ pub struct PlayerName {
 impl PlayerName {
     pub fn check(&self, author: &str) -> Result<(), HttpResponse> {
         if self.name != author {
-            return Err(
-                HttpResponse::Forbidden().json(
-                    ErrMsg::new_from_scratch("This action can be done only by the author of the game")
-                )
-            );
+            return Err(HttpResponse::Forbidden().json(ErrMsg::new_from_scratch(
+                "This action can be done only by the author of the game",
+            )));
         }
         Ok(())
     }
@@ -102,7 +98,10 @@ impl AuthService {
         self.extract_data_from_token(token)
     }
 
-    pub fn extract_data_from_token(&self, token: String) -> Result<(GameID, PlayerName), HttpResponse> {
+    pub fn extract_data_from_token(
+        &self,
+        token: String,
+    ) -> Result<(GameID, PlayerName), HttpResponse> {
         match self.key.verify_token::<JwtData>(&token, None) {
             Err(_) => Err(HttpResponse::Unauthorized().json(ErrRespLocal::new("Invalid JWT"))),
             Ok(data) => Ok((
@@ -111,7 +110,7 @@ impl AuthService {
                 },
                 PlayerName {
                     name: data.custom.player_name,
-                }
+                },
             )),
         }
     }

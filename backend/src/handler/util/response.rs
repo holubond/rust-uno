@@ -51,10 +51,7 @@ impl From<GameRepoError> for HttpResponse {
     fn from(error: GameRepoError) -> HttpResponse {
         use GameRepoError::*;
         match error {
-            GameNotFound(_) =>
-                HttpResponse::NotFound().json(
-                    ErrMsg::new(error)
-                ),
+            GameNotFound(_) => HttpResponse::NotFound().json(ErrMsg::new(error)),
         }
     }
 }

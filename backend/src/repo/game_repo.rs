@@ -1,4 +1,7 @@
-use std::{fmt::{Display, Formatter}, error::Error};
+use std::{
+    error::Error,
+    fmt::{Display, Formatter},
+};
 
 use crate::gamestate::game::Game;
 

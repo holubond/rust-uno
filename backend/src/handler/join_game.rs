@@ -28,9 +28,9 @@ pub async fn join_game(
     let player_name = &request_body.name;
 
     if player_name.is_empty() {
-        return HttpResponse::BadRequest().json(
-            ErrMsg::new_from_scratch("Name of the player cannot be empty.")
-        );
+        return HttpResponse::BadRequest().json(ErrMsg::new_from_scratch(
+            "Name of the player cannot be empty.",
+        ));
     }
 
     let mut game_repo = match safe_lock(&game_repo) {
@@ -44,20 +44,16 @@ pub async fn join_game(
     };
 
     if game.status() != GameStatus::Lobby {
-        return HttpResponse::Gone().json( 
-            ErrMsg::new_from_scratch("Game does not accept any new players.")
-        );
+        return HttpResponse::Gone().json(ErrMsg::new_from_scratch(
+            "Game does not accept any new players.",
+        ));
     }
 
     if let Err(err) = game.add_player(player_name.clone()) {
-        return HttpResponse::InternalServerError().json(
-            ErrMsg::new(err)
-        )
+        return HttpResponse::InternalServerError().json(ErrMsg::new(err));
     };
 
     let jwt = auth_service.generate_jwt(player_name, &game_id);
 
-    HttpResponse::Created().json(SuccessResponse {
-        token: jwt,
-    })
+    HttpResponse::Created().json(SuccessResponse { token: jwt })
 }

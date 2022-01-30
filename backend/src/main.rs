@@ -8,10 +8,7 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use handler::{play_card::play_card, ws_connect::ws_connect};
-use std::{
-    env,
-    sync::Mutex,
-};
+use std::{env, sync::Mutex};
 
 mod cards;
 mod err;
