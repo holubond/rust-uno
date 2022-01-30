@@ -1,1 +1,1 @@
-web: ./target/release/backend
+web: ./target/release/load_balancer

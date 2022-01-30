@@ -6,4 +6,7 @@ members = [
     "load_balancer",
 ]
 
-default-members = ["backend"]
+default-members = [
+    "backend",
+    "load_balancer",
+]
