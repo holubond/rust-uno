@@ -39,10 +39,12 @@ impl GameServerRepo {
             return AddGameServerResult::ServerAlreadyRegistered(position);
         }
 
-        let position = servers.len();
+        let server_id = servers.len();
         servers.push(server_address.to_string());
 
-        AddGameServerResult::ServerAdded(position)
+        println!("Added a new server! Address: {}, ID: {}", server_address, server_id);
+
+        AddGameServerResult::ServerAdded(server_id)
     }
 
     pub fn get(&self, server_id: ServerId) -> GetGameServerResult {
