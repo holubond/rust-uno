@@ -14,7 +14,6 @@ pub struct RequestBody {
 
 #[derive(Serialize, Debug)]
 pub struct SuccessResponse {
-    server: String,
     token: String,
 }
 
@@ -59,7 +58,6 @@ pub async fn join_game(
     let jwt = auth_service.generate_jwt(player_name, &game_id);
 
     HttpResponse::Created().json(SuccessResponse {
-        server: "TODO: implement".to_string(),
         token: jwt,
     })
 }
