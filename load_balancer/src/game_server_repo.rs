@@ -36,7 +36,7 @@ impl GameServerRepo {
 
     /// Adds the game server address to a unique set of known servers.
     /// Returns ID of the server
-    pub fn add(&self, server_address: &str) -> AddGameServerResult {
+    pub fn add(&self, server_address: String) -> AddGameServerResult {
         let mut servers = match self.servers.write() {
             Err(_) => return AddGameServerResult::CouldNotGetLock,
             Ok(repo) => repo,
@@ -53,7 +53,7 @@ impl GameServerRepo {
         let server_id = servers.len();
 
         let server = Server {
-            address: server_address.to_string(),
+            address: server_address.clone(),
             games: 0,
         };
 

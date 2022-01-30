@@ -1,3 +1,5 @@
+use std::env;
+
 use actix_web::{
     client::Client, dev::HttpResponseBuilder, http::StatusCode, post, web, HttpResponse,
 };
@@ -39,8 +41,14 @@ async fn create_game(
 
     let client = Client::default();
 
+    // Determine whether on heroku or localhost
+    let method = match env::var("PORT") {
+        Ok(_) => "https",
+        Err(_) => "http",
+    };
+
     let response = client
-        .post(format!("https://{}/game", server_address))
+        .post(format!("{}://{}/game", method, server_address))
         .header("User-Agent", "actix-web/3.0")
         .send_json(&request_body.into_inner())
         .await;
