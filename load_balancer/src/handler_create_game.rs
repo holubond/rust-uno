@@ -1,4 +1,6 @@
-use actix_web::{HttpResponse, post, web, client::Client, http::StatusCode, dev::HttpResponseBuilder};
+use actix_web::{
+    client::Client, dev::HttpResponseBuilder, http::StatusCode, post, web, HttpResponse,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::game_server_repo::{GameServerRepo, GetServerForNewGameError};
@@ -35,7 +37,8 @@ async fn create_game(
 
     let client = Client::default();
 
-    let response = client.post(format!("https://{}/game", server_address))
+    let response = client
+        .post(format!("https://{}/game", server_address))
         .header("User-Agent", "actix-web/3.0")
         .send_json(&request_body.into_inner())
         .await;
@@ -43,9 +46,11 @@ async fn create_game(
     let mut gs_response = match response {
         Err(error) => {
             game_server_repo.notify_about_false_game_create(server_id);
-            return HttpResponse::InternalServerError().body(
-            format!("Error sending a request to the Game Server: {}", error)
-        )},
+            return HttpResponse::InternalServerError().body(format!(
+                "Error sending a request to the Game Server: {}",
+                error
+            ));
+        }
         Ok(response) => response,
     };
 
@@ -56,10 +61,11 @@ async fn create_game(
     let gs_response_body = match gs_response.json::<SuccessResponseFromGameServer>().await {
         Err(err) => {
             game_server_repo.notify_about_false_game_create(server_id);
-            return HttpResponse::ServiceUnavailable().body(
-                format!("Could not interpret response from a game server: {}", err)
-            )
-        },
+            return HttpResponse::ServiceUnavailable().body(format!(
+                "Could not interpret response from a game server: {}",
+                err
+            ));
+        }
         Ok(json) => json,
     };
 
@@ -76,12 +82,8 @@ impl From<GetServerForNewGameError> for HttpResponse {
     fn from(error: GetServerForNewGameError) -> Self {
         use GetServerForNewGameError::*;
         match error {
-            CouldNotGetLock => HttpResponse::InternalServerError().body(
-                "Could not acquire lock."
-            ),
-            NoServerAvailable => HttpResponse::NotFound().body(
-                "No server is currently available."
-            ),
+            CouldNotGetLock => HttpResponse::InternalServerError().body("Could not acquire lock."),
+            NoServerAvailable => HttpResponse::NotFound().body("No server is currently available."),
         }
     }
 }

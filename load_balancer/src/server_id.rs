@@ -29,17 +29,15 @@ impl ServerId {
 
         match server_id.parse::<usize>() {
             Err(_) => Err(Self::invalid_game_id_response()),
-            Ok(id) => Ok( (Self{id}, game_id) ),
+            Ok(id) => Ok((Self { id }, game_id)),
         }
     }
 
-    pub fn into_inner(&self) -> usize {
+    pub fn into_inner(self) -> usize {
         self.id
     }
 
     fn invalid_game_id_response() -> HttpResponse {
-        HttpResponse::BadRequest().body(
-            "Invalid game ID"
-        )
+        HttpResponse::BadRequest().body("Invalid game ID")
     }
 }

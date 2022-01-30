@@ -1,7 +1,10 @@
 use actix_web::{get, web, HttpResponse};
 use serde::Serialize;
 
-use crate::{game_server_repo::{GameServerRepo, GetGameServerError}, server_id::ServerId};
+use crate::{
+    game_server_repo::{GameServerRepo, GetGameServerError},
+    server_id::ServerId,
+};
 
 #[derive(Serialize)]
 pub struct SuccessResponse {
@@ -27,21 +30,19 @@ pub async fn get_game_server(
         Ok(addr) => addr,
     };
 
-    HttpResponse::Ok().json(
-        SuccessResponse{game_id, server: server_address}
-    )
+    HttpResponse::Ok().json(SuccessResponse {
+        game_id,
+        server: server_address,
+    })
 }
 
 impl From<GetGameServerError> for HttpResponse {
     fn from(result: GetGameServerError) -> Self {
         use GetGameServerError::*;
         match result {
-            CouldNotGetLock => 
-                HttpResponse::InternalServerError().body(
-                    "Could not aquire lock on game server repo"
-                ),
-            NotFound => 
-                HttpResponse::NotFound().finish(),
+            CouldNotGetLock => HttpResponse::InternalServerError()
+                .body("Could not aquire lock on game server repo"),
+            NotFound => HttpResponse::NotFound().finish(),
         }
     }
 }

@@ -1,16 +1,17 @@
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer, Error};
+use actix_web::{web, App, Error, HttpServer};
 use clap::Parser;
-use std::{
-    env,
+use std::env;
+
+use crate::{
+    game_server_repo::GameServerRepo, handler_get_server::get_game_server,
+    handler_register::register_game_server,
 };
 
-use crate::{game_server_repo::GameServerRepo, handler_register::register_game_server, handler_get_server::get_game_server};
-
 mod game_server_repo;
-mod handler_register;
 mod handler_create_game;
 mod handler_get_server;
+mod handler_register;
 mod server_id;
 
 #[derive(Parser)]
