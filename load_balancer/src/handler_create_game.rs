@@ -35,6 +35,8 @@ async fn create_game(
         Ok(address) => address,
     };
 
+    println!("Found server {} {}", server_address, server_id);
+
     let client = Client::default();
 
     let response = client
@@ -43,6 +45,7 @@ async fn create_game(
         .send_json(&request_body.into_inner())
         .await;
 
+        
     let mut gs_response = match response {
         Err(error) => {
             game_server_repo.notify_about_false_game_create(server_id);
@@ -54,6 +57,8 @@ async fn create_game(
         Ok(response) => response,
     };
 
+    println!("Got response {:#?}", gs_response);
+    
     if gs_response.status() != StatusCode::CREATED {
         game_server_repo.notify_about_false_game_create(server_id);
     }
