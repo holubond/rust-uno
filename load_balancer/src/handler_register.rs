@@ -1,6 +1,6 @@
-use actix_web::{HttpResponse, HttpRequest, web, put};
+use actix_web::{put, web, HttpRequest, HttpResponse};
 
-use crate::game_server_repo::{GameServerRepo, AddGameServerResult};
+use crate::game_server_repo::{AddGameServerResult, GameServerRepo};
 
 #[put("/gameServer")]
 pub async fn register_game_server(
@@ -9,9 +9,7 @@ pub async fn register_game_server(
 ) -> HttpResponse {
     let conn_info = request.connection_info();
     let ip = match conn_info.realip_remote_addr() {
-        None => return HttpResponse::InternalServerError().body(
-            "Cannot resolve IP from request"
-        ),
+        None => return HttpResponse::InternalServerError().body("Cannot resolve IP from request"),
         Some(ip) => ip,
     };
 
@@ -22,14 +20,10 @@ impl From<AddGameServerResult> for HttpResponse {
     fn from(result: AddGameServerResult) -> Self {
         use self::AddGameServerResult::*;
         match result {
-            CouldNotGetLock => 
-                HttpResponse::InternalServerError().body(
-                    "Could not aquire lock on game server repo"
-                ),
-            ServerAlreadyRegistered => 
-                HttpResponse::NoContent().finish(),
-            ServerAdded => 
-                HttpResponse::Created().finish(),
+            CouldNotGetLock => HttpResponse::InternalServerError()
+                .body("Could not aquire lock on game server repo"),
+            ServerAlreadyRegistered => HttpResponse::NoContent().finish(),
+            ServerAdded => HttpResponse::Created().finish(),
         }
     }
 }

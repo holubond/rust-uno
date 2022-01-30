@@ -29,19 +29,21 @@ pub enum GetServerForNewGameError {
 
 impl GameServerRepo {
     pub fn new() -> Self {
-        Self { servers: RwLock::new(Vec::new()) }
+        Self {
+            servers: RwLock::new(Vec::new()),
+        }
     }
 
     /// Adds the game server address to a unique set of known servers.
     /// Returns ID of the server
     pub fn add(&self, server_address: &str) -> AddGameServerResult {
-
         let mut servers = match self.servers.write() {
             Err(_) => return AddGameServerResult::CouldNotGetLock,
             Ok(repo) => repo,
         };
 
-        let position = servers.iter()
+        let position = servers
+            .iter()
             .position(|server| server.address == server_address);
 
         if position.is_some() {
@@ -50,14 +52,17 @@ impl GameServerRepo {
 
         let server_id = servers.len();
 
-        let server = Server{
+        let server = Server {
             address: server_address.to_string(),
-            games: 0
+            games: 0,
         };
 
         servers.push(server);
 
-        println!("Added a new server! Address: {}, ID: {}", server_address, server_id);
+        println!(
+            "Added a new server! Address: {}, ID: {}",
+            server_address, server_id
+        );
 
         AddGameServerResult::ServerAdded
     }
@@ -80,11 +85,10 @@ impl GameServerRepo {
             Ok(repo) => repo,
         };
 
-        let candidate = servers.iter_mut()
+        let candidate = servers
+            .iter_mut()
             .enumerate()
-            .min_by(|(_, s1), (_, s2)| 
-                s1.games.cmp(&s2.games)
-            );
+            .min_by(|(_, s1), (_, s2)| s1.games.cmp(&s2.games));
 
         let (server_id, server) = match candidate {
             None => return Err(GetServerForNewGameError::NoServerAvailable),
@@ -97,13 +101,19 @@ impl GameServerRepo {
     }
 
     pub fn notify_about_false_game_create(&self, server_id: usize) {
-        let mut servers = match self.servers.write() {
-            Err(_) => return println!("game_server_repo.notify_about_false_game_create(): could not acquire a lock"),
-            Ok(repo) => repo,
-        };
+        let mut servers =
+            match self.servers.write() {
+                Err(_) => return println!(
+                    "game_server_repo.notify_about_false_game_create(): could not acquire a lock"
+                ),
+                Ok(repo) => repo,
+            };
 
         let server = match servers.get_mut(server_id) {
-            None => return println!("game_server_repo.notify_about_false_game_create(): server with id {} not found", server_id),
+            None => return println!(
+                "game_server_repo.notify_about_false_game_create(): server with id {} not found",
+                server_id
+            ),
             Some(server) => server,
         };
 
