@@ -12,9 +12,8 @@ pub enum AddGameServerResult {
     ServerAdded,
 }
 
-pub enum GetGameServerResult {
+pub enum GetGameServerError {
     CouldNotGetLock,
-    Found(String),
     NotFound,
 }
 
@@ -47,15 +46,15 @@ impl GameServerRepo {
         AddGameServerResult::ServerAdded
     }
 
-    pub fn get(&self, server_id: ServerId) -> GetGameServerResult {
+    pub fn get(&self, server_id: ServerId) -> Result<String, GetGameServerError> {
         let servers = match self.servers.read() {
-            Err(_) => return GetGameServerResult::CouldNotGetLock,
+            Err(_) => return Err(GetGameServerError::CouldNotGetLock),
             Ok(repo) => repo,
         };
 
         match servers.get(server_id.into_inner()) {
-            Some(server_address) => GetGameServerResult::Found(server_address.clone()),
-            None => GetGameServerResult::NotFound,
+            None => Err(GetGameServerError::NotFound),
+            Some(server_address) => Ok(server_address.clone()),
         }
     }
 }

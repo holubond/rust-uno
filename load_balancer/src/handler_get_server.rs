@@ -1,33 +1,44 @@
 use actix_web::{get, web, HttpResponse};
+use serde::Serialize;
 
-use crate::{game_server_repo::{GameServerRepo, GetGameServerResult}, server_id::ServerId};
+use crate::{game_server_repo::{GameServerRepo, GetGameServerError}, server_id::ServerId};
 
-#[get("/gameServer/{gameID}")]
+#[derive(Serialize)]
+pub struct SuccessResponse {
+    #[serde(rename(serialize = "gameID"))]
+    game_id: String,
+    server: String,
+}
+
+#[get("/gameServer/{fullGameID}")]
 pub async fn get_game_server(
     route_params: web::Path<String>,
     game_server_repo: web::Data<GameServerRepo>,
 ) -> HttpResponse {
-    let game_id = route_params.into_inner();
+    let full_game_id = route_params.into_inner();
 
-    let server_id = match ServerId::from(game_id) {
+    let (server_id, game_id) = match ServerId::parse_full_id(full_game_id) {
         Err(response) => return response,
-        Ok(id) => id,
+        Ok(ids) => ids,
     };
 
-    game_server_repo.get(server_id).into()
+    let server_address = match game_server_repo.get(server_id) {
+        Err(error) => return error.into(),
+        Ok(addr) => addr,
+    };
+
+    HttpResponse::Ok().json(
+        SuccessResponse{game_id, server: server_address}
+    )
 }
 
-impl From<GetGameServerResult> for HttpResponse {
-    fn from(result: GetGameServerResult) -> Self {
-        use GetGameServerResult::*;
+impl From<GetGameServerError> for HttpResponse {
+    fn from(result: GetGameServerError) -> Self {
+        use GetGameServerError::*;
         match result {
             CouldNotGetLock => 
                 HttpResponse::InternalServerError().body(
                     "Could not aquire lock on game server repo"
-                ),
-            Found(server_address) =>
-                HttpResponse::Ok().body(
-                    server_address
                 ),
             NotFound => 
                 HttpResponse::NotFound().finish(),
