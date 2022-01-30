@@ -9,6 +9,7 @@ use crate::{game_server_repo::GameServerRepo, handler_register::register_game_se
 
 mod game_server_repo;
 mod handler_register;
+mod handler_create_game;
 mod handler_get_server;
 mod server_id;
 

@@ -6,7 +6,7 @@ pub struct GameServerRepo {
     servers: RwLock<Vec<Server>>,
 }
 
-struct Server {
+pub struct Server {
     games: usize,
     address: String,
 }
@@ -20,6 +20,11 @@ pub enum AddGameServerResult {
 pub enum GetGameServerError {
     CouldNotGetLock,
     NotFound,
+}
+
+pub enum GetServerForNewGameError {
+    CouldNotGetLock,
+    NoServerAvailable,
 }
 
 impl GameServerRepo {
@@ -67,5 +72,41 @@ impl GameServerRepo {
             None => Err(GetGameServerError::NotFound),
             Some(server) => Ok(server.address.clone()),
         }
+    }
+
+    pub fn get_server_for_new_game(&self) -> Result<(String, usize), GetServerForNewGameError> {
+        let mut servers = match self.servers.write() {
+            Err(_) => return Err(GetServerForNewGameError::CouldNotGetLock),
+            Ok(repo) => repo,
+        };
+
+        let candidate = servers.iter_mut()
+            .enumerate()
+            .min_by(|(_, s1), (_, s2)| 
+                s1.games.cmp(&s2.games)
+            );
+
+        let (server_id, server) = match candidate {
+            None => return Err(GetServerForNewGameError::NoServerAvailable),
+            Some(server) => server,
+        };
+
+        server.games += 1;
+
+        Ok((server.address.clone(), server_id))
+    }
+
+    pub fn notify_about_false_game_create(&self, server_id: usize) {
+        let mut servers = match self.servers.write() {
+            Err(_) => return println!("game_server_repo.notify_about_false_game_create(): could not acquire a lock"),
+            Ok(repo) => repo,
+        };
+
+        let server = match servers.get_mut(server_id) {
+            None => return println!("game_server_repo.notify_about_false_game_create(): server with id {} not found", server_id),
+            Some(server) => server,
+        };
+
+        server.games -= 1;
     }
 }
