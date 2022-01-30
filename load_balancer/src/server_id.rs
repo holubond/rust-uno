@@ -33,7 +33,7 @@ impl ServerId {
         }
     }
 
-    pub fn into_inner(&self) -> usize {
+    pub fn into_inner(self) -> usize {
         self.id
     }
 
