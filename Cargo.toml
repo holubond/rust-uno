@@ -7,6 +7,5 @@ members = [
 ]
 
 default-members = [
-    "backend",
     "load_balancer",
 ]
