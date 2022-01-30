@@ -22,7 +22,7 @@ mod ws;
 struct Opts {
     #[clap(short = 'p', long = "port", default_value = "9000")]
     port: String,
-    #[clap(short = 'l', long = "lbaddr", default_value = "https://rust-uno.herokuapp.com/")]
+    #[clap(short = 'l', long = "lbaddr", default_value = "http://rust-uno.herokuapp.com/")]
     load_balancer_addr: String,
 }
 
