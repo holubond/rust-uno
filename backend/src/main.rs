@@ -5,7 +5,7 @@ use crate::handler::restart_game::start_game;
 use crate::handler::service::auth::AuthService;
 use crate::repo::game_repo::InMemoryGameRepo;
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
+use actix_web::{web, App, HttpServer, client::Client, http::StatusCode};
 use clap::Parser;
 use handler::{play_card::play_card, ws_connect::ws_connect};
 use std::{
@@ -25,17 +25,22 @@ mod ws;
 struct Opts {
     #[clap(short = 'p', long = "port", default_value = "9000")]
     port: String,
+    #[clap(short = 'l', long = "loadbalancer", default_value = "https://rust-uno.herokuapp.com/")]
+    load_balancer_address: String,
 }
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
+    let opts = Opts::parse();
     let port = match env::var("PORT") {
         Ok(p) => p,
-        Err(_) => Opts::parse().port,
+        Err(_) => opts.port,
     };
 
     let game_repo = web::Data::new(Mutex::new(InMemoryGameRepo::new()));
     let auth_service = web::Data::new(AuthService::new());
+
+    connect_to_load_balancer(opts.load_balancer_address).await;
 
     println!("Starting server on port {}", port);
 
@@ -61,4 +66,21 @@ async fn main() -> anyhow::Result<()> {
     .await?;
 
     Ok(())
+}
+
+async fn connect_to_load_balancer(url: String) {
+    let client = Client::default();
+    
+    let response = client.put(format!("{}/gameServer", url))
+       .header("User-Agent", "actix-web/3.0")
+       .send()
+       .await
+       .unwrap();  // Unwrap is fine here, there is no point in running a game server without a load balancer
+
+    match response.status() {
+        StatusCode::CREATED => println!("Successfully connected to a load balancer"),
+        StatusCode::NO_CONTENT => println!("Reconnected to a load balancer"),
+        // Panic is fine here, there is no point in running a game server without a load balancer
+        _ => panic!("Invalid response from the load balancer: {:?}", response),
+    }
 }
