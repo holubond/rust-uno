@@ -5,7 +5,7 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::game_server_repo::{GameServerRepo, GetServerForNewGameError};
+use crate::{game_server_repo::{GameServerRepo, GetServerForNewGameError}, server_id::ServerId};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RequestBody {
@@ -82,8 +82,10 @@ async fn create_game(
         Ok(json) => json,
     };
 
+    let full_game_id = ServerId::generate_full_id(gs_response_body.game_id, server_id);
+
     let response_body = SuccessResponseToClient {
-        game_id: gs_response_body.game_id,
+        game_id: full_game_id,
         server: server_address,
         token: gs_response_body.token,
     };
