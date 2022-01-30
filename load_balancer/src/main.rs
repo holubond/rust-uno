@@ -5,10 +5,12 @@ use std::{
     env,
 };
 
-use crate::{game_server_repo::GameServerRepo, handler_register::register_game_server};
+use crate::{game_server_repo::GameServerRepo, handler_register::register_game_server, handler_get_server::get_game_server};
 
 mod game_server_repo;
 mod handler_register;
+mod handler_get_server;
+mod server_id;
 
 #[derive(Parser)]
 #[clap(version = "1.0", author = "Ondrej Holub")]
@@ -42,6 +44,7 @@ async fn main() -> Result<(), Error> {
             .wrap(cors)
             .app_data(game_server_repo.clone())
             .service(register_game_server)
+            .service(get_game_server)
             .service(actix_files::Files::new("/", "./static").index_file("index.html"))
             .default_service(web::resource("").route(web::get().to(fallback_to_spa)))
     })
