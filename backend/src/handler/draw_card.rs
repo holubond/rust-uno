@@ -44,11 +44,10 @@ fn draw_card_response(
     let drawn_cards = game.draw_cards(player_name.into_inner())?;
 
     let next_player = match game.get_current_player() {
-        None => return Err(
-            HttpResponse::InternalServerError().json(
-                ErrMsg::new_from_scratch("Current player not found")
-            )
-        ),
+        None => {
+            return Err(HttpResponse::InternalServerError()
+                .json(ErrMsg::new_from_scratch("Current player not found")))
+        }
         Some(player) => player,
     };
 
@@ -62,18 +61,9 @@ impl From<PlayerDrawError> for HttpResponse {
     fn from(error: PlayerDrawError) -> HttpResponse {
         use PlayerDrawError::*;
         match error {
-            TurnError(_) =>
-                HttpResponse::Conflict().json(
-                    TypedErrMsg::new("NOT_YOUR_TURN", error)
-                ),
-            PlayerExistError(_) => 
-                HttpResponse::BadRequest().json(
-                    ErrMsg::new(error)
-                ),
-            CanPlayInstead => 
-                HttpResponse::Conflict().json(
-                    TypedErrMsg::new("CANNOT_DRAW", error)
-                ),
+            TurnError(_) => HttpResponse::Conflict().json(TypedErrMsg::new("NOT_YOUR_TURN", error)),
+            PlayerExistError(_) => HttpResponse::BadRequest().json(ErrMsg::new(error)),
+            CanPlayInstead => HttpResponse::Conflict().json(TypedErrMsg::new("CANNOT_DRAW", error)),
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::cards::card::{Card, CardColor};
 use crate::err::play_card::PlayCardError;
 use crate::gamestate::game::GameStatus;
-use crate::handler::util::response::{TypedErrMsg, ErrMsg};
+use crate::handler::util::response::{ErrMsg, TypedErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
@@ -65,15 +65,18 @@ fn play_card_response(
     let game = game_repo.get_game_by_id_mut(game_id.clone())?;
 
     if game.status() != GameStatus::Running {
-        return Err( HttpResponse::Conflict().json( 
-            TypedErrMsg::new_from_scratch(
-                "GAME_NOT_RUNNING", 
-                format!("The game with id '{}' is not running", game_id)
-            )
-        ))
+        return Err(HttpResponse::Conflict().json(TypedErrMsg::new_from_scratch(
+            "GAME_NOT_RUNNING",
+            format!("The game with id '{}' is not running", game_id),
+        )));
     }
 
-    game.play_card(player_name.into_inner(), card.clone(), maybe_new_color, said_uno)?;
+    game.play_card(
+        player_name.into_inner(),
+        card.clone(),
+        maybe_new_color,
+        said_uno,
+    )?;
 
     Ok(HttpResponse::NoContent().finish())
 }
@@ -82,30 +85,18 @@ impl From<PlayCardError> for HttpResponse {
     fn from(error: PlayCardError) -> HttpResponse {
         use PlayCardError::*;
         match error {
-            PlayerHasNoSuchCard(_) =>
-                HttpResponse::Conflict().json(
-                    TypedErrMsg::new("CARD_NOT_IN_HAND", error)
-                ),
-            CardCannotBePlayed(_, _) =>
-                HttpResponse::Conflict().json(
-                    TypedErrMsg::new("CANNOT_PLAY_THIS", error)
-                ),
-            PlayerTurnError(_) =>
-                HttpResponse::Conflict().json(
-                    TypedErrMsg::new("NOT_YOUR_TURN", error)
-                ),
-            PlayerExistError(_) => 
-                HttpResponse::NotFound().json(
-                    ErrMsg::new(error)
-                ),
-            CreateStatusError(_) =>
-                HttpResponse::InternalServerError().json(
-                    ErrMsg::new(error)
-                ),
-            SaidUnoWhenShouldNotHave =>
-                HttpResponse::BadRequest().json(
-                    ErrMsg::new(error)
-                )
+            PlayerHasNoSuchCard(_) => {
+                HttpResponse::Conflict().json(TypedErrMsg::new("CARD_NOT_IN_HAND", error))
+            }
+            CardCannotBePlayed(_, _) => {
+                HttpResponse::Conflict().json(TypedErrMsg::new("CANNOT_PLAY_THIS", error))
+            }
+            PlayerTurnError(_) => {
+                HttpResponse::Conflict().json(TypedErrMsg::new("NOT_YOUR_TURN", error))
+            }
+            PlayerExistError(_) => HttpResponse::NotFound().json(ErrMsg::new(error)),
+            CreateStatusError(_) => HttpResponse::InternalServerError().json(ErrMsg::new(error)),
+            SaidUnoWhenShouldNotHave => HttpResponse::BadRequest().json(ErrMsg::new(error)),
         }
     }
 }

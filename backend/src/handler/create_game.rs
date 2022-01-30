@@ -1,7 +1,7 @@
 use crate::gamestate::game::Game;
 use crate::handler::service::auth::AuthService;
-use crate::InMemoryGameRepo;
 use crate::handler::util::response::ErrMsg;
+use crate::InMemoryGameRepo;
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
@@ -18,7 +18,6 @@ pub struct RequestBody {
 pub struct SuccessResponse {
     #[serde(rename(serialize = "gameID", deserialize = "gameID"))]
     game_id: String,
-    server: String,
     token: String,
 }
 
@@ -31,9 +30,9 @@ pub async fn create_game(
     let author_name = &request_body.name;
 
     if author_name.is_empty() {
-        return HttpResponse::BadRequest().json(
-            ErrMsg::new_from_scratch("Name of the player cannot be empty")
-        );
+        return HttpResponse::BadRequest().json(ErrMsg::new_from_scratch(
+            "Name of the player cannot be empty",
+        ));
     }
 
     let game = Game::new(author_name.clone());
@@ -44,12 +43,11 @@ pub async fn create_game(
         Err(response) => return response,
         Ok(repo) => repo,
     };
-    
+
     game_repo.add_game(game);
 
     HttpResponse::Created().json(SuccessResponse {
         game_id,
-        server: "TODO: implement".to_string(),
         token: jwt,
     })
 }

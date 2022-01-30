@@ -1,9 +1,9 @@
+use super::util::response::ErrMsg;
 use crate::err::game_start::GameStartError;
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use std::sync::Mutex;
-use super::util::response::ErrMsg;
 
 #[post("game/{gameID}/statusRunning")]
 pub async fn start_game(
@@ -35,13 +35,13 @@ pub fn start_game_response(
     let game = game_repo.get_game_by_id_mut(game_id)?;
 
     let author_name = match game.find_author() {
-        None => return Err(
-            HttpResponse::InternalServerError().json(
-                ErrMsg::new_from_scratch("Author of the game not found")
-            ) ),
+        None => {
+            return Err(HttpResponse::InternalServerError()
+                .json(ErrMsg::new_from_scratch("Author of the game not found")))
+        }
         Some(author) => author.name(),
     };
-    
+
     player_name_from_token.check(&author_name)?;
 
     game.start()?;
@@ -53,18 +53,11 @@ impl From<GameStartError> for HttpResponse {
     fn from(error: GameStartError) -> Self {
         use GameStartError::*;
         match error {
-            DeckEmptyWhenStartingGame => 
-                HttpResponse::InternalServerError().json(
-                    ErrMsg::new(error)
-                ),
-            GameAlreadyStarted => 
-                HttpResponse::Conflict().json(
-                    ErrMsg::new(error)
-                ),
-            CreateStatusError(_) =>
-                HttpResponse::InternalServerError().json(
-                    ErrMsg::new(error)
-                ),
+            DeckEmptyWhenStartingGame => {
+                HttpResponse::InternalServerError().json(ErrMsg::new(error))
+            }
+            GameAlreadyStarted => HttpResponse::Conflict().json(ErrMsg::new(error)),
+            CreateStatusError(_) => HttpResponse::InternalServerError().json(ErrMsg::new(error)),
         }
     }
 }

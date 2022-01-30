@@ -8,10 +8,7 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use handler::{play_card::play_card, ws_connect::ws_connect};
-use std::{
-    env,
-    sync::Mutex,
-};
+use std::{env, sync::Mutex};
 
 mod cards;
 mod err;
@@ -25,10 +22,6 @@ mod ws;
 struct Opts {
     #[clap(short = 'p', long = "port", default_value = "9000")]
     port: String,
-}
-
-async fn fallback_to_spa() -> actix_files::NamedFile {
-    actix_files::NamedFile::open("./static/index.html").unwrap()
 }
 
 #[actix_web::main]
@@ -59,8 +52,6 @@ async fn main() -> anyhow::Result<()> {
             .service(join_game)
             .service(play_card)
             .service(ws_connect)
-            .service(actix_files::Files::new("/", "./static").index_file("index.html"))
-            .default_service(web::resource("").route(web::get().to(fallback_to_spa)))
     })
     .bind(format!("0.0.0.0:{}", port))?
     .run()
