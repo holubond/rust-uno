@@ -27,10 +27,6 @@ struct Opts {
     port: String,
 }
 
-async fn fallback_to_spa() -> actix_files::NamedFile {
-    actix_files::NamedFile::open("./static/index.html").unwrap()
-}
-
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
     let port = match env::var("PORT") {
@@ -59,8 +55,6 @@ async fn main() -> anyhow::Result<()> {
             .service(join_game)
             .service(play_card)
             .service(ws_connect)
-            .service(actix_files::Files::new("/", "./static").index_file("index.html"))
-            .default_service(web::resource("").route(web::get().to(fallback_to_spa)))
     })
     .bind(format!("0.0.0.0:{}", port))?
     .run()
