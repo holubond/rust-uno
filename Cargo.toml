@@ -1,7 +1,6 @@
 [workspace]
 
 members = [
-    "backend",
     "frontend",
     "load_balancer",
 ]
