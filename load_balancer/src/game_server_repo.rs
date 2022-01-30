@@ -3,7 +3,12 @@ use std::sync::RwLock;
 use crate::server_id::ServerId;
 
 pub struct GameServerRepo {
-    servers: RwLock<Vec<String>>,
+    servers: RwLock<Vec<Server>>,
+}
+
+struct Server {
+    games: usize,
+    address: String,
 }
 
 pub enum AddGameServerResult {
@@ -32,14 +37,20 @@ impl GameServerRepo {
         };
 
         let position = servers.iter()
-            .position(|addr| addr == server_address);
+            .position(|server| server.address == server_address);
 
         if position.is_some() {
             return AddGameServerResult::ServerAlreadyRegistered;
         }
 
         let server_id = servers.len();
-        servers.push(server_address.to_string());
+
+        let server = Server{
+            address: server_address.to_string(),
+            games: 0
+        };
+
+        servers.push(server);
 
         println!("Added a new server! Address: {}, ID: {}", server_address, server_id);
 
@@ -54,7 +65,7 @@ impl GameServerRepo {
 
         match servers.get(server_id.into_inner()) {
             None => Err(GetGameServerError::NotFound),
-            Some(server_address) => Ok(server_address.clone()),
+            Some(server) => Ok(server.address.clone()),
         }
     }
 }
