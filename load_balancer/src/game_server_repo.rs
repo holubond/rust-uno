@@ -8,8 +8,8 @@ pub struct GameServerRepo {
 
 pub enum AddGameServerResult {
     CouldNotGetLock,
-    ServerAlreadyRegistered(usize),
-    ServerAdded(usize),
+    ServerAlreadyRegistered,
+    ServerAdded,
 }
 
 pub enum GetGameServerResult {
@@ -35,8 +35,8 @@ impl GameServerRepo {
         let position = servers.iter()
             .position(|addr| addr == server_address);
 
-        if let Some(position) = position {
-            return AddGameServerResult::ServerAlreadyRegistered(position);
+        if position.is_some() {
+            return AddGameServerResult::ServerAlreadyRegistered;
         }
 
         let server_id = servers.len();
@@ -44,7 +44,7 @@ impl GameServerRepo {
 
         println!("Added a new server! Address: {}, ID: {}", server_address, server_id);
 
-        AddGameServerResult::ServerAdded(server_id)
+        AddGameServerResult::ServerAdded
     }
 
     pub fn get(&self, server_id: ServerId) -> GetGameServerResult {

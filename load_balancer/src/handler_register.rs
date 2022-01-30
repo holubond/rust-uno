@@ -26,10 +26,10 @@ impl From<AddGameServerResult> for HttpResponse {
                 HttpResponse::InternalServerError().body(
                     "Could not aquire lock on game server repo"
                 ),
-            ServerAlreadyRegistered(position) => 
-                HttpResponse::Ok().body(format!("{}", position)),
-            ServerAdded(position) => 
-                HttpResponse::Created().body(format!("{}", position)),
+            ServerAlreadyRegistered => 
+                HttpResponse::NoContent().finish(),
+            ServerAdded => 
+                HttpResponse::Created().finish(),
         }
     }
 }
