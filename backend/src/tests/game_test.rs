@@ -561,3 +561,38 @@ fn test_skip() {
     assert!(!game.active_cards.are_cards_active());
     assert_eq!(game.get_current_player().unwrap().name(), "Andy"); // candice gets skipped
 }
+
+#[test]
+fn test_game_end() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new("Andy".into());
+    game.add_player("Bob".into()).unwrap();
+    game.add_player("Candace".into()).unwrap();
+
+    assert!(game.start().is_ok()); // simulate game start, set status to Running
+
+    // give only 2 starting cards to players
+    for player in game.players.iter_mut() {
+        player.drop_all_cards();
+        player.give_card(Card::new(Blue, Value(1)).unwrap());
+        player.give_card(Card::new(Blue, Value(2)).unwrap());
+    }
+
+    game.deck.play(Card::new(Blue, Value(1)).unwrap());
+
+    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
+    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
+    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
+
+    for player in game.players.iter() {
+        assert_eq!(player.get_card_count(), 1usize);
+    }
+
+    assert_eq!(game.status, GameStatus::Running);
+    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(2)).unwrap(), None, false).is_ok());
+    assert_eq!(game.status, GameStatus::Running);
+    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(2)).unwrap(), None, false).is_ok());
+    assert_eq!(game.status, GameStatus::Finished);
+}

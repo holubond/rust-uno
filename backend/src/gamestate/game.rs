@@ -430,10 +430,13 @@ impl Game {
         played_card: Card,
         player_penalized: bool,
     ) -> Result<(), CreateStatusError> {
-        let new_player_name = self.get_current_player().unwrap().name();
+        let next_player_name = match self.get_current_player() {
+            None => return Err(CreateStatusError::CurrentPlayerNotFound),
+            Some(player) => player.name()
+        };
         self.message_all(WSMsg::play_card(
             player_name.clone(),
-            new_player_name.clone(),
+            next_player_name,
             played_card,
         ));
 
@@ -452,7 +455,7 @@ impl Game {
             self.message_all(WSMsg::finish(player_name.clone()));
         }
 
-        if new_player_name == player_name {
+        if self.players.len().saturating_sub(self.get_finished_players().len()) <= 1 {
             // == after end_turn(), the same player got the turn
             self.status = GameStatus::Finished;
             self.status_message_all()?;
