@@ -49,6 +49,8 @@ async fn create_game(
 
     let url = format!("http://{}/game", ip);
 
+    println!("URL: {}", url);
+
     let response = client
         .post(url)
         .header("User-Agent", "actix-web/3.0")
