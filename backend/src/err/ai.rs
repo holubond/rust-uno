@@ -2,11 +2,13 @@ use crate::err::draw_cards::PlayerDrawError;
 use crate::err::play_card::PlayCardError;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use crate::err::status::CreateStatusError;
 
 #[derive(Debug)]
 pub enum AiError {
     PlayCardError(PlayCardError),
     DrawCardError(PlayerDrawError),
+    CreateStatusError(CreateStatusError)
 }
 
 impl Error for AiError {}
@@ -18,6 +20,7 @@ impl Display for AiError {
         match self {
             PlayCardError(err) => write!(f, "{}", err),
             DrawCardError(err) => write!(f, "{}", err),
+            CreateStatusError(err) => write!(f, "{}", err),
         }
     }
 }
@@ -31,5 +34,11 @@ impl From<PlayCardError> for AiError {
 impl From<PlayerDrawError> for AiError {
     fn from(e: PlayerDrawError) -> Self {
         AiError::DrawCardError(e)
+    }
+}
+
+impl From<CreateStatusError> for AiError {
+    fn from(e: CreateStatusError) -> Self {
+        AiError::CreateStatusError(e)
     }
 }

@@ -483,18 +483,44 @@ impl Game {
         Ok(())
     }
 
+    fn nonhuman_iter(&self) -> impl Iterator<Item=&Player> {
+        self.players.iter().filter(|player| !player.is_human())
+    }
+
+    fn nonhuman_iter_mut(&mut self) -> impl Iterator<Item=&mut Player> {
+        self.players.iter_mut().filter(|player| !player.is_human())
+    }
+
     fn maybe_ai_turn(&mut self) -> Result<(), AiError> {
-        let maybe_current_player = self.get_current_player();
-        if maybe_current_player.is_none() {
+        {
+            // inner scope due to mutable borrowing later
+            let maybe_current_player = self.get_current_player();
+            if maybe_current_player.is_none() {
+                return Ok(());
+            }
+
+            let current_player = maybe_current_player.unwrap();
+            if current_player.is_human() {
+                return Ok(());
+            }
+        }
+
+        if !self.get_finished_players().is_empty() && self.nonhuman_iter().all(|player| !player.is_finished()) {
+            let last_position = self.get_finished_players().last().unwrap().position().unwrap(); // safe due to is_empty check
+            for (index, ai) in self.nonhuman_iter_mut().enumerate() {
+                ai.set_position(last_position + index + 1);
+            }
+            for ai in self.nonhuman_iter() {
+                self.message_all(WSMsg::finish(ai.name()));
+            }
+            self.status = GameStatus::Finished;
+            self.status_message_all()?;
+
             return Ok(());
         }
 
-        let current_player = maybe_current_player.unwrap();
-        if current_player.is_human() {
-            return Ok(());
-        }
         //thread::sleep(decide_sleep_time());
-
+        let current_player = self.get_current_player().unwrap();
         let ai_name = current_player.name();
 
         if let Some(card) = match self.active_cards.are_cards_active() {

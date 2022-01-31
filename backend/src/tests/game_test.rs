@@ -620,3 +620,23 @@ fn test_ai_does_not_hold() {
     assert!(game.get_current_player().unwrap().is_human());
     assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
 }
+
+#[test]
+fn test_only_ai_finishes_game() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new_with_ai("Andy".into(), 6);
+
+    // let Andy play his only one card
+    let skip = Card::new(Blue, Skip).unwrap();
+    game.deck.play(skip.clone());
+    game.players.get_mut(0).unwrap().give_card(skip.clone());
+
+    let skip = Card::new(Blue, Skip).unwrap();
+    // this will cause all the other AI players to play too, but th
+    assert!(game.play_card("Andy".into(), skip.clone(), None, false).is_ok());
+
+    // all humans finished => game finished
+    assert_eq!(game.status, GameStatus::Finished);
+}
