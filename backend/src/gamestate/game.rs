@@ -77,6 +77,8 @@ impl Game {
 
         self.status_message_all()?;
 
+        self.maybe_ai_turn()?;
+
         Ok(())
     }
 
@@ -490,7 +492,7 @@ impl Game {
         let current_player = maybe_current_player.unwrap();
 
         if !current_player.is_human() {
-            thread::sleep(decide_sleep_time());
+            //thread::sleep(decide_sleep_time());
 
             let ai_name = current_player.name();
 

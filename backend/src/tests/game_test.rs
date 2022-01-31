@@ -596,3 +596,27 @@ fn test_game_end() {
     assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(2)).unwrap(), None, false).is_ok());
     assert_eq!(game.status, GameStatus::Finished);
 }
+
+#[test]
+fn test_ai_does_not_hold() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new_with_ai("Andy".into(), 6);
+
+    // simulate game start without the random order
+    assert!(game.deal_starting_cards().is_ok());
+
+    // let Andy play
+    let skip = Card::new(Blue, Skip).unwrap();
+    game.deck.play(skip.clone());
+    game.players.get_mut(0).unwrap().give_card(skip.clone());
+
+    let skip = Card::new(Blue, Skip).unwrap();
+    // this will cause all the other AI players to play too
+    assert!(game.play_card("Andy".into(), skip.clone(), None, false).is_ok());
+
+    // we should be back at Andy
+    assert!(game.get_current_player().unwrap().is_human());
+    assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
+}
