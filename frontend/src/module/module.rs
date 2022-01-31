@@ -91,3 +91,10 @@ pub struct GainedCards {
     pub who: String,
     pub number: u32,
 }
+
+#[derive(Deserialize)]
+pub struct SuccessLBResponse {
+    #[serde(rename(deserialize = "gameID"))]
+    pub game_id: String,
+    pub server: String,
+}
