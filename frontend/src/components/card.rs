@@ -134,7 +134,7 @@ impl Component for Card {
 
 fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
     return html! {
-        <div class="w-40 h-full flex flex-col rounded-lg shadow-md border-black border-4"
+        <div class="w-40 h-full cursor-pointer flex flex-col rounded-lg shadow-md border-black border-4"
             style={format!("background-color: {}", color.to_str())}
             onclick={link.callback(|_: MouseEvent| { Msg::PlayCard })}
         >
@@ -155,7 +155,7 @@ fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
 
 fn print_colorful_card(value: String, link: Scope<Card>) -> Html {
     return html! {
-        <div class="w-40 h-full flex flex-col bg-black rounded-lg shadow-md border-black border-4">
+        <div class="w-40 h-full cursor-pointer flex flex-col bg-black rounded-lg shadow-md border-black border-4">
             <div class="h-1/3 w-full flex flex-row rounded-lg">
                 <div
                     class="h-full w-1/2 rounded-lg" style="background-color: red"
