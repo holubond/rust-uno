@@ -23,7 +23,7 @@ mod ws;
 struct Opts {
     #[clap(short = 'p', long = "port", default_value = "9000")]
     port: String,
-    #[clap(short = 'l', long = "lbaddr", default_value = "http://rust-uno.herokuapp.com/")]
+    #[clap(short = 'l', long = "lbaddr", default_value = "http://rust-uno.herokuapp.com")]
     load_balancer_addr: String,
 }
 
@@ -74,9 +74,11 @@ pub struct RequestBody {
 async fn connect_to_load_balancer(url: String, port: String) {
     let client = Client::default();
 
+    let url = format!("{}/gameServer", url);
+
     println!("Connecting to url: {}", url);
 
-    let response = client.put(format!("{}/gameServer", url))
+    let response = client.put(url)
        .header("User-Agent", "actix-web/3.0")
        .send_json(
            &RequestBody{
