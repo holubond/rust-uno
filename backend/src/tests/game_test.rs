@@ -345,7 +345,7 @@ fn test_active_cards() {
         let game_before = game.clone();
         let andy = game.players.get_mut(0).unwrap();
         assert!(
-            andy.play_card_by_eq(blu_skip.clone()).is_err(),
+            andy.play_card(blu_skip.clone()).is_err(),
             "Before: \n{:?}\nAfter: \n{:?}",
             game_before,
             game.clone()

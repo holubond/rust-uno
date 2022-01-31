@@ -393,7 +393,7 @@ impl Game {
             .unwrap();
 
         let should_have_said_uno = player.should_say_uno(); // acquired before removing a card from players' hands
-        let mut played_card = player.play_card_by_eq(wanted_card)?;
+        let mut played_card = player.play_card(wanted_card)?;
 
         if played_card.should_be_black() {
             if let Some(color) = maybe_new_color {

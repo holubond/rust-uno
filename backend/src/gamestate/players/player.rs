@@ -37,7 +37,7 @@ impl Player {
     }
 
     /// Function returns Err if card is not owned by the player.
-    pub fn play_card_by_eq(&mut self, card: Card) -> Result<Card, PlayCardError> {
+    pub fn play_card(&mut self, card: Card) -> Result<Card, PlayCardError> {
         let maybe_position = self.cards.iter().position(|c| c == &card);
 
         match maybe_position {
