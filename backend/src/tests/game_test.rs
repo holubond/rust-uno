@@ -36,7 +36,7 @@ fn test_current_next_players() {
 
 #[test]
 fn test_play_card() {
-    let mut player = Player::new("Chuck".into(), true);
+    let mut player = Player::new("Chuck".into(), true, true);
 
     assert!(player.play_card_by_index(0).is_err());
 

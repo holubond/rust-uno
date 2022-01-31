@@ -7,16 +7,18 @@ use crate::ws::ws_message::WSMsg;
 pub struct Player {
     name: String,
     is_author: bool,
+    is_human: bool,
     cards: Vec<Card>,
     position: Option<usize>,
     connection: Option<WSConn>,
 }
 
 impl Player {
-    pub fn new(name: String, is_author: bool) -> Player {
+    pub fn new(name: String, is_author: bool, is_human: bool) -> Player {
         Player {
             name,
             is_author,
+            is_human,
             cards: vec![],
             position: None,
             connection: None,
@@ -90,6 +92,10 @@ impl Player {
 
     pub fn is_author(&self) -> bool {
         self.is_author
+    }
+
+    pub fn is_human(&self) -> bool {
+        self.is_human
     }
 
     pub fn message(&self, msg: WSMsg) {

@@ -44,7 +44,7 @@ impl Game {
         Game {
             id: nanoid!(10),
             status: GameStatus::Lobby,
-            players: vec![Player::new(author_name, true)],
+            players: vec![Player::new(author_name, true, true)],
             deck: Deck::new(),
             current_player: 0,
             active_cards: ActiveCards::new(),
@@ -127,7 +127,7 @@ impl Game {
     }
 
     pub fn add_player(&mut self, name: String) -> Result<(), CreateStatusError> {
-        self.players.push(Player::new(name, false));
+        self.players.push(Player::new(name, false, true));
         self.status_message_all()
     }
 
