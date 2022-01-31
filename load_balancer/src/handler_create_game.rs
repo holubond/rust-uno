@@ -1,5 +1,3 @@
-use std::env;
-
 use actix_web::{
     client::Client, dev::HttpResponseBuilder, http::StatusCode, post, web, HttpResponse,
 };
