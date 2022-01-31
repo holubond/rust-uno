@@ -42,7 +42,8 @@ pub struct Game {
     pub(crate) finished_players: Vec<String>,
     pub(crate) clockwise: bool,
     pub(crate) uno_bool: bool,
-    pub(crate) discarted_card: CardInfo, //todo discarted card
+    pub(crate) discarted_card: CardInfo,
+    pub(crate) real_game_id: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -84,8 +85,10 @@ impl Component for Game {
 
     fn create(ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("lastGame").unwrap();
+        let copy_id = game.game_id.clone();
+        let real_id = copy_id.split("@").collect::<Vec<&str>>();
         let link = ctx.link().clone();
-        let mut ws = WebSocket::open(&game_ws(&game.token.clone())).unwrap();
+        let ws = WebSocket::open(&game_ws(&game.token.clone(), game.server.clone())).unwrap();
         let (_write, mut read) = ws.split();
         let default_data = Self {
             client: Arc::new(Client::new()),
@@ -104,6 +107,7 @@ impl Component for Game {
                 _type: CardType::Value,
                 value: Some(1),
             },
+            real_game_id: real_id.clone().first().unwrap().to_string(),
         };
         spawn_local(async move {
             while let Some(msg) = read.next().await {
@@ -135,11 +139,12 @@ impl Component for Game {
 
             Msg::SubmitStart => {
                 let client = self.client.clone();
-                let id = self.game.game_id.clone();
+                let id = self.real_game_id.clone();
                 let token = self.game.token.clone();
+                let game_server = self.game.server.clone();
                 log!("Start game sending");
                 ctx.link().send_future(async {
-                    match submit_start_game(client, id, token).await {
+                    match submit_start_game(client, id, token, game_server).await {
                         Ok(_) => Msg::SubmitSuccess,
                         Err(err) => Msg::SubmitFailure(err),
                     }
@@ -149,12 +154,21 @@ impl Component for Game {
             Msg::PlayCard(card) => {
                 log!("PLAY CARD");
                 let client = self.client.clone();
-                let id = self.game.game_id.clone();
+                let id = self.real_game_id.clone();
                 let token = self.game.token.clone();
                 let said_uno = self.uno_bool.clone();
+                let game_server = self.game.server.clone();
                 log!("play game sending");
                 ctx.link().send_future(async move {
-                    match play_card_request(client, id, token, card.clone(), said_uno.clone()).await
+                    match play_card_request(
+                        client,
+                        id,
+                        token,
+                        card.clone(),
+                        said_uno.clone(),
+                        game_server,
+                    )
+                    .await
                     {
                         Ok(_) => Msg::PlaySubmitSuccess(card),
                         Err(err) => Msg::SubmitFailure(err),
@@ -165,11 +179,12 @@ impl Component for Game {
             Msg::DrawCard => {
                 log!("DRAW CARD");
                 let client = self.client.clone();
-                let id = self.game.game_id.clone();
+                let id = self.real_game_id.clone();
                 let token = self.game.token.clone();
+                let game_server = self.game.server.clone();
                 log!("Start sending draw card");
                 ctx.link().send_future(async {
-                    match draw_card_request(client, id, token).await {
+                    match draw_card_request(client, id, token, game_server).await {
                         Ok(result) => Msg::DrawSuccess(result),
                         Err(err) => Msg::SubmitFailure(err),
                     }
@@ -205,7 +220,7 @@ impl Component for Game {
                             Err(x) => alert(&x),
                         };
                     }
-                    Message::Bytes(bytes) => (),
+                    Message::Bytes(_) => (),
                 }
                 log!("Updating status msg");
             }
@@ -387,8 +402,9 @@ async fn submit_start_game(
     client: Arc<Client>,
     game_id: String,
     token: String,
+    game_server: String,
 ) -> Result<(), String> {
-    let url = url::status_running(game_id);
+    let url = url::status_running(game_id, game_server);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
@@ -411,8 +427,9 @@ async fn draw_card_request(
     client: Arc<Client>,
     game_id: String,
     token: String,
+    game_server: String,
 ) -> Result<DrawResponse, String> {
-    let url = url::drawn_cards(game_id);
+    let url = url::drawn_cards(game_id, game_server);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
@@ -444,13 +461,14 @@ async fn play_card_request(
     token: String,
     mut card: PlayCardRequest,
     said_uno: bool,
+    game_server: String,
 ) -> Result<(), String> {
     card.said_uno = said_uno;
     match card.new_color {
         Some(x) => card.new_color = Some(x.to_uppercase()),
         None => (),
     }
-    let url = url::play_card(game_id);
+    let url = url::play_card(game_id, game_server);
     let response = client.post(url).json(&card).bearer_auth(token).send().await;
     let response = match response {
         Ok(x) => x,
