@@ -432,9 +432,13 @@ impl Game {
         played_card: Card,
         player_penalized: bool,
     ) -> Result<(), CreateStatusError> {
+        let next_player_name = match self.get_current_player() {
+            None => return Err(CreateStatusError::CurrentPlayerNotFound),
+            Some(player) => player.name()
+        };
         self.message_all(WSMsg::play_card(
             player_name.clone(),
-            self.get_current_player().unwrap().name(),
+            next_player_name,
             played_card,
         ));
 
