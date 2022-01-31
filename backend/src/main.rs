@@ -32,15 +32,15 @@ struct Opts {
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
     let opts = Opts::parse();
-    let (port, my_listening_port) = match env::var("PORT") {
-        Ok(p) => (p, "443".to_string()),
-        Err(_) => (opts.port.clone(), opts.port),
+    let port = match env::var("PORT") {
+        Ok(p) => p,
+        Err(_) => opts.port,
     };
 
     let game_repo = web::Data::new(Mutex::new(InMemoryGameRepo::new()));
     let auth_service = web::Data::new(AuthService::new());
 
-    connect_to_load_balancer(opts.load_balancer_addr, my_listening_port).await;
+    connect_to_load_balancer(opts.load_balancer_addr, opts.server_addr).await;
 
     println!("Starting server on port {}", port);
 
