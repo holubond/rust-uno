@@ -129,7 +129,12 @@ pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
 }
 
 pub fn handle_gained_cards(game: &mut Game, new_data: GainedCards) {
-    let log_msg = format!("{}: {} {}x cards", new_data.who, Action::Gained.logger_string(),new_data.number);
+    let log_msg = format!(
+        "{}: {} {}x cards",
+        new_data.who,
+        Action::Gained.logger_string(),
+        new_data.number
+    );
     add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
@@ -147,7 +152,7 @@ pub enum Action {
 }
 
 impl Action {
-    pub fn logger_string(&self)->String{
+    pub fn logger_string(&self) -> String {
         match self {
             Action::PlayCard => "played card".to_string(),
             Action::Draw => "drawn card".to_string(),
@@ -156,7 +161,7 @@ impl Action {
         }
     }
 }
-pub fn add_log(game: &mut Game, log: String){
+pub fn add_log(game: &mut Game, log: String) {
     if game.logs.len() == 5 {
         game.logs.remove(0);
     }
