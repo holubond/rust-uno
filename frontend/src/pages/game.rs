@@ -44,6 +44,7 @@ pub struct Game {
     pub(crate) uno_bool: bool,
     pub(crate) discarted_card: CardInfo,
     pub(crate) real_game_id: String,
+    pub(crate) logs: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -108,6 +109,7 @@ impl Component for Game {
                 value: Some(1),
             },
             real_game_id: real_id.clone().first().unwrap().to_string(),
+            logs: vec![],
         };
         spawn_local(async move {
             while let Some(msg) = read.next().await {
@@ -312,6 +314,7 @@ impl Component for Game {
                 </main>
             };
         }
+        let log = self.logs.clone();
         return html! {
             <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                 <div class="w-screen h-80 flex flex-row justify-between">
@@ -319,8 +322,17 @@ impl Component for Game {
                 </div>
 
                 <div class="w-screen h-48 flex justify-around">
-                    <div class="w-1/5 h-full bg-black">
+                    <div class="w-1/5 h-full border-black border-4 rounded-lg shadow-md">
+                        <p>{"News"}</p>
+                        {
+                            log.iter().rev().map(|x|{
+                                html!{
+                                    <p>{format!("- {}", x)}</p>
+                                }
+                            }).collect::<Html>()
+                        }
                     </div>
+
                     <div class="w-20 flex flex-row">
                         <input
                             id="uno"
@@ -331,8 +343,9 @@ impl Component for Game {
                         />
                         <label for="uno">{"UNO!"}</label>
                     </div>
+
                     <div>
-                        <img onclick={draw_pile_on_click} class="h-full w-full" src="../resources/draw_pile.png" alt="card"/>
+                        <img onclick={draw_pile_on_click} class="cursor-pointer h-full w-full" src="../resources/draw_pile.png" alt="card"/>
                     </div>
 
                     <div class="opacity-10">
