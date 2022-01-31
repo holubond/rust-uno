@@ -64,6 +64,9 @@ impl From<PlayerDrawError> for HttpResponse {
             TurnError(_) => HttpResponse::Conflict().json(TypedErrMsg::new("NOT_YOUR_TURN", error)),
             PlayerExistError(_) => HttpResponse::BadRequest().json(ErrMsg::new(error)),
             CanPlayInstead => HttpResponse::Conflict().json(TypedErrMsg::new("CANNOT_DRAW", error)),
+            _ => {
+                todo!("React to ChainedAiError")
+            }
         }
     }
 }

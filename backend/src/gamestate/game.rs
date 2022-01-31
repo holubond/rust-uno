@@ -1,5 +1,6 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::cards::deck::Deck;
+use crate::err::ai::AiError;
 use crate::err::draw_cards::PlayerDrawError;
 use crate::err::game_start::GameStartError;
 use crate::err::play_card::PlayCardError;
@@ -14,6 +15,7 @@ use nanoid::nanoid;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use crate::gamestate::players::ai::{first_card_of_symbol, first_playable_card_against, decide_new_color};
 
 #[cfg(test)]
 #[path = "../tests/game_test.rs"]
@@ -285,6 +287,8 @@ impl Game {
                 player_name.clone(),
                 WSMsg::draw(player_name, self.get_current_player().unwrap().name(), 0),
             );
+            self.maybe_ai_turn()?;
+
             return Ok(vec![]);
         }
 
@@ -308,6 +312,7 @@ impl Game {
                 draw_count,
             ),
         );
+        self.maybe_ai_turn()?;
 
         Ok(drawn_cards)
     }
@@ -385,6 +390,7 @@ impl Game {
             played_card,
             should_say_uno && !said_uno,
         )?;
+        self.maybe_ai_turn()?;
 
         Ok(())
     }
@@ -469,6 +475,38 @@ impl Game {
             // == after end_turn(), the same player got the turn
             self.status = GameStatus::Finished;
             self.status_message_all()?;
+        }
+
+        Ok(())
+    }
+
+    fn maybe_ai_turn(&mut self) -> Result<(), AiError> {
+        let maybe_current_player = self.get_current_player();
+        if maybe_current_player.is_none() {
+            return Ok(());
+        }
+
+        let current_player = maybe_current_player.unwrap();
+
+        if !current_player.is_human() {
+            let ai_name = current_player.name();
+
+            if let Some(card) = match self.active_cards.are_cards_active() {
+                true => first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap()),
+                false => first_playable_card_against(current_player, self.deck.top_discard_card()),
+            } {
+                let should_say_uno = current_player.should_say_uno();
+                let new_color = decide_new_color(&card);
+
+                self.play_card(
+                    ai_name,
+                    card.clone(),
+                    new_color,
+                    should_say_uno,
+                )?;
+            } else {
+                self.draw_cards(ai_name)?;
+            }
         }
 
         Ok(())
