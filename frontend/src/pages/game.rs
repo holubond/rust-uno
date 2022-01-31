@@ -314,11 +314,23 @@ impl Component for Game {
         }
         return html! {
             <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
-                <div class="w-screen flex flex-row justify-between">
+                <div class="w-screen h-80 flex flex-row justify-between">
                     <Oponents players={self.players.clone()} you={self.you.clone()} current={self.current_player.clone()}/>
                 </div>
 
                 <div class="w-screen h-48 flex justify-around">
+                    <div class="w-1/5 h-full bg-black">
+                    </div>
+                    <div class="w-20 flex flex-row">
+                        <input
+                            id="uno"
+                            class="bg-gray-200 w-full py-2 px-4"
+                            type="checkbox"
+                            checked={self.uno_bool.clone()}
+                            onchange={ctx.link().callback(|_| Msg::UnoChanged)}
+                        />
+                        <label for="uno">{"UNO!"}</label>
+                    </div>
                     <div>
                         <img onclick={draw_pile_on_click} class="h-full w-full" src="../resources/draw_pile.png" alt="card"/>
                     </div>
@@ -337,7 +349,7 @@ impl Component for Game {
                         }
                     </div>
 
-                    <div class="rounded-lg w-32 bg-black shadow-md">
+                    <div class="w-32 bg-black rounded-lg shadow-md border-black border-4">
                         {
                             print_discarded_card(self.discarted_card.clone())
                         }
@@ -345,18 +357,6 @@ impl Component for Game {
                 </div>
 
                 <div class="w-screen flex flex-row justify-between">
-                    <div>
-                        <input
-                            id="uno"
-                            class="bg-gray-200 w-full py-2 px-4"
-                            type="checkbox"
-                            checked={self.uno_bool.clone()}
-                            onchange={ctx.link().callback(|_| Msg::UnoChanged)}
-                        />
-
-                        <label for="uno">{"UNO!"}</label>
-                    </div>
-
                     <MyUser
                         username={self.you.clone()}
                         current_username={self.current_player.clone()}
