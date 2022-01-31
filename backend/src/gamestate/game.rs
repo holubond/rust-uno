@@ -333,7 +333,7 @@ impl Game {
         };
         let drawn_cards = self.draw_n_cards(player_name.clone(), draw_count);
 
-        assert_eq!(draw_count, drawn_cards.len());
+        debug_assert_eq!(draw_count, drawn_cards.len());
         self.end_drawing(player_name, drawn_cards)
     }
 

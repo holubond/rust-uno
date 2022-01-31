@@ -46,6 +46,9 @@ impl From<PlayerDrawError> for HttpResponse {
             PlayerExistError(_) => HttpResponse::BadRequest().json(ErrMsg::new(error)),
             CanPlayInstead => HttpResponse::Conflict().json(TypedErrMsg::new("CANNOT_DRAW", error)),
             ChainedAiError => HttpResponse::InternalServerError().json(ErrMsg::new(error)),
+            _ => {
+                todo!("React to CreateStatusError")
+            }
         }
     }
 }

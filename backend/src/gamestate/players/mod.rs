@@ -1,5 +1,6 @@
 pub mod ai;
 pub mod player;
+pub mod ai;
 
 pub(self) mod name_generation {
     use rand::seq::IteratorRandom;
