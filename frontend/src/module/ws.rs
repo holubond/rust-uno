@@ -19,7 +19,7 @@ pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
             };
         } else if msg.contains("\"status\":\"FINISHED\"") {
             match serde_json::from_str::<LobbyStatus>(&msg) {
-                Ok(x) => handle_lobby(game, x),
+                Ok(x) => handle_finish_lobby(game, x),
                 Err(_) => (),
             };
         } else {
@@ -58,6 +58,19 @@ pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
 
 pub fn handle_lobby(game: &mut Game, new_data: LobbyStatus) {
     game.status = GameState::Lobby;
+    game.author = new_data.author;
+    game.you = new_data.you;
+    game.players = vec![];
+    new_data.players.iter().for_each(|p| {
+        game.players.push(Player {
+            name: p.to_string(),
+            cards: 0,
+        })
+    });
+}
+
+pub fn handle_finish_lobby(game: &mut Game, new_data: LobbyStatus) {
+    game.status = GameState::Finished;
     game.author = new_data.author;
     game.you = new_data.you;
     game.players = vec![];
