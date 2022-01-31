@@ -1,14 +1,14 @@
-use crate::handler::create_game::create_game;
+use crate::handler::lb_reconnect::lb_reconnect;
+use crate::handler::{create_game::create_game, service::lb_connector::LoadBalancerConnector};
 use crate::handler::draw_card::draw_card;
 use crate::handler::join_game::join_game;
 use crate::handler::restart_game::start_game;
 use crate::handler::service::auth::AuthService;
 use crate::repo::game_repo::InMemoryGameRepo;
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer, client::Client, http::StatusCode};
+use actix_web::{web, App, HttpServer};
 use clap::Parser;
 use handler::{play_card::play_card, ws_connect::ws_connect};
-use serde::Serialize;
 use std::{env, sync::Mutex};
 
 mod cards;
@@ -23,7 +23,7 @@ mod ws;
 struct Opts {
     #[clap(short = 'p', long = "port", default_value = "9000")]
     port: String,
-    #[clap(short = 'l', long = "lbaddr", default_value = "http://rust-uno.herokuapp.com")]
+    #[clap(short = 'l', long = "lbaddr", default_value = "rust-uno.herokuapp.com")]
     load_balancer_addr: String,
     #[clap(short = 's', long = "servername")]
     server_addr: String,
@@ -40,7 +40,12 @@ async fn main() -> anyhow::Result<()> {
     let game_repo = web::Data::new(Mutex::new(InMemoryGameRepo::new()));
     let auth_service = web::Data::new(AuthService::new());
 
-    connect_to_load_balancer(opts.load_balancer_addr, opts.server_addr).await;
+    let lb_connector = LoadBalancerConnector::new(opts.load_balancer_addr, opts.server_addr );
+    match lb_connector.connect().await {
+        Err(_) => (),
+        Ok(_) => (),
+    };
+    let lb_connector = web::Data::new(lb_connector);
 
     println!("Starting server on port {}", port);
 
@@ -54,46 +59,18 @@ async fn main() -> anyhow::Result<()> {
             .wrap(cors)
             .app_data(game_repo.clone())
             .app_data(auth_service.clone())
+            .app_data(lb_connector.clone())
             .service(create_game)
             .service(start_game)
             .service(draw_card)
             .service(join_game)
             .service(play_card)
             .service(ws_connect)
+            .service(lb_reconnect)
     })
     .bind(format!("0.0.0.0:{}", port))?
     .run()
     .await?;
 
     Ok(())
-}
-
-#[derive(Serialize, Debug)]
-pub struct RequestBody {
-    server: String,
-}
-
-async fn connect_to_load_balancer(url: String, gs_domain_name: String) {
-    let client = Client::default();
-
-    let url = format!("{}/gameServer", url);
-
-    println!("Connecting to url: {}", url);
-
-    let response = client.put(url)
-       .header("User-Agent", "actix-web/3.0")
-       .send_json(
-           &RequestBody{
-               server: gs_domain_name
-           }
-       )
-       .await
-       .unwrap();  // Unwrap is fine here, there is no point in running a game server without a load balancer
-
-    match response.status() {
-        StatusCode::CREATED => println!("Successfully connected to a load balancer"),
-        StatusCode::NO_CONTENT => println!("Reconnected to a load balancer"),
-        // Panic is fine here, there is no point in running a game server without a load balancer
-        _ => panic!("Invalid response from the load balancer: {:?}", response),
-    }
 }
