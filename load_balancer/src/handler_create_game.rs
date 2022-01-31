@@ -39,6 +39,15 @@ async fn create_game(
 
     let client = Client::default();
 
+    // create request has to be sent to port 80 as there is no SSL for server requests
+    let ip = match server_address.split(":").next() {
+        None => return HttpResponse::InternalServerError().json(
+            ErrMsg::new("Error when splitting IP".to_string()),
+        ),
+        Some(ip) => ip,
+    };
+    let server_address = format!("{}:80", ip);
+
     let response = client
         .post(format!("http://{}/game", server_address))
         .header("User-Agent", "actix-web/3.0")
