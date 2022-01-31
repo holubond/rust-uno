@@ -2,46 +2,57 @@ const ON_HEROKU: bool = true;
 
 const METHOD: &str = "http";
 const HOST: &str = "localhost";
-const PORT: &str = "9000";
+const LBPORT: &str = "9000";
+const GSPORT: &str = "9900";
 const WSMETHOD: &str = "ws";
-const WSPORT: &str = "9000";
+const WSPORT: &str = "9900";
 
 // Heroku
 const HEROKU_METHOD: &str = "https";
-const HEROKU_HOST: &str = "ancient-anchorage-67103.herokuapp.com";
+const HEROKU_HOST: &str = "rust-uno.herokuapp.com";
 const HEROKU_WSMETHOD: &str = "wss";
 
 pub fn game() -> String {
-    route("/game".into())
+    route_lb("/game".into())
 }
 
 pub fn player(game_id: String) -> String {
-    route(format!("/game/{}/player", game_id))
+    route_lb(format!("/gameServer/{}", game_id))
 }
 
-pub fn status_running(game_id: String) -> String {
-    route(format!("/game/{}/statusRunning", game_id))
+pub fn player_gs(game_id: String, game_server: String) -> String {
+    route_gs(format!("/game/{}/player", game_id), game_server)
 }
 
-pub fn drawn_cards(game_id: String) -> String {
-    route(format!("/game/{}/drawnCards", game_id))
+pub fn status_running(game_id: String, game_server: String) -> String {
+    route_gs(format!("/game/{}/statusRunning", game_id), game_server)
 }
 
-pub fn play_card(game_id: String) -> String {
-    route(format!("/game/{}/playCard", game_id))
+pub fn drawn_cards(game_id: String, game_server: String) -> String {
+    route_gs(format!("/game/{}/drawnCards", game_id), game_server)
 }
 
-fn route(endpoint: String) -> String {
+pub fn play_card(game_id: String, game_server: String) -> String {
+    route_gs(format!("/game/{}/playCard", game_id), game_server)
+}
+
+fn route_lb(endpoint: String) -> String {
     if ON_HEROKU {
         return format!("{}://{}{}", HEROKU_METHOD, HEROKU_HOST, endpoint);
     }
-    format!("{}://{}:{}{}", METHOD, HOST, PORT, endpoint)
+    format!("{}://{}:{}{}", METHOD, HOST, LBPORT, endpoint)
+}
+fn route_gs(endpoint: String, game_server: String) -> String {
+    if ON_HEROKU {
+        return format!("{}://{}{}", HEROKU_METHOD, game_server, endpoint);
+    }
+    format!("{}://{}:{}{}", METHOD, game_server, GSPORT, endpoint)
 }
 
-pub fn game_ws(token: &String) -> String {
+pub fn game_ws(token: &String, game_server: String) -> String {
     let endpoint = format!("/ws/token/{}", token);
     if ON_HEROKU {
-        return format!("{}://{}{}", HEROKU_WSMETHOD, HEROKU_HOST, endpoint);
+        return format!("{}://{}{}", HEROKU_WSMETHOD, game_server, endpoint);
     }
-    format!("{}://{}:{}{}", WSMETHOD, HOST, WSPORT, endpoint)
+    format!("{}://{}:{}{}", WSMETHOD, game_server, WSPORT, endpoint)
 }

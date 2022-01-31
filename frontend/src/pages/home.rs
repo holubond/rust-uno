@@ -1,4 +1,4 @@
-use crate::module::module::MessageResponse;
+use crate::module::module::{MessageResponse, SuccessLBResponse};
 use crate::util::alert::alert;
 use crate::util::local_storage;
 use crate::{url, Route};
@@ -21,7 +21,6 @@ pub struct CreateResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct JoinResponse {
-    server: String,
     token: String,
 }
 
@@ -29,8 +28,9 @@ pub enum Msg {
     InputChanged,
     SubmitCreate,
     SubmitJoin,
+    SubmitJoinGs(SuccessLBResponse, String),
     SubmitCreateSuccess(CreateResponse),
-    SubmitJoinSuccess(JoinResponse),
+    SubmitJoinSuccess(JoinResponse, String),
     SubmitFailure(String),
 }
 
@@ -81,14 +81,27 @@ impl Component for Home {
                         if !game_id.is_empty() {
                             let client = self.client.clone();
                             ctx.link().send_future(async {
-                                match send_join_game_request(client, name_join, game_id).await {
-                                    Ok(result) => Msg::SubmitJoinSuccess(result),
+                                match send_join_game_lb_request(client, game_id).await {
+                                    Ok(result) => Msg::SubmitJoinGs(result, name_join),
                                     Err(err) => Msg::SubmitFailure(err),
                                 }
                             });
                         }
                     }
                 }
+                return false;
+            }
+            Msg::SubmitJoinGs(response, name) => {
+                let client = self.client.clone();
+                let server = response.server.clone();
+                ctx.link().send_future(async {
+                    match send_join_game_gs_request(client, name, response.game_id, response.server)
+                        .await
+                    {
+                        Ok(result) => Msg::SubmitJoinSuccess(result, server),
+                        Err(err) => Msg::SubmitFailure(err),
+                    }
+                });
                 return false;
             }
 
@@ -98,13 +111,13 @@ impl Component for Home {
                 ctx.link().history().unwrap().push(Route::Lobby { id });
             }
 
-            Msg::SubmitJoinSuccess(result) => {
+            Msg::SubmitJoinSuccess(result, server) => {
                 if let Some(game) = self.game_id.cast::<HtmlInputElement>() {
                     let game_id = game.value();
                     let game_data = CreateResponse {
                         game_id: game_id.clone(),
                         token: result.token,
-                        server: result.server,
+                        server,
                     };
 
                     local_storage::set("lastGame", game_data);
@@ -262,14 +275,40 @@ async fn send_create_game_request(
     };
 }
 
-async fn send_join_game_request(
+async fn send_join_game_lb_request(
+    client: Arc<Client>,
+    game_id: String,
+) -> Result<SuccessLBResponse, String> {
+    let url = url::player(game_id);
+    let response = client.get(url).send().await;
+    let response = match response {
+        Ok(x) => x,
+        _ => return Err("Server is not responding.".to_string()),
+    };
+    return match response.status() {
+        StatusCode::OK => match response.json::<SuccessLBResponse>().await {
+            Ok(x) => Ok(x),
+            _ => Err("Error: message from server had bad struct.".to_string()),
+        },
+        StatusCode::NOT_FOUND | StatusCode::INTERNAL_SERVER_ERROR => {
+            match response.json::<MessageResponse>().await {
+                Ok(x) => Err(x.message.clone()),
+                _ => Err("Error: message from server had bad struct.".to_string()),
+            }
+        }
+        _ => Err("Undefined error occurred.".to_string()),
+    };
+}
+
+async fn send_join_game_gs_request(
     client: Arc<Client>,
     name: String,
     game_id: String,
+    game_server: String,
 ) -> Result<JoinResponse, String> {
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
-    let url = url::player(game_id);
+    let url = url::player_gs(game_id, game_server);
     let response = client.post(url).json(&request_body).send().await;
     let response = match response {
         Ok(x) => x,

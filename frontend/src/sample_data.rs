@@ -25,6 +25,7 @@ pub fn test_session(game: GameStore) -> Game {
             _type: CardType::Value,
             value: Some(3),
         },
+        real_game_id: "".to_string(),
     }
 }
 
