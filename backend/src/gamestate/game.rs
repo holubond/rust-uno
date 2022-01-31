@@ -490,28 +490,28 @@ impl Game {
         }
 
         let current_player = maybe_current_player.unwrap();
+        if current_player.is_human() {
+            return Ok(());
+        }
+        //thread::sleep(decide_sleep_time());
 
-        if !current_player.is_human() {
-            //thread::sleep(decide_sleep_time());
+        let ai_name = current_player.name();
 
-            let ai_name = current_player.name();
+        if let Some(card) = match self.active_cards.are_cards_active() {
+            true => first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap()),
+            false => first_playable_card_against(current_player, self.deck.top_discard_card()),
+        } {
+            let should_say_uno = current_player.should_say_uno();
+            let new_color = decide_new_color(&card);
 
-            if let Some(card) = match self.active_cards.are_cards_active() {
-                true => first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap()),
-                false => first_playable_card_against(current_player, self.deck.top_discard_card()),
-            } {
-                let should_say_uno = current_player.should_say_uno();
-                let new_color = decide_new_color(&card);
-
-                self.play_card(
-                    ai_name,
-                    card.clone(),
-                    new_color,
-                    should_say_uno,
-                )?;
-            } else {
-                self.draw_cards(ai_name)?;
-            }
+            self.play_card(
+                ai_name,
+                card.clone(),
+                new_color,
+                should_say_uno,
+            )?;
+        } else {
+            self.draw_cards(ai_name)?;
         }
 
         Ok(())
