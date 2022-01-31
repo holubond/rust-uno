@@ -1,9 +1,11 @@
+use std::env;
+
 use actix_web::{
     client::Client, dev::HttpResponseBuilder, http::StatusCode, post, web, HttpResponse,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::game_server_repo::{GameServerRepo, GetServerForNewGameError};
+use crate::{game_server_repo::{GameServerRepo, GetServerForNewGameError}, server_id::ServerId};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RequestBody {
@@ -35,14 +37,23 @@ async fn create_game(
         Ok(address) => address,
     };
 
+    println!("Found server {} {}", server_address, server_id);
+
     let client = Client::default();
 
+    // Determine whether on heroku or localhost
+    let method = match env::var("PORT") {
+        Ok(_) => "https",
+        Err(_) => "http",
+    };
+
     let response = client
-        .post(format!("https://{}/game", server_address))
+        .post(format!("{}://{}/game", method, server_address))
         .header("User-Agent", "actix-web/3.0")
         .send_json(&request_body.into_inner())
         .await;
 
+        
     let mut gs_response = match response {
         Err(error) => {
             game_server_repo.notify_about_false_game_create(server_id);
@@ -54,6 +65,8 @@ async fn create_game(
         Ok(response) => response,
     };
 
+    println!("Got response {:#?}", gs_response);
+    
     if gs_response.status() != StatusCode::CREATED {
         game_server_repo.notify_about_false_game_create(server_id);
     }
@@ -69,8 +82,10 @@ async fn create_game(
         Ok(json) => json,
     };
 
+    let full_game_id = ServerId::generate_full_id(gs_response_body.game_id, server_id);
+
     let response_body = SuccessResponseToClient {
-        game_id: gs_response_body.game_id,
+        game_id: full_game_id,
         server: server_address,
         token: gs_response_body.token,
     };
