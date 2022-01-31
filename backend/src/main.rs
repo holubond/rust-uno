@@ -8,6 +8,7 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer, client::Client, http::StatusCode};
 use clap::Parser;
 use handler::{play_card::play_card, ws_connect::ws_connect};
+use serde::Serialize;
 use std::{env, sync::Mutex};
 
 mod cards;
@@ -29,15 +30,15 @@ struct Opts {
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
     let opts = Opts::parse();
-    let port = match env::var("PORT") {
-        Ok(p) => p,
-        Err(_) => opts.port,
+    let (port, my_listening_port) = match env::var("PORT") {
+        Ok(p) => (p, "443".to_string()),
+        Err(_) => (opts.port.clone(), opts.port),
     };
 
     let game_repo = web::Data::new(Mutex::new(InMemoryGameRepo::new()));
     let auth_service = web::Data::new(AuthService::new());
 
-    connect_to_load_balancer(opts.load_balancer_addr).await;
+    connect_to_load_balancer(opts.load_balancer_addr, my_listening_port).await;
 
     println!("Starting server on port {}", port);
 
@@ -65,12 +66,23 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn connect_to_load_balancer(url: String) {
+#[derive(Serialize, Debug)]
+pub struct RequestBody {
+    port: String,
+}
+
+async fn connect_to_load_balancer(url: String, port: String) {
     let client = Client::default();
+
+    println!("Connecting to url: {}", url);
 
     let response = client.put(format!("{}/gameServer", url))
        .header("User-Agent", "actix-web/3.0")
-       .send()
+       .send_json(
+           &RequestBody{
+               port
+           }
+       )
        .await
        .unwrap();  // Unwrap is fine here, there is no point in running a game server without a load balancer
 
