@@ -8,6 +8,7 @@ use crate::{
     handler_register::register_game_server, handler_create_game::create_game,
 };
 
+mod err_msg;
 mod game_server_repo;
 mod handler_create_game;
 mod handler_get_server;

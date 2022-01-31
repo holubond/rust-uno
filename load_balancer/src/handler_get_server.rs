@@ -3,7 +3,7 @@ use serde::Serialize;
 
 use crate::{
     game_server_repo::{GameServerRepo, GetGameServerError},
-    server_id::ServerId,
+    server_id::ServerId, err_msg::ErrMsg,
 };
 
 #[derive(Serialize)]
@@ -40,9 +40,12 @@ impl From<GetGameServerError> for HttpResponse {
     fn from(result: GetGameServerError) -> Self {
         use GetGameServerError::*;
         match result {
-            CouldNotGetLock => HttpResponse::InternalServerError()
-                .body("Could not aquire lock on game server repo"),
-            NotFound => HttpResponse::NotFound().finish(),
+            CouldNotGetLock => HttpResponse::InternalServerError().json(
+                ErrMsg::new("Could not aquire lock on game server repo".to_string()),
+            ),
+            NotFound => HttpResponse::NotFound().json(
+                ErrMsg::new("Game server not found".to_string()),
+            ),
         }
     }
 }

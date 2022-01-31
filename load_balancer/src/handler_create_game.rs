@@ -5,7 +5,7 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{game_server_repo::{GameServerRepo, GetServerForNewGameError}, server_id::ServerId};
+use crate::{game_server_repo::{GameServerRepo, GetServerForNewGameError}, server_id::ServerId, err_msg::ErrMsg};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RequestBody {
@@ -57,10 +57,9 @@ async fn create_game(
     let mut gs_response = match response {
         Err(error) => {
             game_server_repo.notify_about_false_game_create(server_id);
-            return HttpResponse::InternalServerError().body(format!(
-                "Error sending a request to the Game Server: {}",
-                error
-            ));
+            return HttpResponse::InternalServerError().json(
+                ErrMsg::new(format!("Error sending a request to the Game Server: {}", error))
+            );
         }
         Ok(response) => response,
     };
@@ -74,10 +73,9 @@ async fn create_game(
     let gs_response_body = match gs_response.json::<SuccessResponseFromGameServer>().await {
         Err(err) => {
             game_server_repo.notify_about_false_game_create(server_id);
-            return HttpResponse::ServiceUnavailable().body(format!(
-                "Could not interpret response from a game server: {}",
-                err
-            ));
+            return HttpResponse::ServiceUnavailable().json(
+                ErrMsg::new(format!("Could not interpret response from a game server: {}", err))
+            );
         }
         Ok(json) => json,
     };
@@ -97,8 +95,12 @@ impl From<GetServerForNewGameError> for HttpResponse {
     fn from(error: GetServerForNewGameError) -> Self {
         use GetServerForNewGameError::*;
         match error {
-            CouldNotGetLock => HttpResponse::InternalServerError().body("Could not acquire lock."),
-            NoServerAvailable => HttpResponse::NotFound().body("No server is currently available."),
+            CouldNotGetLock => HttpResponse::InternalServerError().json(
+                ErrMsg::new("Could not acquire lock.".to_string()),
+            ),
+            NoServerAvailable => HttpResponse::NotFound().json(
+                ErrMsg::new("No server is currently available.".to_string()),
+            ),
         }
     }
 }
