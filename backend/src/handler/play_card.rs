@@ -97,9 +97,7 @@ impl From<PlayCardError> for HttpResponse {
             PlayerExistError(_) => HttpResponse::NotFound().json(ErrMsg::new(error)),
             CreateStatusError(_) => HttpResponse::InternalServerError().json(ErrMsg::new(error)),
             SaidUnoWhenShouldNotHave => HttpResponse::BadRequest().json(ErrMsg::new(error)),
-            _ => {
-                todo!("React to ChainedAiError")
-            }
+            ChainedAiError => HttpResponse::InternalServerError().json(ErrMsg::new(error)),
         }
     }
 }
