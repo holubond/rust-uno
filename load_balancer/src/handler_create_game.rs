@@ -8,6 +8,7 @@ use crate::{game_server_repo::{GameServerRepo, GetServerForNewGameError}, server
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RequestBody {
     name: String,
+    ais: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -39,15 +40,7 @@ async fn create_game(
 
     let client = Client::default();
 
-    // create request has to be sent to port 80 (we use http and emit port) as there is no SSL for server requests
-    let ip = match server_address.split(":").next() {
-        None => return HttpResponse::InternalServerError().json(
-            ErrMsg::new("Error when splitting IP".to_string()),
-        ),
-        Some(ip) => ip,
-    };
-
-    let url = format!("http://{}/game", ip);
+    let url = format!("http://{}/game", server_address);
 
     println!("URL: {}", url);
 
@@ -57,7 +50,6 @@ async fn create_game(
         .send_json(&request_body.into_inner())
         .await;
 
-        
     let mut gs_response = match response {
         Err(error) => {
             game_server_repo.notify_about_false_game_create(server_id);
@@ -68,10 +60,16 @@ async fn create_game(
         Ok(response) => response,
     };
 
-    println!("Got response {:#?}", gs_response);
-    
     if gs_response.status() != StatusCode::CREATED {
         game_server_repo.notify_about_false_game_create(server_id);
+
+        let body = match gs_response.body().await {
+            Err(err) => return HttpResponse::ServiceUnavailable().json(
+                ErrMsg::new(err.to_string())
+            ),
+            Ok(x) => x,
+        };
+        return HttpResponseBuilder::new(gs_response.status()).body(body);
     }
 
     let gs_response_body = match gs_response.json::<SuccessResponseFromGameServer>().await {
