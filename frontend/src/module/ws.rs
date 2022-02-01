@@ -1,4 +1,3 @@
-use std::time::SystemTime;
 use crate::components::card::CardType;
 use crate::module::module::{
     DrawCard, Finish, GainedCards, LobbyStatus, Penalty, PlayCard, RunningStatus,
@@ -90,7 +89,14 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
 }
 
 pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
-    let log_msg = format!("{}: {}", new_data.who, Action::PlayCard.logger_string());
+    let card_info = match new_data.card._type {
+        CardType::Value => format!("{} {}", new_data.card.color.to_str(), new_data.card.value.unwrap()),
+        CardType::Reverse|
+        CardType::Draw2|
+        CardType::Skip => format!("{} {}", new_data.card.color.to_str(), new_data.card._type.card_type_text()),
+        CardType::Wild|CardType::Draw4 => format!("{}", new_data.card._type.card_type_text()),
+    };
+    let log_msg = format!("{}: {} {}", new_data.who, Action::PlayCard.logger_string(), card_info);
     add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
@@ -155,7 +161,7 @@ pub enum Action {
 impl Action {
     pub fn logger_string(&self) -> String {
         match self {
-            Action::PlayCard => "played card".to_string(),
+            Action::PlayCard => "played".to_string(),
             Action::Draw => "drawn card".to_string(),
             Action::Finish => "finished!".to_string(),
             Action::Gained => "gained".to_string(),
@@ -163,6 +169,5 @@ impl Action {
     }
 }
 pub fn add_log(game: &mut Game, log: String) {
-    //todo date
-    game.logs.push(log);
+    game.logs.push(format!("{}",log));
 }
