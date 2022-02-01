@@ -161,7 +161,7 @@ impl Game {
             .iter()
             .filter(|p| p.is_finished())
             .collect::<Vec<&Player>>();
-        result.sort_by_key(|player| player.position().unwrap());
+        result.sort_by_key(|player| player.position().unwrap()); // safe due to p.is_finished() filter above
         result
     }
 
@@ -238,7 +238,7 @@ impl Game {
         let top_card = self.deck.top_discard_card();
 
         if self.active_cards.are_cards_active() {
-            played_card.symbol == self.active_cards.active_symbol().unwrap()
+            played_card.symbol == self.active_cards.active_symbol().unwrap() // save due to are_cards_active() check above
         } else {
             played_card.color == CardColor::Black
                 || played_card.color == top_card.color
@@ -290,7 +290,11 @@ impl Game {
     ) -> Result<(), PlayerDrawError> {
         self.end_turn();
 
-        let next_player_name = self.get_current_player().unwrap().name(); // after end_turn
+        // player name after end_turn == next player
+        let next_player_name = match self.get_current_player() {
+            None => return Err(PlayerDrawError::from(CreateStatusError::CurrentPlayerNotFound)),
+            Some(player) => player.name()
+        };
         self.message_all_but(
             drawing_player.clone(),
             WSMsg::draw(
@@ -299,9 +303,10 @@ impl Game {
                 cards_drawn.len(),
             ),
         );
-        self.find_player(drawing_player)
-            .unwrap()
-            .message(WSMsg::draw_me(next_player_name, cards_drawn));
+        match self.find_player(drawing_player.clone()) {
+            None => return Err(PlayerExistError::NoSuchPlayer(drawing_player).into()),
+            Some(player) => player.message(WSMsg::draw_me(next_player_name, cards_drawn))
+        }
 
         self.maybe_ai_turn()?;
 
@@ -316,7 +321,7 @@ impl Game {
 
         // Skip turn
         if self.active_cards.are_cards_active()
-            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
+            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip // safe since are_cards_active() check above
         {
             self.active_cards.clear();
             return self.end_drawing(player_name, vec![]);
@@ -344,7 +349,7 @@ impl Game {
             .players
             .iter_mut()
             .find(|player| player.name() == player_name)
-            .unwrap(); // safe because of check_player_drawing()
+            .unwrap(); // safe because of can_player_draw() in draw_cards()
         let mut drawn_cards = vec![];
 
         for _ in 0..n {
@@ -353,7 +358,7 @@ impl Game {
                 // there are no cards on the table at all
                 break;
             }
-            let drawn_card = drawn_card.unwrap();
+            let drawn_card = drawn_card.unwrap(); // safe since is_none() check + early break above
 
             drawn_cards.push(drawn_card.clone());
             player.give_card(drawn_card);
@@ -426,14 +431,14 @@ impl Game {
             .players
             .iter_mut()
             .find(|player| player.name() == *player_name)
-            .unwrap();
+            .unwrap(); // safe because of can_player_play() in play_card()
 
         let should_have_said_uno = player.should_say_uno(); // acquired before removing a card from players' hands
         let mut played_card = player.play_card(wanted_card)?;
 
         if played_card.should_be_black() {
             if let Some(color) = maybe_new_color {
-                played_card = played_card.morph_black_card(color).unwrap();
+                played_card = played_card.morph_black_card(color).unwrap(); // safe because of should_be_black() check above
             }
         }
 
@@ -453,7 +458,7 @@ impl Game {
                 self.active_cards.clear();
             }
             CardSymbol::Draw2 | CardSymbol::Draw4 | CardSymbol::Skip => {
-                self.active_cards.push(played_card.clone()).unwrap();
+                self.active_cards.push(played_card.clone()).unwrap(); // match guard corresponds with ALLOWED_ACTIVE_CARDS in ActiveCards
             }
         }
     }
@@ -483,7 +488,7 @@ impl Game {
                 WSMsg::gained_cards(player_name.clone(), gained_cards.len()),
             );
             self.find_player(player_name.clone())
-                .unwrap()
+                .unwrap() // safe because of can_player_play() in play_card()
                 .message(WSMsg::penalty(player_name.clone(), gained_cards));
         }
 
@@ -518,10 +523,11 @@ impl Game {
             // inner scope due to mutable borrowing later
             let maybe_current_player = self.get_current_player();
             if maybe_current_player.is_none() {
+                // if there is no current player, don't attempt to play
                 return Ok(());
             }
 
-            let current_player = maybe_current_player.unwrap();
+            let current_player = maybe_current_player.unwrap(); // safe since is_none() check + early return above
             if current_player.is_human() {
                 return Ok(());
             }
@@ -533,9 +539,9 @@ impl Game {
             let last_position = self
                 .get_finished_players()
                 .last()
-                .unwrap()
+                .unwrap() // safe since get_finished_players().is_empty() check above (not empty => last will succeed)
                 .position()
-                .unwrap(); // safe due to is_empty check
+                .unwrap(); // safe since we are iterating get_finished_players()
             for (index, ai) in self.nonhuman_iter_mut().enumerate() {
                 ai.set_position(last_position + index + 1);
             }
@@ -551,12 +557,15 @@ impl Game {
         // todo!("simulate AI decision making with non-blocking sleep");
         thread::sleep(decide_sleep_time());
 
-        let current_player = self.get_current_player().unwrap();
+        let current_player = match self.get_current_player() {
+            None => return Err(AiError::from(CreateStatusError::CurrentPlayerNotFound)),
+            Some(player) => player
+        };
         let ai_name = current_player.name();
 
         if let Some(card) = match self.active_cards.are_cards_active() {
             true => {
-                first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap())
+                first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap()) // safe since are_cards_active() check above
             }
             false => first_playable_card_against(current_player, self.deck.top_discard_card()),
         } {

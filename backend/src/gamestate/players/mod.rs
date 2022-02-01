@@ -20,7 +20,7 @@ pub(self) mod name_generation {
         file_string
             .lines()
             .choose(&mut rand::thread_rng())
-            .unwrap()
+            .unwrap() // safe since the NAMES_FILE text file is not empty
             .to_string()
     }
 }

@@ -24,9 +24,9 @@ impl Deck {
         deck.shuffle_draw_pile();
 
         // ensure discard pile starts with one random card
-        let mut new_top_card = deck.draw_pile.pop().unwrap();
+        let mut new_top_card = deck.draw_pile.pop().unwrap(); // safe since we just created the draw_pile using the insert_* functions
         if new_top_card.should_be_black() {
-            new_top_card = new_top_card.morph_black_card(random_color()).unwrap();
+            new_top_card = new_top_card.morph_black_card(random_color()).unwrap(); // safe since explicit should_be_black() test
         }
         deck.discard_pile.push(new_top_card);
 
@@ -50,8 +50,7 @@ impl Deck {
 
                 self.switch_piles();
 
-                // should definitely be a safe operation
-                Some(self.draw_pile.pop().unwrap())
+                Some(self.draw_pile.pop().unwrap()) // safe since both piles being empty is handled & switch_piles() moves at least one card then
             }
             Some(card) => Some(card),
         }
@@ -62,7 +61,7 @@ impl Deck {
             return;
         }
 
-        let last_discarded_card = self.discard_pile.pop().unwrap();
+        let last_discarded_card = self.discard_pile.pop().unwrap(); // safe since check above
 
         for card in self.discard_pile.iter_mut() {
             if card.should_be_black() {
@@ -81,8 +80,7 @@ impl Deck {
     }
 
     pub fn top_discard_card(&self) -> &Card {
-        // draw pile should always have at least one card
-        self.discard_pile.last().unwrap()
+        self.discard_pile.last().unwrap() // safe since draw pile should always have at least one card
     }
 
     // Used in a test
@@ -98,6 +96,7 @@ impl Deck {
     }
 }
 
+// use of Card::new(...).unwrap() in this function is safe at the time of this commit
 fn insert_number_cards(card_stack: &mut Vec<Card>) {
     for color in CardColor::non_black_iter() {
         // only one value=0 card of each color
@@ -111,6 +110,7 @@ fn insert_number_cards(card_stack: &mut Vec<Card>) {
     }
 }
 
+// use of Card::new(...).unwrap() in this function is safe at the time of this commit
 fn insert_colored_symbol_cards(card_stack: &mut Vec<Card>) {
     for color in CardColor::non_black_iter() {
         for _ in 0..2 {
@@ -121,6 +121,7 @@ fn insert_colored_symbol_cards(card_stack: &mut Vec<Card>) {
     }
 }
 
+// use of Card::new(...).unwrap() in this function is safe at the time of this commit
 fn insert_black_symbol_cards(card_stack: &mut Vec<Card>) {
     for _ in 0..4 {
         card_stack.push(Card::new(CardColor::Black, CardSymbol::Wild).unwrap());

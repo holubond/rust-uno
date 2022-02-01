@@ -3,6 +3,7 @@ use crate::err::player_exist::PlayerExistError;
 use crate::err::player_turn::PlayerTurnError;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use crate::err::status::CreateStatusError;
 
 #[derive(Debug)]
 pub enum PlayerDrawError {
@@ -10,6 +11,7 @@ pub enum PlayerDrawError {
     PlayerExistError(PlayerExistError),
     ChainedAiError,
     CanPlayInstead,
+    CreateStatusError(CreateStatusError)
 }
 
 impl Error for PlayerDrawError {}
@@ -21,6 +23,7 @@ impl Display for PlayerDrawError {
         match self {
             TurnError(err) => write!(f, "{}", err),
             PlayerExistError(err) => write!(f, "{}", err),
+            CreateStatusError(err) => write!(f, "{}", err),
             CanPlayInstead => write!(f, "No need to draw, playing a card is possible"),
             ChainedAiError => write!(f, "Error occurred when AI played"),
         }
@@ -42,5 +45,11 @@ impl From<PlayerExistError> for PlayerDrawError {
 impl From<AiError> for PlayerDrawError {
     fn from(_e: AiError) -> Self {
         PlayerDrawError::ChainedAiError
+    }
+}
+
+impl From<CreateStatusError> for PlayerDrawError {
+    fn from(e: CreateStatusError) -> Self {
+        PlayerDrawError::CreateStatusError(e)
     }
 }

@@ -50,7 +50,7 @@ impl Player {
 
         match maybe_position {
             None => Err(PlayCardError::PlayerHasNoSuchCard(card)),
-            Some(position) => Ok(self.play_card_by_index(position).unwrap()),
+            Some(position) => Ok(self.play_card_by_index(position).unwrap()), // safe since earlier .position call would have returned None
         }
     }
 
