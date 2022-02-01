@@ -2,10 +2,8 @@ const ON_HEROKU: bool = true;
 
 const METHOD: &str = "http";
 const HOST: &str = "localhost";
-const LBPORT: &str = "9000";
-const GSPORT: &str = "9900";
+const LBPORT: &str = "9900";
 const WSMETHOD: &str = "ws";
-const WSPORT: &str = "9900";
 
 // Heroku
 const HEROKU_METHOD: &str = "https";
@@ -46,7 +44,7 @@ fn route_gs(endpoint: String, game_server: String) -> String {
     if ON_HEROKU {
         return format!("{}://{}{}", HEROKU_METHOD, game_server, endpoint);
     }
-    format!("{}://{}:{}{}", METHOD, game_server, GSPORT, endpoint)
+    format!("{}://{}{}", METHOD, game_server, endpoint)
 }
 
 pub fn game_ws(token: &String, game_server: String) -> String {
@@ -54,5 +52,5 @@ pub fn game_ws(token: &String, game_server: String) -> String {
     if ON_HEROKU {
         return format!("{}://{}{}", HEROKU_WSMETHOD, game_server, endpoint);
     }
-    format!("{}://{}:{}{}", WSMETHOD, game_server, WSPORT, endpoint)
+    format!("{}://{}{}", WSMETHOD, game_server, endpoint)
 }
