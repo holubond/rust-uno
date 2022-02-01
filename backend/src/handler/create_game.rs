@@ -12,6 +12,7 @@ use super::util::safe_lock::safe_lock;
 #[derive(Deserialize, Debug)]
 pub struct RequestBody {
     name: String,
+    ais: String
 }
 
 #[derive(Serialize, Debug)]
@@ -28,6 +29,11 @@ pub async fn create_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
     let author_name = &request_body.name;
+    let ais = match request_body.ais.parse::<usize>() {
+        Ok(ais) => ais,
+        Err(_) => return HttpResponse::InternalServerError().json(ErrMsg::new_from_scratch(
+            "Number of AIS must be positive number"))
+    };
 
     if author_name.is_empty() {
         return HttpResponse::BadRequest().json(ErrMsg::new_from_scratch(
@@ -35,7 +41,7 @@ pub async fn create_game(
         ));
     }
 
-    let game = Game::new(author_name.clone());
+    let game = Game::new_with_ai(author_name.clone(), ais);
     let game_id = game.id.clone();
     let jwt = auth_service.generate_jwt(author_name, &game_id);
 
