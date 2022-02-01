@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use crate::gamestate::game::GameStatus;
 use crate::handler::util::response::ErrMsg;
 use crate::handler::util::safe_lock::safe_lock;
@@ -6,6 +7,7 @@ use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
 use std::sync::Mutex;
+use crate::err::add_player::AddPlayerError;
 
 #[derive(Deserialize, Debug)]
 pub struct RequestBody {
@@ -50,8 +52,16 @@ pub async fn join_game(
     }
 
     if let Err(err) = game.add_player(player_name.clone()) {
-        return HttpResponse::InternalServerError().json(ErrMsg::new(err));
+        return HttpResponse::Conflict().json(ErrMsg::new(err));
     };
+
+    match game.add_player(player_name.clone()) {
+        Ok(_) => (),
+        Err(err) => return match err {
+            AddPlayerError::AlreadyExists(x) => HttpResponse::Conflict().json(x),
+            AddPlayerError::CreateStatusError(x) => (HttpResponse::InternalServerError().json(ErrMsg::new(x)))
+        }
+    }
 
     let jwt = auth_service.generate_jwt(player_name, &game_id);
 
