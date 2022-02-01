@@ -1,5 +1,7 @@
 use actix_web::HttpResponse;
 
+use crate::err_msg::ErrMsg;
+
 const SEPARATOR: &str = "@";
 
 pub struct ServerId {
@@ -39,6 +41,8 @@ impl ServerId {
     }
 
     fn invalid_game_id_response() -> HttpResponse {
-        HttpResponse::BadRequest().body("Invalid game ID")
+        HttpResponse::BadRequest().json(
+            ErrMsg::new("Invalid game ID".to_string())
+        )
     }
 }
