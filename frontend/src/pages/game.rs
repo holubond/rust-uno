@@ -252,7 +252,7 @@ impl Component for Game {
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
-                        <div class="h-1/2">
+                        <div class="h-1/2 flex flex-col justify-center items-center">
                             <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
                             {
                                 if self.author == self.you {
@@ -282,11 +282,12 @@ impl Component for Game {
             };
         }
         if self.status.eq(&GameState::Finished) {
+            log!("KONEC");
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
-                        <div class="h-1/2">
-                            <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
+                        <div class="h-1/2 w-full flex flex-col justify-center items-center">
+                            <p class="font-mono text-7xl font-bold text-center">{"Finished game lobby"}</p>
                             {
                                 if self.author == self.you {
                                     html!{
@@ -296,16 +297,16 @@ impl Component for Game {
                                         </button>
                                     }
                                 } else {
-                                    html!{}
+                                    html!{<div></div>}
                                 }
                             }
                         </div>
-                        <div class="h-1/2">
+                        <div class="h-1/2 w-full flex flex-col justify-center items-center">
                             <p class="text-xl font-bold text-center">{"Rankings:"}</p>
                             {
                                 self.finished_players.iter().enumerate().map(|(x,y)|{
                                     html!{
-                                        <p class="text-l font-bold text-center">{format!{"{}.{}",x,&y}}</p>
+                                        <p class="text-l font-bold text-center">{format!{"{}.{}",x+1,&y}}</p>
                                     }
                                 }).collect::<Html>()
                             }
