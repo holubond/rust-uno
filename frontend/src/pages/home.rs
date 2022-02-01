@@ -293,7 +293,7 @@ async fn send_join_game_lb_request(
             Ok(x) => Ok(x),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
-        StatusCode::NOT_FOUND | StatusCode::INTERNAL_SERVER_ERROR => {
+        StatusCode::NOT_FOUND | StatusCode::BAD_REQUEST | StatusCode::INTERNAL_SERVER_ERROR => {
             match response.json::<MessageResponse>().await {
                 Ok(x) => Err(x.message.clone()),
                 _ => Err("Error: message from server had bad struct.".to_string()),
