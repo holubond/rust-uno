@@ -274,6 +274,21 @@ impl Game {
         Ok(())
     }
 
+    fn end_drawing(&mut self, drawing_player: String, cards_drawn: Vec<Card>) -> Result<(), PlayerDrawError> {
+        self.end_turn();
+
+        let next_player_name = self.get_current_player().unwrap().name(); // after end_turn
+        self.message_all_but(
+            drawing_player.clone(),
+            WSMsg::draw(drawing_player.clone(), next_player_name.clone(), cards_drawn.len()),
+        );
+        self.find_player(drawing_player).unwrap().message(WSMsg::draw_me(next_player_name, cards_drawn));
+
+        self.maybe_ai_turn()?;
+
+        Ok(())
+    }
+
     /// Returns a cloned vector of what the player received as drawn cards.
     /// Returns an error if the player does not exist, is not the current player, or has a valid card to play.
     /// Should get called whenever a player clicks the draw card pile.
@@ -284,19 +299,8 @@ impl Game {
         if self.active_cards.are_cards_active()
             && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
         {
-            self.end_turn();
             self.active_cards.clear();
-
-            let next_player_name = self.get_current_player().unwrap().name();
-            self.message_all_but(
-                player_name.clone(),
-                WSMsg::draw(player_name.clone(), next_player_name.clone(), 0),
-            );
-            self.find_player(player_name).unwrap().message(WSMsg::draw_me(next_player_name, vec![]));
-
-            self.maybe_ai_turn()?;
-
-            return Ok(());
+            return self.end_drawing(player_name, vec![]);
         }
 
         let draw_count = if self.active_cards.are_cards_active() {
@@ -310,22 +314,8 @@ impl Game {
         };
         let drawn_cards = self.draw_n_cards(player_name.clone(), draw_count);
 
-        self.end_turn();
-
-        let next_player_name = self.get_current_player().unwrap().name(); // after end_turn
-        self.message_all_but(
-            player_name.clone(),
-            WSMsg::draw(
-                player_name.clone(),
-                next_player_name.clone(),
-                draw_count,
-            ),
-        );
-        self.find_player(player_name).unwrap().message(WSMsg::draw_me(next_player_name, drawn_cards));
-
-        self.maybe_ai_turn()?;
-
-        Ok(())
+        assert_eq!(draw_count, drawn_cards.len());
+        self.end_drawing(player_name, drawn_cards)
     }
 
     /// Draws n cards from the deck and gives them to the named player.
