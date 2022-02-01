@@ -90,13 +90,24 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
 
 pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
     let card_info = match new_data.card._type {
-        CardType::Value => format!("{} {}", new_data.card.color.to_str(), new_data.card.value.unwrap()),
-        CardType::Reverse|
-        CardType::Draw2|
-        CardType::Skip => format!("{} {}", new_data.card.color.to_str(), new_data.card._type.card_type_text()),
-        CardType::Wild|CardType::Draw4 => format!("{}", new_data.card._type.card_type_text()),
+        CardType::Value => format!(
+            "{} {}",
+            new_data.card.color.to_str(),
+            new_data.card.value.unwrap()
+        ),
+        CardType::Reverse | CardType::Draw2 | CardType::Skip => format!(
+            "{} {}",
+            new_data.card.color.to_str(),
+            new_data.card._type.card_type_text()
+        ),
+        CardType::Wild | CardType::Draw4 => format!("{}", new_data.card._type.card_type_text()),
     };
-    let log_msg = format!("{}: {} {}", new_data.who, Action::PlayCard.logger_string(), card_info);
+    let log_msg = format!(
+        "{}: {} {}",
+        new_data.who,
+        Action::PlayCard.logger_string(),
+        card_info
+    );
     add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
@@ -169,5 +180,5 @@ impl Action {
     }
 }
 pub fn add_log(game: &mut Game, log: String) {
-    game.logs.push(format!("{}",log));
+    game.logs.push(format!("{}", log));
 }
