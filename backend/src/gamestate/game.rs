@@ -541,7 +541,9 @@ impl Game {
             return Ok(());
         }
 
-        //thread::sleep(decide_sleep_time());
+        // todo!("simulate AI decision making with non-blocking sleep");
+        thread::sleep(decide_sleep_time());
+
         let current_player = self.get_current_player().unwrap();
         let ai_name = current_player.name();
 

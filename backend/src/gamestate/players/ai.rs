@@ -13,7 +13,7 @@ pub fn decide_new_color(card: &Card) -> Option<CardColor> {
 }
 
 pub fn decide_sleep_time() -> Duration {
-    Duration::from_secs(rand::thread_rng().gen_range(1..=4))
+    Duration::from_secs(rand::thread_rng().gen_range(1..=2))
 }
 
 pub fn first_card_of_symbol(player: &Player, symbol: CardSymbol) -> Option<Card> {
