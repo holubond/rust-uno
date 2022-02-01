@@ -304,6 +304,7 @@ async fn send_create_game_request(
         StatusCode::BAD_REQUEST
         | StatusCode::INTERNAL_SERVER_ERROR
         | StatusCode::NOT_FOUND
+        | StatusCode::CONFLICT
         | StatusCode::SERVICE_UNAVAILABLE => match response.json::<MessageResponse>().await {
             Ok(x) => Err(x.message.clone()),
             _ => Err("Error: message from server had bad struct.".to_string()),
