@@ -6,7 +6,6 @@ use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
-use std::fmt::Display;
 use std::sync::Mutex;
 
 #[derive(Deserialize, Debug)]
