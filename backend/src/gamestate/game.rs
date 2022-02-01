@@ -8,8 +8,10 @@ use crate::err::player_exist::PlayerExistError;
 use crate::err::player_turn::PlayerTurnError;
 use crate::err::status::CreateStatusError;
 use crate::gamestate::active_cards::ActiveCards;
+use crate::gamestate::players::ai::{
+    decide_new_color, decide_sleep_time, first_card_of_symbol, first_playable_card_against,
+};
 use crate::gamestate::players::player::Player;
-use crate::gamestate::players::ai::{first_card_of_symbol, first_playable_card_against, decide_new_color, decide_sleep_time};
 use crate::gamestate::{CARDS_DEALT_TO_PLAYERS, PENALTY_CARDS};
 use crate::ws::ws_message::WSMsg;
 use nanoid::nanoid;
@@ -274,15 +276,25 @@ impl Game {
         Ok(())
     }
 
-    fn end_drawing(&mut self, drawing_player: String, cards_drawn: Vec<Card>) -> Result<(), PlayerDrawError> {
+    fn end_drawing(
+        &mut self,
+        drawing_player: String,
+        cards_drawn: Vec<Card>,
+    ) -> Result<(), PlayerDrawError> {
         self.end_turn();
 
         let next_player_name = self.get_current_player().unwrap().name(); // after end_turn
         self.message_all_but(
             drawing_player.clone(),
-            WSMsg::draw(drawing_player.clone(), next_player_name.clone(), cards_drawn.len()),
+            WSMsg::draw(
+                drawing_player.clone(),
+                next_player_name.clone(),
+                cards_drawn.len(),
+            ),
         );
-        self.find_player(drawing_player).unwrap().message(WSMsg::draw_me(next_player_name, cards_drawn));
+        self.find_player(drawing_player)
+            .unwrap()
+            .message(WSMsg::draw_me(next_player_name, cards_drawn));
 
         self.maybe_ai_turn()?;
 
@@ -449,7 +461,7 @@ impl Game {
     ) -> Result<(), CreateStatusError> {
         let next_player_name = match self.get_current_player() {
             None => return Err(CreateStatusError::CurrentPlayerNotFound),
-            Some(player) => player.name()
+            Some(player) => player.name(),
         };
         self.message_all(WSMsg::play_card(
             player_name.clone(),
@@ -469,11 +481,16 @@ impl Game {
         }
 
         if player_finished {
-            self.message_all(WSMsg::finish(player_name.clone()));
+            self.message_all(WSMsg::finish(player_name));
         }
 
-        if self.players.len().saturating_sub(self.get_finished_players().len()) <= 1 {
-            // == after end_turn(), the same player got the turn
+        if self
+            .players
+            .len()
+            .saturating_sub(self.get_finished_players().len())
+            <= 1
+        {
+            // == the difference between all players and finished players is 0 or 1
             self.status = GameStatus::Finished;
             self.status_message_all()?;
         }
@@ -503,8 +520,15 @@ impl Game {
             }
         }
 
-        if !self.get_finished_players().is_empty() && self.nonhuman_iter().all(|player| !player.is_finished()) {
-            let last_position = self.get_finished_players().last().unwrap().position().unwrap(); // safe due to is_empty check
+        if !self.get_finished_players().is_empty()
+            && self.nonhuman_iter().all(|player| !player.is_finished())
+        {
+            let last_position = self
+                .get_finished_players()
+                .last()
+                .unwrap()
+                .position()
+                .unwrap(); // safe due to is_empty check
             for (index, ai) in self.nonhuman_iter_mut().enumerate() {
                 ai.set_position(last_position + index + 1);
             }
@@ -522,18 +546,15 @@ impl Game {
         let ai_name = current_player.name();
 
         if let Some(card) = match self.active_cards.are_cards_active() {
-            true => first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap()),
+            true => {
+                first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap())
+            }
             false => first_playable_card_against(current_player, self.deck.top_discard_card()),
         } {
             let should_say_uno = current_player.should_say_uno();
             let new_color = decide_new_color(&card);
 
-            self.play_card(
-                ai_name,
-                card.clone(),
-                new_color,
-                should_say_uno,
-            )?;
+            self.play_card(ai_name, card, new_color, should_say_uno)?;
         } else {
             self.draw_cards(ai_name)?;
         }

@@ -1,7 +1,7 @@
+use crate::err::ai::AiError;
 use crate::err::status::CreateStatusError;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
-use crate::err::ai::AiError;
 
 #[derive(Debug)]
 pub enum GameStartError {

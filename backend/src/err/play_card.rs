@@ -1,10 +1,10 @@
 use crate::cards::card::Card;
+use crate::err::ai::AiError;
 use crate::err::player_exist::PlayerExistError;
 use crate::err::player_turn::PlayerTurnError;
 use crate::err::status::CreateStatusError;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use crate::err::ai::AiError;
 
 #[derive(Debug)]
 pub enum PlayCardError {

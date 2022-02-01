@@ -1,14 +1,14 @@
 use crate::err::draw_cards::PlayerDrawError;
 use crate::err::play_card::PlayCardError;
+use crate::err::status::CreateStatusError;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use crate::err::status::CreateStatusError;
 
 #[derive(Debug)]
 pub enum AiError {
     PlayCardError(PlayCardError),
     DrawCardError(PlayerDrawError),
-    CreateStatusError(CreateStatusError)
+    CreateStatusError(CreateStatusError),
 }
 
 impl Error for AiError {}

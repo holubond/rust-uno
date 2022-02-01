@@ -589,18 +589,53 @@ fn test_game_end() {
 
     game.deck.play(Card::new(Blue, Value(1)).unwrap());
 
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(1)).unwrap(),
+            None,
+            true,
+        )
+        .is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(1)).unwrap(),
+            None,
+            true,
+        )
+        .is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(1)).unwrap(),
+            None,
+            true,
+        )
+        .is_ok());
 
     for player in game.players.iter() {
         assert_eq!(player.get_card_count(), 1usize);
     }
 
     assert_eq!(game.status, GameStatus::Running);
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(2)).unwrap(), None, false).is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(2)).unwrap(),
+            None,
+            false,
+        )
+        .is_ok());
     assert_eq!(game.status, GameStatus::Running);
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(2)).unwrap(), None, false).is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(2)).unwrap(),
+            None,
+            false,
+        )
+        .is_ok());
     assert_eq!(game.status, GameStatus::Finished);
 }
 
@@ -621,11 +656,16 @@ fn test_ai_does_not_hold() {
 
     let skip = Card::new(Blue, Skip).unwrap();
     // this will cause all the other AI players to play too
-    assert!(game.play_card("Andy".into(), skip.clone(), None, false).is_ok());
+    assert!(game
+        .play_card("Andy".into(), skip.clone(), None, false)
+        .is_ok());
 
     // we should be back at Andy
     assert!(game.get_current_player().unwrap().is_human());
-    assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
+    assert_eq!(
+        game.get_current_player().unwrap().name(),
+        "Andy".to_string()
+    );
 }
 
 #[test]
@@ -642,7 +682,9 @@ fn test_only_ai_finishes_game() {
 
     let skip = Card::new(Blue, Skip).unwrap();
     // this will cause all the other AI players to play too, but th
-    assert!(game.play_card("Andy".into(), skip.clone(), None, false).is_ok());
+    assert!(game
+        .play_card("Andy".into(), skip.clone(), None, false)
+        .is_ok());
 
     // all humans finished => game finished
     assert_eq!(game.status, GameStatus::Finished);
