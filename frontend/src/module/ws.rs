@@ -102,6 +102,8 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
 }
 
 pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
+    let log_msg = format!("{}: {}", new_data.who, Action::PlayCard.logger_string());
+    add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
             player.cards -= 1;
@@ -116,6 +118,8 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
 }
 
 pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
+    let log_msg = format!("{}: {}", new_data.who, Action::Draw.logger_string());
+    add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
             player.cards += new_data.cards;
@@ -126,6 +130,8 @@ pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
 }
 
 pub fn handle_finish(game: &mut Game, new_data: Finish) {
+    let log_msg = format!("{}: {}", new_data.who, Action::Finish.logger_string());
+    add_log(game, log_msg);
     game.finished_players.push(new_data.who);
 }
 
@@ -136,10 +142,41 @@ pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
 }
 
 pub fn handle_gained_cards(game: &mut Game, new_data: GainedCards) {
+    let log_msg = format!(
+        "{}: {} {}x cards",
+        new_data.who,
+        Action::Gained.logger_string(),
+        new_data.number
+    );
+    add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
             player.cards += new_data.number;
         }
         None => (),
     };
+}
+
+pub enum Action {
+    PlayCard,
+    Draw,
+    Finish,
+    Gained,
+}
+
+impl Action {
+    pub fn logger_string(&self) -> String {
+        match self {
+            Action::PlayCard => "played card".to_string(),
+            Action::Draw => "drawn card".to_string(),
+            Action::Finish => "finished!".to_string(),
+            Action::Gained => "gained".to_string(),
+        }
+    }
+}
+pub fn add_log(game: &mut Game, log: String) {
+    if game.logs.len() == 5 {
+        game.logs.remove(0);
+    }
+    game.logs.push(log);
 }

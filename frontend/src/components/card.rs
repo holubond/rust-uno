@@ -55,7 +55,7 @@ impl CardType {
     pub fn card_type_text(&self) -> String {
         match self {
             CardType::Skip => "Skip".to_string(),
-            CardType::Reverse => "Reverse".to_string(),
+            CardType::Reverse => "Rev".to_string(),
             CardType::Draw2 => "+2".to_string(),
             CardType::Draw4 => "+4".to_string(),
             CardType::Wild => "Wild".to_string(),
@@ -134,19 +134,19 @@ impl Component for Card {
 
 fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
     return html! {
-        <div class="w-40 h-full flex flex-col rounded-lg shadow-md"
+        <div class="w-40 h-full cursor-pointer flex flex-col rounded-lg shadow-md border-black border-4"
             style={format!("background-color: {}", color.to_str())}
             onclick={link.callback(|_: MouseEvent| { Msg::PlayCard })}
         >
-            <div class="h-1/3 w-40">
+            <div class="h-1/3 w-full">
                 <p class="text-6xl text-left text-White-500 font-bold">{value.to_string()}</p>
             </div>
 
-            <div class="h-1/3 w-40 flex justify-center">
+            <div class="h-1/3 w-full flex justify-center">
                 <p class="text-6xl text-center bg-gray-300 text-Black-500 font-bold">{value.to_string()}</p>
             </div>
 
-            <div class="h-1/3 w-40">
+            <div class="h-1/3 w-full">
                 <p class="text-6xl text-right text-White-500 font-bold">{value.to_string()}</p>
             </div>
         </div>
@@ -155,7 +155,7 @@ fn print_card(color: &Color, value: String, link: Scope<Card>) -> Html {
 
 fn print_colorful_card(value: String, link: Scope<Card>) -> Html {
     return html! {
-        <div class="w-40 h-full flex flex-col bg-black rounded-lg shadow-md">
+        <div class="w-40 h-full cursor-pointer flex flex-col bg-black rounded-lg shadow-md border-black border-4">
             <div class="h-1/3 w-full flex flex-row rounded-lg">
                 <div
                     class="h-full w-1/2 rounded-lg" style="background-color: red"
