@@ -39,6 +39,7 @@ pub struct Home {
     name_create: NodeRef,
     name_join: NodeRef,
     game_id: NodeRef,
+    ai: NodeRef,
 }
 
 impl Component for Home {
@@ -51,6 +52,7 @@ impl Component for Home {
             name_join: NodeRef::default(),
             name_create: NodeRef::default(),
             game_id: NodeRef::default(),
+            ai: NodeRef::default(),
         }
     }
 
@@ -59,17 +61,21 @@ impl Component for Home {
             Msg::InputChanged => {}
 
             Msg::SubmitCreate => {
-                if let Some(input) = self.name_create.cast::<HtmlInputElement>() {
-                    let name_create = input.value();
-                    let client = self.client.clone();
-                    ctx.link().send_future(async {
-                        match send_create_game_request(client, name_create).await {
-                            Ok(result) => Msg::SubmitCreateSuccess(result),
-                            Err(err) => Msg::SubmitFailure(err),
+                if let Some(name) = self.name_create.cast::<HtmlInputElement>() {
+                    if let Some(ai) = self.ai.cast::<HtmlInputElement>() {
+                        let name_create: String = name.value();
+                        let mut ai_val: String = ai.value();
+                        if ai_val.is_empty() {
+                            ai_val = "0".to_string();
                         }
-                    });
-                } else {
-                    return false;
+                        let client = self.client.clone();
+                        ctx.link().send_future(async {
+                            match send_create_game_request(client, name_create, ai_val).await {
+                                Ok(result) => Msg::SubmitCreateSuccess(result),
+                                Err(err) => Msg::SubmitFailure(err),
+                            }
+                        });
+                    }
                 }
             }
 
@@ -177,6 +183,24 @@ impl Component for Home {
                                     </div>
                                 </div>
 
+                                <div class="md:flex md:items-center mb-6">
+                                    <div class="md:w-1/3">
+                                        <label class="block text-Black-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="inline-full-name">
+                                            {"Number of AI"}
+                                        </label>
+                                    </div>
+
+                                    <div class="md:w-2/3">
+                                        <input
+                                            id="ai"
+                                            class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
+                                            type="number"
+                                            ref={self.ai.clone()}
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
+
                                 <div class="md:flex md:items-center">
                                     <div class="md:w-1/3">
                                     </div>
@@ -254,9 +278,11 @@ impl Component for Home {
 async fn send_create_game_request(
     client: Arc<Client>,
     name: String,
+    ai_val: String,
 ) -> Result<CreateResponse, String> {
     let mut request_body = HashMap::new();
     request_body.insert("name", name);
+    request_body.insert("ais", ai_val);
     let response = client.post(url::game()).json(&request_body).send().await;
     let response = match response {
         Ok(x) => x,
