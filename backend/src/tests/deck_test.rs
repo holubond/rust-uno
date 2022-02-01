@@ -68,3 +68,15 @@ fn test_ser_de() {
 
     assert_eq!(draw_pile, transmuted_pile);
 }
+
+
+#[test]
+fn test_one_card_left() {
+    let mut deck = Deck::new();
+    deck.draw_pile.clear();
+
+    assert_eq!(deck.draw_pile.len(), 0);
+    assert_eq!(deck.discard_pile.len(), 1);
+
+    assert!(deck.draw().is_none());
+}

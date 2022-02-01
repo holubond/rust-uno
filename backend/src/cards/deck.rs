@@ -37,10 +37,14 @@ impl Deck {
         self.draw_pile.shuffle(&mut rand::thread_rng());
     }
 
+    fn switching_piles_wont_move_card(&self) -> bool {
+        self.discard_pile.is_empty() || self.discard_pile.len() == 1
+    }
+
     pub fn draw(&mut self) -> Option<Card> {
         match self.draw_pile.pop() {
             None => {
-                if self.discard_pile.is_empty() {
+                if self.switching_piles_wont_move_card() {
                     return None;
                 }
 
@@ -54,6 +58,10 @@ impl Deck {
     }
 
     fn switch_piles(&mut self) {
+        if self.switching_piles_wont_move_card() {
+            return;
+        }
+
         let last_discarded_card = self.discard_pile.pop().unwrap();
 
         for card in self.discard_pile.iter_mut() {
