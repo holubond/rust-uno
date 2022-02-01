@@ -68,6 +68,14 @@ impl Component for Home {
                         if ai_val.is_empty() {
                             ai_val = "0".to_string();
                         }
+                        if ai_val.parse::<i32>().unwrap() > 5 {
+                            alert("Game can have maximum of 5 oponents!");
+                            return false;
+                        }
+                        if ai_val.parse::<i32>().unwrap() < 0 {
+                            alert("Game cannot have negative number of AI (lowest is 0)");
+                            return false;
+                        }
                         let client = self.client.clone();
                         ctx.link().send_future(async {
                             match send_create_game_request(client, name_create, ai_val).await {
