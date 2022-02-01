@@ -38,17 +38,17 @@ impl Component for Oponent {
 fn render_opponent(name: &String, number_of_cards: u32) -> Html {
     html! {
         <>
-            <div>
+            <div class="h-1/6">
                 <p class="text-2xl text-center text-Black-500 font-bold">
                     { name }
                 </p>
             </div>
 
-            <div>
-                <img class="h-full w-2/3" src="../resources/card_face_down.png" alt="card"/>
+            <div class="h-4/6">
+                <img class="h-full w-full object-scale-down" src="../resources/card_face_down.png" alt="card"/>
             </div>
 
-            <div>
+            <div class="h-1/6">
                 <p class="text-xl text-center text-Black-500 font-bold">
                     { format!{"number of cards: {}", number_of_cards} }
                 </p>
