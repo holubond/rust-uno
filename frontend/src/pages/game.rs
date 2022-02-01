@@ -25,7 +25,6 @@ pub enum Msg {
     SubmitFailure(String),
     PlayCard(PlayCardRequest),
     DrawCard,
-    DrawSuccess(DrawResponse),
     UpdateStatus(Message),
     PlaySubmitSuccess(PlayCardRequest),
 }
@@ -185,17 +184,10 @@ impl Component for Game {
                 log!("Start sending draw card");
                 ctx.link().send_future(async {
                     match draw_card_request(client, id, token, game_server).await {
-                        Ok(result) => Msg::DrawSuccess(result),
+                        Ok(_) => Msg::SubmitSuccess,
                         Err(err) => Msg::SubmitFailure(err),
                     }
                 });
-            }
-
-            Msg::DrawSuccess(response) => {
-                response.cards.iter().for_each(|card| {
-                    self.cards.push(card.clone());
-                });
-                self.current_player = Some(response.next);
             }
 
             Msg::SubmitSuccess => {}
@@ -428,7 +420,7 @@ async fn draw_card_request(
     game_id: String,
     token: String,
     game_server: String,
-) -> Result<DrawResponse, String> {
+) -> Result<(), String> {
     let url = url::drawn_cards(game_id, game_server);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
@@ -437,10 +429,7 @@ async fn draw_card_request(
     };
 
     return match response.status() {
-        StatusCode::OK => match response.json::<DrawResponse>().await {
-            Ok(x) => return Ok(x),
-            _ => Err("Error: message from server had bad struct.".to_string()),
-        },
+        StatusCode::NO_CONTENT => Ok(()),
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN | StatusCode::NOT_FOUND => {
             match response.json::<MessageResponse>().await {
                 Ok(x) => Err(x.message.clone()),
