@@ -1,3 +1,4 @@
+use std::time::SystemTime;
 use crate::components::card::CardType;
 use crate::module::module::{
     DrawCard, Finish, GainedCards, LobbyStatus, Penalty, PlayCard, RunningStatus,
@@ -162,8 +163,6 @@ impl Action {
     }
 }
 pub fn add_log(game: &mut Game, log: String) {
-    if game.logs.len() == 5 {
-        game.logs.remove(0);
-    }
+    //todo date
     game.logs.push(log);
 }

@@ -322,7 +322,7 @@ impl Component for Game {
                 </div>
 
                 <div class="w-screen h-48 flex justify-around">
-                    <div class="w-1/5 h-full border-black border-4 rounded-lg shadow-md">
+                    <div class="w-1/5 h-full border-black border-4 rounded-lg shadow-md overflow-auto">
                         <p>{"News"}</p>
                         {
                             log.iter().rev().map(|x|{
