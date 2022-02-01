@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use crate::err::add_player::AddPlayerError;
 use crate::gamestate::game::GameStatus;
 use crate::handler::util::response::ErrMsg;
 use crate::handler::util::safe_lock::safe_lock;
@@ -6,8 +6,8 @@ use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Deserialize;
 use serde::Serialize;
+use std::fmt::Display;
 use std::sync::Mutex;
-use crate::err::add_player::AddPlayerError;
 
 #[derive(Deserialize, Debug)]
 pub struct RequestBody {
@@ -51,19 +51,18 @@ pub async fn join_game(
         ));
     }
 
-    if let Err(err) = game.add_player(player_name.clone()) {
-        return HttpResponse::Conflict().json(ErrMsg::new(err));
-    };
-
-    match game.add_player(player_name.clone()) {
-        Ok(_) => (),
-        Err(err) => return match err {
-            AddPlayerError::AlreadyExists(x) => HttpResponse::Conflict().json(x),
-            AddPlayerError::CreateStatusError(x) => (HttpResponse::InternalServerError().json(ErrMsg::new(x)))
+    return match game.add_player(player_name.clone()) {
+        Ok(_) => {
+            let jwt = auth_service.generate_jwt(player_name, &game_id);
+            HttpResponse::Created().json(SuccessResponse { token: jwt })
         }
-    }
-
-    let jwt = auth_service.generate_jwt(player_name, &game_id);
-
-    HttpResponse::Created().json(SuccessResponse { token: jwt })
+        Err(err) => {
+            return match err {
+                AddPlayerError::AlreadyExists(x) =>
+                    HttpResponse::Conflict().json(ErrMsg::new_from_scratch(&x)),
+                AddPlayerError::CreateStatusError(x) =>
+                    HttpResponse::InternalServerError().json(ErrMsg::new(x))
+            }
+        }
+    };
 }
