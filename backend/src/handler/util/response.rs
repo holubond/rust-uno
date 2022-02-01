@@ -30,19 +30,19 @@ impl TypedErrMsg {
 
 #[derive(Serialize, Debug)]
 pub struct ErrMsg {
-    msg: String,
+    message: String,
 }
 
 impl ErrMsg {
     pub fn new(err: impl Error) -> Self {
         Self {
-            msg: err.to_string(),
+            message: err.to_string(),
         }
     }
 
     pub fn new_from_scratch(message: &str) -> Self {
         Self {
-            msg: message.into(),
+            message: message.into(),
         }
     }
 }
