@@ -26,6 +26,7 @@ pub fn test_session(game: GameStore) -> Game {
             value: Some(3),
         },
         real_game_id: "".to_string(),
+        logs: vec![],
     }
 }
 
