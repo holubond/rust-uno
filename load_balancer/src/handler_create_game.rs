@@ -8,6 +8,7 @@ use crate::{game_server_repo::{GameServerRepo, GetServerForNewGameError}, server
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RequestBody {
     name: String,
+    ais: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -49,7 +50,6 @@ async fn create_game(
         .send_json(&request_body.into_inner())
         .await;
 
-        
     let mut gs_response = match response {
         Err(error) => {
             game_server_repo.notify_about_false_game_create(server_id);
@@ -60,10 +60,16 @@ async fn create_game(
         Ok(response) => response,
     };
 
-    println!("Got response {:#?}", gs_response);
-    
     if gs_response.status() != StatusCode::CREATED {
         game_server_repo.notify_about_false_game_create(server_id);
+
+        let body = match gs_response.body().await {
+            Err(err) => return HttpResponse::ServiceUnavailable().json(
+                ErrMsg::new(err.to_string())
+            ),
+            Ok(x) => x,
+        };
+        return HttpResponseBuilder::new(gs_response.status()).body(body);
     }
 
     let gs_response_body = match gs_response.json::<SuccessResponseFromGameServer>().await {
