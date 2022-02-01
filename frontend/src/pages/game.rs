@@ -249,7 +249,7 @@ impl Component for Game {
 
         // loby screen
         if self.status.eq(&GameState::Lobby) {
-            let game_id = self.real_game_id.clone();
+            let game_id = self.game.game_id.clone();
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
