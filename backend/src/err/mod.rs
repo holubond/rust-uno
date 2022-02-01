@@ -1,4 +1,5 @@
 pub mod add_player;
+pub mod ai;
 pub mod draw_cards;
 pub mod game_start;
 pub mod play_card;

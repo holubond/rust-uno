@@ -1,6 +1,6 @@
 mod active_cards;
 pub mod game;
-pub mod player;
+pub mod players;
 
 pub type WSMessage = String;
 

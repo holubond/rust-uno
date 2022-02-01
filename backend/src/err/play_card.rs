@@ -1,4 +1,5 @@
 use crate::cards::card::Card;
+use crate::err::ai::AiError;
 use crate::err::player_exist::PlayerExistError;
 use crate::err::player_turn::PlayerTurnError;
 use crate::err::status::CreateStatusError;
@@ -13,6 +14,7 @@ pub enum PlayCardError {
     PlayerHasNoSuchCard(Card),
     CardCannotBePlayed(Card, Card),
     SaidUnoWhenShouldNotHave,
+    ChainedAiError,
 }
 
 impl Error for PlayCardError {}
@@ -32,6 +34,7 @@ impl Display for PlayCardError {
             SaidUnoWhenShouldNotHave => {
                 write!(f, "UNO! was said when it shouldn't have been possible")
             }
+            ChainedAiError => write!(f, "Error occurred when AI played"),
         }
     }
 }
@@ -51,5 +54,11 @@ impl From<PlayerExistError> for PlayCardError {
 impl From<CreateStatusError> for PlayCardError {
     fn from(e: CreateStatusError) -> Self {
         PlayCardError::CreateStatusError(e)
+    }
+}
+
+impl From<AiError> for PlayCardError {
+    fn from(_e: AiError) -> Self {
+        PlayCardError::ChainedAiError
     }
 }

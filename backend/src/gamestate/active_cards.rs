@@ -21,7 +21,7 @@ impl ActiveCards {
 
     pub(super) fn sum_active_draw_cards(&self) -> Option<usize> {
         if self.are_cards_active() {
-            match self.active_symbol_unchecked() {
+            match self.active_symbol_unchecked() { // unwrap inside fn safe due to are_cards_active() check above
                 CardSymbol::Draw2 => Some(2 * self.active_cards.len()),
                 CardSymbol::Draw4 => Some(4 * self.active_cards.len()),
                 _ => None,
@@ -33,14 +33,14 @@ impl ActiveCards {
 
     pub(super) fn active_symbol(&self) -> Option<CardSymbol> {
         if self.are_cards_active() {
-            Some(self.active_symbol_unchecked())
+            Some(self.active_symbol_unchecked()) // unwrap inside fn safe due to are_cards_active() check above
         } else {
             None
         }
     }
 
     fn active_symbol_unchecked(&self) -> CardSymbol {
-        self.active_cards.get(0).unwrap().symbol.clone()
+        self.active_cards.get(0).unwrap().symbol.clone() // private convenience fn, should always be preceded by a are_cards_active() check
     }
 
     /// Ensures that only active cards can be of the same symbol by returning Err otherwise.

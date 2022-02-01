@@ -1,7 +1,8 @@
 use crate::cards::card::{Card, CardColor};
 use crate::cards::deck::{
-    insert_black_symbol_cards, insert_colored_symbol_cards, insert_number_cards, random_color, Deck,
+    insert_black_symbol_cards, insert_colored_symbol_cards, insert_number_cards, Deck,
 };
+use crate::cards::random_color;
 
 #[test]
 fn test_card_symbol_eq() {
@@ -66,4 +67,16 @@ fn test_ser_de() {
     }
 
     assert_eq!(draw_pile, transmuted_pile);
+}
+
+
+#[test]
+fn test_one_card_left() {
+    let mut deck = Deck::new();
+    deck.draw_pile.clear();
+
+    assert_eq!(deck.draw_pile.len(), 0);
+    assert_eq!(deck.discard_pile.len(), 1);
+
+    assert!(deck.draw().is_none());
 }

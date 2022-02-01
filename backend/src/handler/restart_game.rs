@@ -58,6 +58,7 @@ impl From<GameStartError> for HttpResponse {
             }
             GameAlreadyStarted => HttpResponse::Conflict().json(ErrMsg::new(error)),
             CreateStatusError(_) => HttpResponse::InternalServerError().json(ErrMsg::new(error)),
+            ChainedAiError => HttpResponse::InternalServerError().json(ErrMsg::new(error)),
         }
     }
 }

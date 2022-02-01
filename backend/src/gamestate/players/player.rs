@@ -1,26 +1,33 @@
 use crate::cards::card::Card;
 use crate::err::play_card::PlayCardError;
+use crate::gamestate::players::name_generation::get_random_name;
 use crate::ws::ws_conn::WSConn;
 use crate::ws::ws_message::WSMsg;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Player {
     name: String,
-    pub is_author: bool,
+    is_author: bool,
+    is_human: bool,
     cards: Vec<Card>,
     position: Option<usize>,
     connection: Option<WSConn>,
 }
 
 impl Player {
-    pub fn new(name: String, is_author: bool) -> Player {
+    pub fn new(name: String, is_author: bool, is_human: bool) -> Player {
         Player {
             name,
             is_author,
+            is_human,
             cards: vec![],
             position: None,
             connection: None,
         }
+    }
+
+    pub fn new_ai() -> Player {
+        Player::new(get_random_name(), false, false)
     }
 
     /// Function returns Err if index is out of bounds
@@ -37,12 +44,12 @@ impl Player {
     }
 
     /// Function returns Err if card is not owned by the player.
-    pub fn play_card_by_eq(&mut self, card: Card) -> Result<Card, PlayCardError> {
+    pub fn play_card(&mut self, card: Card) -> Result<Card, PlayCardError> {
         let maybe_position = self.cards.iter().position(|c| c == &card);
 
         match maybe_position {
             None => Err(PlayCardError::PlayerHasNoSuchCard(card)),
-            Some(position) => Ok(self.play_card_by_index(position).unwrap()),
+            Some(position) => Ok(self.play_card_by_index(position).unwrap()), // safe since earlier .position call would have returned None
         }
     }
 
@@ -86,6 +93,14 @@ impl Player {
     /// Clones the name of the player.
     pub fn name(&self) -> String {
         self.name.clone()
+    }
+
+    pub fn is_author(&self) -> bool {
+        self.is_author
+    }
+
+    pub fn is_human(&self) -> bool {
+        self.is_human
     }
 
     pub fn message(&self, msg: WSMsg) {

@@ -1,3 +1,4 @@
+use crate::cards::card::Card;
 use crate::ws::ws_structs::WsMessageWrapper;
 use serde::{Deserialize, Serialize};
 
@@ -26,3 +27,23 @@ impl DrawWSMessage {
 }
 
 impl WsMessageWrapper for DrawWSMessage {}
+
+#[derive(Serialize, Deserialize)]
+pub struct DrawMeWSMessage {
+    #[serde(rename = "type")]
+    typee: String,
+    next: String,
+    cards: Vec<Card>,
+}
+
+impl DrawMeWSMessage {
+    pub fn new(next_player_name: String, cards_drawn: Vec<Card>) -> DrawMeWSMessage {
+        DrawMeWSMessage {
+            typee: "DRAW ME".into(),
+            next: next_player_name,
+            cards: cards_drawn,
+        }
+    }
+}
+
+impl WsMessageWrapper for DrawMeWSMessage {}

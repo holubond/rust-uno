@@ -1,6 +1,6 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
 use crate::gamestate::game::{Game, GameStatus};
-use crate::gamestate::player::Player;
+use crate::gamestate::players::player::Player;
 use crate::gamestate::CARDS_DEALT_TO_PLAYERS;
 use crate::err::add_player::AddPlayerError;
 
@@ -37,7 +37,7 @@ fn test_current_next_players() {
 
 #[test]
 fn test_play_card() {
-    let mut player = Player::new("Chuck".into(), true);
+    let mut player = Player::new("Chuck".into(), true, true);
 
     assert!(player.play_card_by_index(0).is_err());
 
@@ -114,7 +114,10 @@ fn test_draw_cards_draws() {
         .push(game.deck.top_discard_card().clone())
         .is_ok());
 
-    assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 2);
+    let before_cards = game.players.get(0).unwrap().get_card_count();
+    assert!(game.draw_cards("Andy".into()).is_ok());
+    let after_cards = game.players.get(0).unwrap().get_card_count();
+    assert_eq!(before_cards + 2, after_cards);
 
     game.active_cards.clear();
     game.players.get_mut(0).unwrap().drop_all_cards();
@@ -122,7 +125,11 @@ fn test_draw_cards_draws() {
         .get_mut(0)
         .unwrap()
         .give_card(Card::new(CardColor::Red, CardSymbol::Value(2)).unwrap()); // cannot play this
-    assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 1);
+
+    let before_cards = game.players.get(0).unwrap().get_card_count();
+    assert!(game.draw_cards("Andy".into()).is_ok());
+    let after_cards = game.players.get(0).unwrap().get_card_count();
+    assert_eq!(before_cards + 1, after_cards);
 }
 
 #[test]
@@ -346,7 +353,7 @@ fn test_active_cards() {
         let game_before = game.clone();
         let andy = game.players.get_mut(0).unwrap();
         assert!(
-            andy.play_card_by_eq(blu_skip.clone()).is_err(),
+            andy.play_card(blu_skip.clone()).is_err(),
             "Before: \n{:?}\nAfter: \n{:?}",
             game_before,
             game.clone()
@@ -591,17 +598,103 @@ fn test_game_end() {
 
     game.deck.play(Card::new(Blue, Value(1)).unwrap());
 
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(1)).unwrap(), None, true).is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(1)).unwrap(),
+            None,
+            true,
+        )
+        .is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(1)).unwrap(),
+            None,
+            true,
+        )
+        .is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(1)).unwrap(),
+            None,
+            true,
+        )
+        .is_ok());
 
     for player in game.players.iter() {
         assert_eq!(player.get_card_count(), 1usize);
     }
 
     assert_eq!(game.status, GameStatus::Running);
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(2)).unwrap(), None, false).is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(2)).unwrap(),
+            None,
+            false,
+        )
+        .is_ok());
     assert_eq!(game.status, GameStatus::Running);
-    assert!(game.play_card(game.get_current_player().unwrap().name(), Card::new(Blue, Value(2)).unwrap(), None, false).is_ok());
+    assert!(game
+        .play_card(
+            game.get_current_player().unwrap().name(),
+            Card::new(Blue, Value(2)).unwrap(),
+            None,
+            false,
+        )
+        .is_ok());
+    assert_eq!(game.status, GameStatus::Finished);
+}
+
+#[test]
+fn test_ai_does_not_hold() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new_with_ai("Andy".into(), 6);
+
+    // simulate game start without the random order
+    assert!(game.deal_starting_cards().is_ok());
+
+    // let Andy play
+    let skip = Card::new(Blue, Skip).unwrap();
+    game.deck.play(skip.clone());
+    game.players.get_mut(0).unwrap().give_card(skip.clone());
+
+    let skip = Card::new(Blue, Skip).unwrap();
+    // this will cause all the other AI players to play too
+    assert!(game
+        .play_card("Andy".into(), skip.clone(), None, false)
+        .is_ok());
+
+    // we should be back at Andy
+    assert!(game.get_current_player().unwrap().is_human());
+    assert_eq!(
+        game.get_current_player().unwrap().name(),
+        "Andy".to_string()
+    );
+}
+
+#[test]
+fn test_only_ai_finishes_game() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new_with_ai("Andy".into(), 6);
+
+    // let Andy play his only one card
+    let skip = Card::new(Blue, Skip).unwrap();
+    game.deck.play(skip.clone());
+    game.players.get_mut(0).unwrap().give_card(skip.clone());
+
+    let skip = Card::new(Blue, Skip).unwrap();
+    // this will cause all the other AI players to play too, but th
+    assert!(game
+        .play_card("Andy".into(), skip.clone(), None, false)
+        .is_ok());
+
+    // all humans finished => game finished
     assert_eq!(game.status, GameStatus::Finished);
 }
