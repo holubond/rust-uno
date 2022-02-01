@@ -38,7 +38,7 @@ pub async fn create_game(
 
     let ais = match request_body.ais.parse::<usize>() {
         Ok(ais) => ais,
-        Err(_) => return HttpResponse::InternalServerError().json(ErrMsg::new_from_scratch(
+        Err(_) => return HttpResponse::BadRequest().json(ErrMsg::new_from_scratch(
             "Number of AIS must be positive number"))
     };
 
