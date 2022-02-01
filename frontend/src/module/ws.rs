@@ -19,7 +19,7 @@ pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
             };
         } else if msg.contains("\"status\":\"FINISHED\"") {
             match serde_json::from_str::<LobbyStatus>(&msg) {
-                Ok(x) => handle_lobby(game, x),
+                Ok(x) => handle_finish_lobby(game, x),
                 Err(_) => (),
             };
         } else {
@@ -74,6 +74,19 @@ pub fn handle_lobby(game: &mut Game, new_data: LobbyStatus) {
     });
 }
 
+pub fn handle_finish_lobby(game: &mut Game, new_data: LobbyStatus) {
+    game.status = GameState::Finished;
+    game.author = new_data.author;
+    game.you = new_data.you;
+    game.players = vec![];
+    new_data.players.iter().for_each(|p| {
+        game.players.push(Player {
+            name: p.to_string(),
+            cards: 0,
+        })
+    });
+}
+
 pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
     game.status = GameState::Running;
     game.author = new_data.author;
@@ -94,6 +107,8 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
 }
 
 pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
+    let log_msg = format!("{}: {}", new_data.who, Action::PlayCard.logger_string());
+    add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
             player.cards -= 1;
@@ -115,6 +130,8 @@ pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
 }
 
 pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
+    let log_msg = format!("{}: {}", new_data.who, Action::Draw.logger_string());
+    add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
             player.cards += new_data.cards;
@@ -125,6 +142,8 @@ pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
 }
 
 pub fn handle_finish(game: &mut Game, new_data: Finish) {
+    let log_msg = format!("{}: {}", new_data.who, Action::Finish.logger_string());
+    add_log(game, log_msg);
     game.finished_players.push(new_data.who);
 }
 
@@ -135,10 +154,41 @@ pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
 }
 
 pub fn handle_gained_cards(game: &mut Game, new_data: GainedCards) {
+    let log_msg = format!(
+        "{}: {} {}x cards",
+        new_data.who,
+        Action::Gained.logger_string(),
+        new_data.number
+    );
+    add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
             player.cards += new_data.number;
         }
         None => (),
     };
+}
+
+pub enum Action {
+    PlayCard,
+    Draw,
+    Finish,
+    Gained,
+}
+
+impl Action {
+    pub fn logger_string(&self) -> String {
+        match self {
+            Action::PlayCard => "played card".to_string(),
+            Action::Draw => "drawn card".to_string(),
+            Action::Finish => "finished!".to_string(),
+            Action::Gained => "gained".to_string(),
+        }
+    }
+}
+pub fn add_log(game: &mut Game, log: String) {
+    if game.logs.len() == 5 {
+        game.logs.remove(0);
+    }
+    game.logs.push(log);
 }

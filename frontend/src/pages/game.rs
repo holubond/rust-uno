@@ -43,6 +43,7 @@ pub struct Game {
     pub(crate) uno_bool: bool,
     pub(crate) discarted_card: CardInfo,
     pub(crate) real_game_id: String,
+    pub(crate) logs: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -107,6 +108,7 @@ impl Component for Game {
                 value: Some(1),
             },
             real_game_id: real_id.clone().first().unwrap().to_string(),
+            logs: vec![],
         };
         spawn_local(async move {
             while let Some(msg) = read.next().await {
@@ -239,11 +241,13 @@ impl Component for Game {
 
         // loby screen
         if self.status.eq(&GameState::Lobby) {
+            let game_id = self.game.game_id.clone();
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
-                        <div class="h-1/2">
+                        <div class="h-1/2 flex flex-col justify-center items-center">
                             <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
+                            <p class="font-mono text-3xl font-bold text-center">{format!("Lobby: {}", game_id)}</p>
                             {
                                 if self.author == self.you {
                                     html!{
@@ -272,11 +276,12 @@ impl Component for Game {
             };
         }
         if self.status.eq(&GameState::Finished) {
+            log!("KONEC");
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
-                        <div class="h-1/2">
-                            <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
+                        <div class="h-1/2 w-full flex flex-col justify-center items-center">
+                            <p class="font-mono text-7xl font-bold text-center">{"Finished game lobby"}</p>
                             {
                                 if self.author == self.you {
                                     html!{
@@ -286,16 +291,16 @@ impl Component for Game {
                                         </button>
                                     }
                                 } else {
-                                    html!{}
+                                    html!{<div></div>}
                                 }
                             }
                         </div>
-                        <div class="h-1/2">
+                        <div class="h-1/2 w-full flex flex-col justify-center items-center">
                             <p class="text-xl font-bold text-center">{"Rankings:"}</p>
                             {
                                 self.finished_players.iter().enumerate().map(|(x,y)|{
                                     html!{
-                                        <p class="text-l font-bold text-center">{format!{"{}.{}",x,&y}}</p>
+                                        <p class="text-l font-bold text-center">{format!{"{}.{}",x+1,&y}}</p>
                                     }
                                 }).collect::<Html>()
                             }
@@ -304,15 +309,38 @@ impl Component for Game {
                 </main>
             };
         }
+        let log = self.logs.clone();
         return html! {
             <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
-                <div class="w-screen flex flex-row justify-between">
+                <div class="w-screen h-80 flex flex-row justify-between">
                     <Oponents players={self.players.clone()} you={self.you.clone()} current={self.current_player.clone()}/>
                 </div>
 
                 <div class="w-screen h-48 flex justify-around">
+                    <div class="w-1/5 h-full border-black border-4 rounded-lg shadow-md">
+                        <p>{"News"}</p>
+                        {
+                            log.iter().rev().map(|x|{
+                                html!{
+                                    <p>{format!("- {}", x)}</p>
+                                }
+                            }).collect::<Html>()
+                        }
+                    </div>
+
+                    <div class="w-20 flex flex-row">
+                        <input
+                            id="uno"
+                            class="bg-gray-200 w-full py-2 px-4"
+                            type="checkbox"
+                            checked={self.uno_bool.clone()}
+                            onchange={ctx.link().callback(|_| Msg::UnoChanged)}
+                        />
+                        <label for="uno">{"UNO!"}</label>
+                    </div>
+
                     <div>
-                        <img onclick={draw_pile_on_click} class="h-full w-full" src="../resources/draw_pile.png" alt="card"/>
+                        <img onclick={draw_pile_on_click} class="cursor-pointer h-full w-full" src="../resources/draw_pile.png" alt="card"/>
                     </div>
 
                     <div class="opacity-10">
@@ -329,7 +357,7 @@ impl Component for Game {
                         }
                     </div>
 
-                    <div class="rounded-lg w-32 bg-black shadow-md">
+                    <div class="w-32 bg-black rounded-lg shadow-md border-black border-4">
                         {
                             print_discarded_card(self.discarted_card.clone())
                         }
@@ -337,18 +365,6 @@ impl Component for Game {
                 </div>
 
                 <div class="w-screen flex flex-row justify-between">
-                    <div>
-                        <input
-                            id="uno"
-                            class="bg-gray-200 w-full py-2 px-4"
-                            type="checkbox"
-                            checked={self.uno_bool.clone()}
-                            onchange={ctx.link().callback(|_| Msg::UnoChanged)}
-                        />
-
-                        <label for="uno">{"UNO!"}</label>
-                    </div>
-
                     <MyUser
                         username={self.you.clone()}
                         current_username={self.current_player.clone()}

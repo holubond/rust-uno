@@ -31,13 +31,13 @@ impl Component for MyUser {
 
         if current_username == props.username {
             return html! {
-                <div class="flex flex-col w-2/3 h-96 rounded-lg bg-yellow-300 shadow-md justify-center">
+                <div class="flex flex-col w-full h-96 rounded-lg bg-yellow-300 shadow-md justify-center">
                     {player_board(props.username, props.cards, props.card_on_click)}
                 </div>
             };
         }
         return html! {
-            <div class="flex flex-col w-2/3 h-96 rounded-lg bg-white shadow-md justify-center">
+            <div class="flex flex-col w-full h-96 rounded-lg bg-white shadow-md justify-center">
                 {player_board(props.username, props.cards, props.card_on_click)}
             </div>
         };
