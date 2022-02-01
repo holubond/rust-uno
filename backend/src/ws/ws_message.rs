@@ -1,7 +1,7 @@
 use crate::cards::card::Card;
 use crate::err::status::CreateStatusError;
 use crate::gamestate::game::{Game, GameStatus};
-use crate::ws::ws_structs::draw::DrawWSMessage;
+use crate::ws::ws_structs::draw::{DrawMeWSMessage, DrawWSMessage};
 use crate::ws::ws_structs::finish::FinishWSMessage;
 use crate::ws::ws_structs::gained_cards::GainedCardsWSMessage;
 use crate::ws::ws_structs::penalty::PenaltyWSMessage;
@@ -42,6 +42,11 @@ impl WSMsg {
 
     pub fn draw(drawing_player_name: String, next_player_name: String, cards_drawn: usize) -> Self {
         let msg = DrawWSMessage::new(drawing_player_name, next_player_name, cards_drawn);
+        Self::new(msg.ws_serialize())
+    }
+
+    pub fn draw_me(next_player_name: String, cards_drawn: Vec<Card>) -> Self {
+        let msg = DrawMeWSMessage::new(next_player_name, cards_drawn);
         Self::new(msg.ws_serialize())
     }
 

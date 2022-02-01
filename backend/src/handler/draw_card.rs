@@ -1,17 +1,9 @@
-use crate::cards::card::Card;
 use crate::err::draw_cards::PlayerDrawError;
 use crate::handler::util::response::{ErrMsg, TypedErrMsg};
 use crate::handler::util::safe_lock::safe_lock;
 use crate::{AuthService, InMemoryGameRepo};
 use actix_web::{post, web, HttpRequest, HttpResponse};
-use serde::Serialize;
 use std::sync::Mutex;
-
-#[derive(Serialize, Debug)]
-pub struct SuccessResponse {
-    cards: Vec<Card>,
-    next: String,
-}
 
 #[post("/game/{gameID}/drawnCards")]
 pub async fn draw_card(
@@ -41,20 +33,9 @@ fn draw_card_response(
 
     let game = game_repo.get_game_by_id_mut(game_id)?;
 
-    let drawn_cards = game.draw_cards(player_name.into_inner())?;
+    game.draw_cards(player_name.into_inner())?;
 
-    let next_player = match game.get_current_player() {
-        None => {
-            return Err(HttpResponse::InternalServerError()
-                .json(ErrMsg::new_from_scratch("Current player not found")))
-        }
-        Some(player) => player,
-    };
-
-    Ok(HttpResponse::Ok().json(SuccessResponse {
-        cards: drawn_cards,
-        next: next_player.name(),
-    }))
+    Ok(HttpResponse::NoContent().finish())
 }
 
 impl From<PlayerDrawError> for HttpResponse {

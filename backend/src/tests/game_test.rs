@@ -113,7 +113,10 @@ fn test_draw_cards_draws() {
         .push(game.deck.top_discard_card().clone())
         .is_ok());
 
-    assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 2);
+    let before_cards = game.players.get(0).unwrap().get_card_count();
+    assert!(game.draw_cards("Andy".into()).is_ok());
+    let after_cards = game.players.get(0).unwrap().get_card_count();
+    assert_eq!(before_cards + 2, after_cards);
 
     game.active_cards.clear();
     game.players.get_mut(0).unwrap().drop_all_cards();
@@ -121,7 +124,11 @@ fn test_draw_cards_draws() {
         .get_mut(0)
         .unwrap()
         .give_card(Card::new(CardColor::Red, CardSymbol::Value(2)).unwrap()); // cannot play this
-    assert_eq!(game.draw_cards("Andy".into()).unwrap().len(), 1);
+
+    let before_cards = game.players.get(0).unwrap().get_card_count();
+    assert!(game.draw_cards("Andy".into()).is_ok());
+    let after_cards = game.players.get(0).unwrap().get_card_count();
+    assert_eq!(before_cards + 1, after_cards);
 }
 
 #[test]
