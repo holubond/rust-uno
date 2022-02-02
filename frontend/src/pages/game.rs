@@ -194,8 +194,6 @@ impl Component for Game {
 
             Msg::SubmitSuccess => {}
             Msg::PlaySubmitSuccess(card) => {
-                let index = self.cards.iter().position(|c| c == &card.card).unwrap();
-                self.cards.remove(index);
                 if self.uno_bool {
                     self.uno_bool = false;
                 }
