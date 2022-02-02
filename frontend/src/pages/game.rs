@@ -311,7 +311,7 @@ impl Component for Game {
         return html! {
             <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                 <div class="w-screen h-80 flex flex-row justify-between">
-                    <Oponents players={self.players.clone()} you={self.you.clone()} current={self.current_player.clone()}/>
+                    <Oponents players={self.players.clone()} you={self.you.clone()} current={self.current_player.clone()} done={self.finished_players.clone()}/>
                 </div>
 
                 <div class="w-screen h-48 flex justify-around">
@@ -368,6 +368,7 @@ impl Component for Game {
                         current_username={self.current_player.clone()}
                         cards={self.cards.clone()}
                         card_on_click={card_on_click}
+                        done={self.finished_players.clone()}
                     />
                 </div>
             </main>
