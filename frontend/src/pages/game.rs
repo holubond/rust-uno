@@ -25,7 +25,6 @@ pub enum Msg {
     SubmitFailure(String),
     PlayCard(PlayCardRequest),
     DrawCard,
-    DrawSuccess(DrawResponse),
     UpdateStatus(Message),
     PlaySubmitSuccess(PlayCardRequest),
 }
@@ -187,17 +186,10 @@ impl Component for Game {
                 log!("Start sending draw card");
                 ctx.link().send_future(async {
                     match draw_card_request(client, id, token, game_server).await {
-                        Ok(result) => Msg::DrawSuccess(result),
+                        Ok(_) => Msg::SubmitSuccess,
                         Err(err) => Msg::SubmitFailure(err),
                     }
                 });
-            }
-
-            Msg::DrawSuccess(response) => {
-                response.cards.iter().for_each(|card| {
-                    self.cards.push(card.clone());
-                });
-                self.current_player = Some(response.next);
             }
 
             Msg::SubmitSuccess => {}
@@ -249,11 +241,13 @@ impl Component for Game {
 
         // loby screen
         if self.status.eq(&GameState::Lobby) {
+            let game_id = self.game.game_id.clone();
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
-                        <div class="h-1/2">
+                        <div class="h-1/2 flex flex-col justify-center items-center">
                             <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
+                            <p class="font-mono text-3xl font-bold text-center">{format!("Lobby: {}", game_id)}</p>
                             {
                                 if self.author == self.you {
                                     html!{
@@ -282,11 +276,12 @@ impl Component for Game {
             };
         }
         if self.status.eq(&GameState::Finished) {
+            log!("KONEC");
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
-                        <div class="h-1/2">
-                            <p class="font-mono text-7xl font-bold text-center">{"Uno game lobby"}</p>
+                        <div class="h-1/2 w-full flex flex-col justify-center items-center">
+                            <p class="font-mono text-7xl font-bold text-center">{"Finished game lobby"}</p>
                             {
                                 if self.author == self.you {
                                     html!{
@@ -296,16 +291,16 @@ impl Component for Game {
                                         </button>
                                     }
                                 } else {
-                                    html!{}
+                                    html!{<div></div>}
                                 }
                             }
                         </div>
-                        <div class="h-1/2">
+                        <div class="h-1/2 w-full flex flex-col justify-center items-center">
                             <p class="text-xl font-bold text-center">{"Rankings:"}</p>
                             {
                                 self.finished_players.iter().enumerate().map(|(x,y)|{
                                     html!{
-                                        <p class="text-l font-bold text-center">{format!{"{}.{}",x,&y}}</p>
+                                        <p class="text-l font-bold text-center">{format!{"{}.{}",x+1,&y}}</p>
                                     }
                                 }).collect::<Html>()
                             }
@@ -441,7 +436,7 @@ async fn draw_card_request(
     game_id: String,
     token: String,
     game_server: String,
-) -> Result<DrawResponse, String> {
+) -> Result<(), String> {
     let url = url::drawn_cards(game_id, game_server);
     let response = client.post(url).bearer_auth(token).send().await;
     let response = match response {
@@ -450,10 +445,7 @@ async fn draw_card_request(
     };
 
     return match response.status() {
-        StatusCode::OK => match response.json::<DrawResponse>().await {
-            Ok(x) => return Ok(x),
-            _ => Err("Error: message from server had bad struct.".to_string()),
-        },
+        StatusCode::NO_CONTENT => Ok(()),
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN | StatusCode::NOT_FOUND => {
             match response.json::<MessageResponse>().await {
                 Ok(x) => Err(x.message.clone()),

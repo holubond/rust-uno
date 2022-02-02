@@ -1,6 +1,6 @@
 use crate::components::card::CardType;
 use crate::module::module::{
-    DrawCard, Finish, GainedCards, LobbyStatus, Penalty, PlayCard, RunningStatus,
+    DrawCard, DrawMeCard, Finish, GainedCards, LobbyStatus, Penalty, PlayCard, RunningStatus,
 };
 use crate::pages::game::{GameState, Player};
 use crate::Game;
@@ -19,7 +19,7 @@ pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
             };
         } else if msg.contains("\"status\":\"FINISHED\"") {
             match serde_json::from_str::<LobbyStatus>(&msg) {
-                Ok(x) => handle_lobby(game, x),
+                Ok(x) => handle_finish_lobby(game, x),
                 Err(_) => (),
             };
         } else {
@@ -28,6 +28,11 @@ pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
     } else if msg.contains("\"type\":\"PLAY CARD\"") {
         match serde_json::from_str::<PlayCard>(&msg) {
             Ok(x) => handle_play_card(game, x),
+            Err(_) => (),
+        };
+    } else if msg.contains("\"type\":\"DRAW ME\"") {
+        match serde_json::from_str::<DrawMeCard>(&msg) {
+            Ok(x) => handle_draw_cards_me(game, x),
             Err(_) => (),
         };
     } else if msg.contains("\"type\":\"DRAW\"") {
@@ -58,6 +63,19 @@ pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
 
 pub fn handle_lobby(game: &mut Game, new_data: LobbyStatus) {
     game.status = GameState::Lobby;
+    game.author = new_data.author;
+    game.you = new_data.you;
+    game.players = vec![];
+    new_data.players.iter().for_each(|p| {
+        game.players.push(Player {
+            name: p.to_string(),
+            cards: 0,
+        })
+    });
+}
+
+pub fn handle_finish_lobby(game: &mut Game, new_data: LobbyStatus) {
+    game.status = GameState::Finished;
     game.author = new_data.author;
     game.you = new_data.you;
     game.players = vec![];
@@ -120,6 +138,13 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
     }
     game.current_player = Some(new_data.next);
     game.discarted_card = new_data.card;
+}
+
+pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
+    new_data.cards.iter().for_each(|card| {
+        game.cards.push(card.clone());
+    });
+    game.current_player = Some(new_data.next);
 }
 
 pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
