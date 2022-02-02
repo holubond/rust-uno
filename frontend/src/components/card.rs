@@ -170,7 +170,7 @@ fn print_colorful_card(value: String, link: Scope<Card>) -> Html {
                 </div>
             </div>
 
-            <div class="h-1/3 w-40 flex justify-center">
+            <div class="h-1/3 w-full flex justify-center">
                 <p class="text-5xl text-center bg-gray-300 text-Black-500 font-bold">
                     {value.to_string()}
                 </p>

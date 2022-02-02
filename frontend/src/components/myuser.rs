@@ -59,7 +59,7 @@ fn player_board(
 ) -> Html {
     return html! {
         <>
-            <div class="h-80 flex flex-row overflow-auto">
+            <div class="h-80 flex flex-row justify-around overflow-auto">
                 {
                     cards.iter().map(|card| {
                         html!{

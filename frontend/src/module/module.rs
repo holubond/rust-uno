@@ -72,6 +72,8 @@ pub struct DrawCard {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DrawMeCard {
+    #[serde(rename(serialize = "type", deserialize = "type"))]
+    pub typee: String,
     pub next: String,
     pub cards: Vec<CardInfo>,
 }
