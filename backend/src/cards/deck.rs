@@ -26,7 +26,8 @@ impl Deck {
         // ensure discard pile starts with one random card
         let mut new_top_card = deck.draw_pile.pop().unwrap(); // safe since we just created the draw_pile using the insert_* functions
         if new_top_card.should_be_black() {
-            new_top_card = new_top_card.morph_black_card(random_color()).unwrap(); // safe since explicit should_be_black() test
+            // safe since explicit should_be_black() test
+            new_top_card = new_top_card.morph_black_card(random_color()).unwrap();
         }
         deck.discard_pile.push(new_top_card);
 

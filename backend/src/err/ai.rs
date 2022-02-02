@@ -6,8 +6,8 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum AiError {
-    PlayCardError(PlayCardError),
-    DrawCardError(PlayerDrawError),
+    PlayCard(PlayCardError),
+    DrawCard(PlayerDrawError),
     CreateStatusError(CreateStatusError),
 }
 
@@ -18,8 +18,8 @@ impl Display for AiError {
         use AiError::*;
 
         match self {
-            PlayCardError(err) => write!(f, "{}", err),
-            DrawCardError(err) => write!(f, "{}", err),
+            PlayCard(err) => write!(f, "{}", err),
+            DrawCard(err) => write!(f, "{}", err),
             CreateStatusError(err) => write!(f, "{}", err),
         }
     }
@@ -27,13 +27,13 @@ impl Display for AiError {
 
 impl From<PlayCardError> for AiError {
     fn from(e: PlayCardError) -> Self {
-        AiError::PlayCardError(e)
+        AiError::PlayCard(e)
     }
 }
 
 impl From<PlayerDrawError> for AiError {
     fn from(e: PlayerDrawError) -> Self {
-        AiError::DrawCardError(e)
+        AiError::DrawCard(e)
     }
 }
 

@@ -50,18 +50,18 @@ pub async fn join_game(
         ));
     }
 
-    return match game.add_player(player_name.clone()) {
+    match game.add_player(player_name.clone()) {
         Ok(_) => {
             let jwt = auth_service.generate_jwt(player_name, &game_id);
             HttpResponse::Created().json(SuccessResponse { token: jwt })
         }
-        Err(err) => {
-            return match err {
-                AddPlayerError::AlreadyExists(x) =>
-                    HttpResponse::Conflict().json(ErrMsg::new_from_scratch(&x)),
-                AddPlayerError::CreateStatusError(x) =>
-                    HttpResponse::InternalServerError().json(ErrMsg::new(x))
+        Err(err) => match err {
+            AddPlayerError::AlreadyExists(x) => {
+                HttpResponse::Conflict().json(ErrMsg::new_from_scratch(&x))
             }
-        }
-    };
+            AddPlayerError::CreateStatusError(x) => {
+                HttpResponse::InternalServerError().json(ErrMsg::new(x))
+            }
+        },
+    }
 }

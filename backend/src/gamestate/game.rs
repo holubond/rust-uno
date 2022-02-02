@@ -142,7 +142,7 @@ impl Game {
 
     pub fn add_player(&mut self, name: String) -> Result<(), AddPlayerError> {
         if self.find_player(name.clone()).is_some() {
-            return Err(AddPlayerError::AlreadyExists(name.clone()));
+            return Err(AddPlayerError::AlreadyExists(name));
         }
 
         self.players.push(Player::new(name, false, true));
@@ -292,8 +292,12 @@ impl Game {
 
         // player name after end_turn == next player
         let next_player_name = match self.get_current_player() {
-            None => return Err(PlayerDrawError::from(CreateStatusError::CurrentPlayerNotFound)),
-            Some(player) => player.name()
+            None => {
+                return Err(PlayerDrawError::from(
+                    CreateStatusError::CurrentPlayerNotFound,
+                ))
+            }
+            Some(player) => player.name(),
         };
         self.message_all_but(
             drawing_player.clone(),
@@ -305,7 +309,7 @@ impl Game {
         );
         match self.find_player(drawing_player.clone()) {
             None => return Err(PlayerExistError::NoSuchPlayer(drawing_player).into()),
-            Some(player) => player.message(WSMsg::draw_me(next_player_name, cards_drawn))
+            Some(player) => player.message(WSMsg::draw_me(next_player_name, cards_drawn)),
         }
 
         self.maybe_ai_turn()?;
@@ -319,9 +323,9 @@ impl Game {
     pub fn draw_cards(&mut self, player_name: String) -> Result<(), PlayerDrawError> {
         self.can_player_draw(player_name.clone())?;
 
-        // Skip turn
+        // Skip turn, unwrap() is safe since are_cards_active() check above
         if self.active_cards.are_cards_active()
-            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip // safe since are_cards_active() check above
+            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
         {
             self.active_cards.clear();
             return self.end_drawing(player_name, vec![]);
@@ -503,6 +507,8 @@ impl Game {
             <= 1
         {
             // == the difference between all players and finished players is 0 or 1
+            self.finish_all_unfinished_players();
+
             self.status = GameStatus::Finished;
             self.status_message_all()?;
         }
@@ -510,12 +516,39 @@ impl Game {
         Ok(())
     }
 
-    fn nonhuman_iter(&self) -> impl Iterator<Item=&Player> {
-        self.players.iter().filter(|player| !player.is_human())
+    fn human_iter(&self) -> impl Iterator<Item=&Player> {
+        self.players.iter().filter(|player| player.is_human())
     }
 
-    fn nonhuman_iter_mut(&mut self) -> impl Iterator<Item=&mut Player> {
-        self.players.iter_mut().filter(|player| !player.is_human())
+    /// Finishes all players that are not yet finished.
+    /// Sends Finish WS Messages to all players appropriately.
+    fn finish_all_unfinished_players(&mut self) {
+        if self.get_finished_players().is_empty() {
+            return;
+        }
+
+        let last_position = self
+            .get_finished_players()
+            .last()
+            .unwrap() // safe since get_finished_players().is_empty() check above (not empty => last will succeed)
+            .position()
+            .unwrap(); // safe since we are iterating get_finished_players()
+
+        let mut newly_finished = vec![];
+        for (index, ai) in self
+            .players
+            .iter_mut()
+            .filter(|p| !p.is_finished())
+            .enumerate()
+        {
+            ai.set_position(last_position + index + 1);
+            newly_finished.push(ai.name());
+        }
+
+        // has to be a separate for-loop due tu mutability reasons
+        for ai_name in newly_finished {
+            self.message_all(WSMsg::finish(ai_name));
+        }
     }
 
     fn maybe_ai_turn(&mut self) -> Result<(), AiError> {
@@ -534,20 +567,11 @@ impl Game {
         }
 
         if !self.get_finished_players().is_empty()
-            && self.nonhuman_iter().all(|player| !player.is_finished())
+            && self.human_iter().all(|player| player.is_finished())
         {
-            let last_position = self
-                .get_finished_players()
-                .last()
-                .unwrap() // safe since get_finished_players().is_empty() check above (not empty => last will succeed)
-                .position()
-                .unwrap(); // safe since we are iterating get_finished_players()
-            for (index, ai) in self.nonhuman_iter_mut().enumerate() {
-                ai.set_position(last_position + index + 1);
-            }
-            for ai in self.nonhuman_iter() {
-                self.message_all(WSMsg::finish(ai.name()));
-            }
+            // if all humans are finished, finish all other (i.e. ai) players
+            self.finish_all_unfinished_players();
+
             self.status = GameStatus::Finished;
             self.status_message_all()?;
 
@@ -559,13 +583,14 @@ impl Game {
 
         let current_player = match self.get_current_player() {
             None => return Err(AiError::from(CreateStatusError::CurrentPlayerNotFound)),
-            Some(player) => player
+            Some(player) => player,
         };
         let ai_name = current_player.name();
 
         if let Some(card) = match self.active_cards.are_cards_active() {
             true => {
-                first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap()) // safe since are_cards_active() check above
+                // safe since are_cards_active() check above
+                first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap())
             }
             false => first_playable_card_against(current_player, self.deck.top_discard_card()),
         } {

@@ -5,7 +5,7 @@ pub(self) mod name_generation {
     use rand::seq::IteratorRandom;
     use rust_embed::RustEmbed;
 
-    const NAMES_FILE: &'static str = "names.txt";
+    const NAMES_FILE: &str = "names.txt";
 
     #[derive(RustEmbed)]
     #[folder = "static/resources"]

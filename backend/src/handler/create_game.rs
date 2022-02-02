@@ -12,7 +12,7 @@ use super::util::safe_lock::safe_lock;
 #[derive(Deserialize, Debug)]
 pub struct RequestBody {
     name: String,
-    ais: String
+    ais: String,
 }
 
 #[derive(Serialize, Debug)]
@@ -29,7 +29,7 @@ pub async fn create_game(
     game_repo: web::Data<Mutex<InMemoryGameRepo>>,
 ) -> impl Responder {
     let author_name = &request_body.name;
-    
+
     if author_name.is_empty() {
         return HttpResponse::BadRequest().json(ErrMsg::new_from_scratch(
             "Name of the player cannot be empty",
@@ -38,8 +38,11 @@ pub async fn create_game(
 
     let ais = match request_body.ais.parse::<usize>() {
         Ok(ais) => ais,
-        Err(_) => return HttpResponse::BadRequest().json(ErrMsg::new_from_scratch(
-            "Number of AIS must be positive number"))
+        Err(_) => {
+            return HttpResponse::BadRequest().json(ErrMsg::new_from_scratch(
+                "Number of AIS must be positive number",
+            ))
+        }
     };
 
     let game = Game::new_with_ai(author_name.clone(), ais);

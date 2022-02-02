@@ -69,7 +69,6 @@ fn test_ser_de() {
     assert_eq!(draw_pile, transmuted_pile);
 }
 
-
 #[test]
 fn test_one_card_left() {
     let mut deck = Deck::new();
