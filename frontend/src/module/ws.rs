@@ -141,10 +141,15 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
 }
 
 pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
+    let action = match new_data.cards.len() {
+        0 => "was skipped".to_string(),
+        x => format!("drawn {} card(s)", x),
+    };
+
     let log_msg = format!(
-        "{}: drawn {} card(s)",
+        "{}: {}",
         game.you,
-        new_data.cards.len()
+        action
     );
     add_log(game, log_msg);
     new_data.cards.iter().for_each(|card| {
@@ -154,10 +159,15 @@ pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
 }
 
 pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
+    let action = match new_data.cards {
+        0 => "was skipped".to_string(),
+        x => format!("drawn {} card(s)", x),
+    };
+
     let log_msg = format!(
-        "{}: drawn {} card(s)",
+        "{}: {}",
         new_data.who,
-        new_data.cards
+        action
     );
     add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
