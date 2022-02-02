@@ -11,6 +11,7 @@ pub struct MyUserProps {
     pub current_username: Option<String>,
     pub cards: Vec<CardInfo>,
     pub card_on_click: Callback<PlayCardRequest>,
+    pub done: Vec<String>,
 }
 
 impl Component for MyUser {
@@ -23,12 +24,19 @@ impl Component for MyUser {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props().clone();
-
+        let done = props.done.contains(&props.username);
         let current_username = match props.current_username {
             None => panic!("No value in MyUserProps.current_username"),
             Some(x) => x,
         };
 
+        if done {
+            return html! {
+                <div class="flex flex-col w-full h-96 rounded-lg bg-gray-500 shadow-md justify-center">
+                    {player_board(props.username, props.cards, props.card_on_click)}
+                </div>
+            };
+        }
         if current_username == props.username {
             return html! {
                 <div class="flex flex-col w-full h-96 rounded-lg bg-yellow-300 shadow-md justify-center">

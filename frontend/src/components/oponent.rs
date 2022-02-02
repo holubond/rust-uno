@@ -9,6 +9,7 @@ pub struct OponentProps {
     pub name: String,
     pub num: u32,
     pub current: bool,
+    pub done: bool,
 }
 
 impl Component for Oponent {
@@ -19,6 +20,14 @@ impl Component for Oponent {
         Self
     }
     fn view(&self, ctx: &Context<Self>) -> Html {
+        if ctx.props().done {
+            return html! {
+                <div class="w-1/5 h-full flex flex-col rounded-lg bg-gray-500 shadow-md">
+                    { render_opponent(&ctx.props().name, ctx.props().num) }
+                </div>
+            };
+        }
+
         if ctx.props().current {
             return html! {
                 <div class="w-1/5 h-full flex flex-col rounded-lg bg-yellow-300 shadow-md">
@@ -64,6 +73,7 @@ pub struct OponentsProps {
     pub players: Vec<Player>,
     pub you: String,
     pub current: Option<String>,
+    pub done: Vec<String>,
 }
 
 impl Component for Oponents {
@@ -81,18 +91,21 @@ impl Component for Oponents {
             None => panic!("OponentsProps.current is None"),
             Some(x) => x,
         };
-
         return html! {
             props.players.iter()
                 .filter(|p| p.name != props.you)
                 .map( |player| {
+                    let mut done = false;
+                    if props.done.contains(&player.name) {
+                        done = true;
+                    }
                     if &player.name == current_player {
                         html!{
-                            <Oponent name={player.name.clone()} num={player.cards} current={true} />
+                            <Oponent name={player.name.clone()} num={player.cards} current={true} done={done}/>
                         }
                     } else{
                         html!{
-                            <Oponent name={player.name.clone()} num={player.cards} current={false} />
+                            <Oponent name={player.name.clone()} num={player.cards} current={false} done={done}/>
                         }
                     }
                 }).collect::<Html>()
