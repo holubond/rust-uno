@@ -123,7 +123,11 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
         if new_data.card._type == CardType::Draw4 || new_data.card._type == CardType::Wild {
             let mut reconstructed_card = new_data.card.clone();
             reconstructed_card.color = Color::Black;
-            index = game.cards.iter().position(|c| c == &reconstructed_card).unwrap();
+            index = game
+                .cards
+                .iter()
+                .position(|c| c == &reconstructed_card)
+                .unwrap();
         } else {
             index = game.cards.iter().position(|c| c == &new_data.card).unwrap();
         }
