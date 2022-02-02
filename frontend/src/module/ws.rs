@@ -118,7 +118,11 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
             new_data.card.color.to_str(),
             new_data.card._type.card_type_text()
         ),
-        CardType::Wild | CardType::Draw4 => format!("{}", new_data.card._type.card_type_text()),
+        CardType::Wild | CardType::Draw4 => format!(
+            "{} {}",
+            new_data.card.color.to_str(),
+            new_data.card._type.card_type_text()
+        ),
     };
     let log_msg = format!(
         "{}: {} {}",
