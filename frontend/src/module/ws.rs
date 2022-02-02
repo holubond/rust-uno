@@ -142,9 +142,8 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
 
 pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
     let log_msg = format!(
-        "{}: {} {} cards",
+        "{}: drawn {} card(s)",
         game.you,
-        Action::Draw.logger_string(),
         new_data.cards.len()
     );
     add_log(game, log_msg);
@@ -156,9 +155,8 @@ pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
 
 pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
     let log_msg = format!(
-        "{}: {} {}",
+        "{}: drawn {} card(s)",
         new_data.who,
-        Action::Draw.logger_string(),
         new_data.cards
     );
     add_log(game, log_msg);
