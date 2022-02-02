@@ -186,6 +186,13 @@ pub fn handle_finish(game: &mut Game, new_data: Finish) {
 }
 
 pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
+    let log_msg = format!(
+        "{}: forgot to say UNO (gained {} card(s))",
+        game.you,
+        new_data.cards.len()
+    );
+    add_log(game, log_msg);
+
     new_data.cards.iter().for_each(|card| {
         game.cards.push(card.clone());
     });
@@ -193,9 +200,8 @@ pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
 
 pub fn handle_gained_cards(game: &mut Game, new_data: GainedCards) {
     let log_msg = format!(
-        "{}: {} {}x cards",
+        "{}: forgot to say UNO (gained {} card(s))",
         new_data.who,
-        Action::Gained.logger_string(),
         new_data.number
     );
     add_log(game, log_msg);
