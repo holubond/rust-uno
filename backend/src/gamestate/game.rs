@@ -510,12 +510,32 @@ impl Game {
         Ok(())
     }
 
-    fn nonhuman_iter(&self) -> impl Iterator<Item=&Player> {
-        self.players.iter().filter(|player| !player.is_human())
+    fn human_iter(&self) -> impl Iterator<Item=&Player> {
+        self.players.iter().filter(|player| player.is_human())
     }
 
-    fn nonhuman_iter_mut(&mut self) -> impl Iterator<Item=&mut Player> {
-        self.players.iter_mut().filter(|player| !player.is_human())
+    fn finish_all_unfinished_players(&mut self) {
+        if self.get_finished_players().is_empty() {
+            return;
+        }
+
+        let last_position = self
+            .get_finished_players()
+            .last()
+            .unwrap() // safe since get_finished_players().is_empty() check above (not empty => last will succeed)
+            .position()
+            .unwrap(); // safe since we are iterating get_finished_players()
+
+        let mut newly_finished = vec![];
+        for (index, ai) in self.players.iter_mut().filter(|p| !p.is_finished()).enumerate() {
+            ai.set_position(last_position + index + 1);
+            newly_finished.push(ai.name());
+        }
+
+        // has to be a separate for-loop due tu mutability reasons
+        for ai_name in newly_finished {
+            self.message_all(WSMsg::finish(ai_name));
+        }
     }
 
     fn maybe_ai_turn(&mut self) -> Result<(), AiError> {
@@ -534,20 +554,11 @@ impl Game {
         }
 
         if !self.get_finished_players().is_empty()
-            && self.nonhuman_iter().all(|player| !player.is_finished())
+            && self.human_iter().all(|player| player.is_finished())
         {
-            let last_position = self
-                .get_finished_players()
-                .last()
-                .unwrap() // safe since get_finished_players().is_empty() check above (not empty => last will succeed)
-                .position()
-                .unwrap(); // safe since we are iterating get_finished_players()
-            for (index, ai) in self.nonhuman_iter_mut().enumerate() {
-                ai.set_position(last_position + index + 1);
-            }
-            for ai in self.nonhuman_iter() {
-                self.message_all(WSMsg::finish(ai.name()));
-            }
+            // if all humans are finished, finish all other (i.e. ai) players
+            self.finish_all_unfinished_players();
+
             self.status = GameStatus::Finished;
             self.status_message_all()?;
 

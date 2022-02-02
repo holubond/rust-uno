@@ -698,3 +698,46 @@ fn test_only_ai_finishes_game() {
     // all humans finished => game finished
     assert_eq!(game.status, GameStatus::Finished);
 }
+
+#[test]
+fn test_game_finish_with_only_ai_left_playing() {
+    use CardColor::*;
+    use CardSymbol::*;
+
+    let mut game = Game::new_with_ai("Andy".into(), 2);
+    // let Andy play his only one card
+    let value_2 = Card::new(Blue, Value(2)).unwrap();
+    game.deck.play(value_2.clone()); // ensure playability
+
+    // Human finishes second
+    assert_eq!(game.players.get(0).unwrap().name(), "Andy".to_string());
+    game.players.get_mut(0).unwrap().give_card(value_2.clone());
+    game.players.get_mut(0).unwrap().give_card(value_2.clone());
+
+    // one ai finishes first
+    assert!(!game.players.get(1).unwrap().is_human());
+    game.players.get_mut(1).unwrap().give_card(value_2.clone());
+
+    // other ai does not finish by playing cards, but by every human being finished
+    assert!(!game.players.get(2).unwrap().is_human());
+    for _ in 0..20 {
+        game.players.get_mut(2).unwrap().give_card(value_2.clone());
+    }
+
+    assert!(!game.players.get(0).unwrap().is_finished());
+    assert!(!game.players.get(1).unwrap().is_finished());
+    assert!(!game.players.get(2).unwrap().is_finished());
+
+    assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
+    assert!(game.play_card("Andy".into(), value_2.clone(), None, true).is_ok());
+    assert!(!game.players.get(0).unwrap().is_finished());
+    assert!(game.players.get(1).unwrap().is_finished());
+    assert!(!game.players.get(2).unwrap().is_finished());
+
+    assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
+    assert!(game.play_card("Andy".into(), value_2.clone(), None, false).is_ok());
+    assert_eq!(game.status, GameStatus::Finished);
+    assert!(game.players.get(0).unwrap().is_finished());
+    assert!(game.players.get(1).unwrap().is_finished());
+    assert!(game.players.get(2).unwrap().is_finished()); // set in maybe_ai_turn()
+}
