@@ -503,6 +503,8 @@ impl Game {
             <= 1
         {
             // == the difference between all players and finished players is 0 or 1
+            self.finish_all_unfinished_players();
+
             self.status = GameStatus::Finished;
             self.status_message_all()?;
         }
@@ -514,6 +516,8 @@ impl Game {
         self.players.iter().filter(|player| player.is_human())
     }
 
+    /// Finishes all players that are not yet finished.
+    /// Sends Finish WS Messages to all players appropriately.
     fn finish_all_unfinished_players(&mut self) {
         if self.get_finished_players().is_empty() {
             return;
