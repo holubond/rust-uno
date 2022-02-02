@@ -118,6 +118,10 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
     if new_data.card._type == CardType::Reverse {
         game.clockwise = !game.clockwise;
     }
+    if new_data.who == game.you {
+        let index = game.cards.iter().position(|c| c == &new_data.card).unwrap();
+        game.cards.remove(index);
+    }
     game.current_player = Some(new_data.next);
     game.discarted_card = new_data.card;
 }
