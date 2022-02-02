@@ -141,6 +141,8 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
 }
 
 pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
+    let log_msg = format!("{}: {}", game.you, Action::Draw.logger_string());
+    add_log(game, log_msg);
     new_data.cards.iter().for_each(|card| {
         game.cards.push(card.clone());
     });
