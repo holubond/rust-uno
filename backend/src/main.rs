@@ -1,9 +1,9 @@
-use crate::handler::lb_reconnect::lb_reconnect;
-use crate::handler::{create_game::create_game, service::lb_connector::LoadBalancerConnector};
 use crate::handler::draw_card::draw_card;
 use crate::handler::join_game::join_game;
+use crate::handler::lb_reconnect::lb_reconnect;
 use crate::handler::restart_game::start_game;
 use crate::handler::service::auth::AuthService;
+use crate::handler::{create_game::create_game, service::lb_connector::LoadBalancerConnector};
 use crate::repo::game_repo::InMemoryGameRepo;
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
@@ -40,8 +40,8 @@ async fn main() -> anyhow::Result<()> {
     let game_repo = web::Data::new(Mutex::new(InMemoryGameRepo::new()));
     let auth_service = web::Data::new(AuthService::new());
 
-    let lb_connector = LoadBalancerConnector::new(opts.load_balancer_addr, opts.server_addr );
-    if lb_connector.connect().await.is_err() { }
+    let lb_connector = LoadBalancerConnector::new(opts.load_balancer_addr, opts.server_addr);
+    if lb_connector.connect().await.is_err() {}
     let lb_connector = web::Data::new(lb_connector);
 
     println!("Starting server on port {}", port);

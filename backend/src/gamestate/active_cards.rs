@@ -21,7 +21,8 @@ impl ActiveCards {
 
     pub(super) fn sum_active_draw_cards(&self) -> Option<usize> {
         if self.are_cards_active() {
-            match self.active_symbol_unchecked() { // unwrap inside fn safe due to are_cards_active() check above
+            // unwrap inside fn safe due to are_cards_active() check above
+            match self.active_symbol_unchecked() {
                 CardSymbol::Draw2 => Some(2 * self.active_cards.len()),
                 CardSymbol::Draw4 => Some(4 * self.active_cards.len()),
                 _ => None,

@@ -1,8 +1,8 @@
 use crate::cards::card::{Card, CardColor, CardSymbol};
+use crate::err::add_player::AddPlayerError;
 use crate::gamestate::game::{Game, GameStatus};
 use crate::gamestate::players::player::Player;
 use crate::gamestate::CARDS_DEALT_TO_PLAYERS;
-use crate::err::add_player::AddPlayerError;
 
 static CARDS_TOTAL_IN_GAME: usize = 108;
 
@@ -575,7 +575,10 @@ fn test_add_player() {
     let mut game = Game::new("Andy".into());
     assert!(game.add_player("Bob".into()).is_ok());
     assert!(game.add_player("Bob".into()).is_err());
-    assert_eq!(game.add_player("Bob".into()), Err(AddPlayerError::AlreadyExists("Bob".into())));
+    assert_eq!(
+        game.add_player("Bob".into()),
+        Err(AddPlayerError::AlreadyExists("Bob".into()))
+    );
 }
 
 #[test]
@@ -728,14 +731,24 @@ fn test_game_finish_with_only_ai_left_playing() {
     assert!(!game.players.get(1).unwrap().is_finished());
     assert!(!game.players.get(2).unwrap().is_finished());
 
-    assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
-    assert!(game.play_card("Andy".into(), value_2.clone(), None, true).is_ok());
+    assert_eq!(
+        game.get_current_player().unwrap().name(),
+        "Andy".to_string()
+    );
+    assert!(game
+        .play_card("Andy".into(), value_2.clone(), None, true)
+        .is_ok());
     assert!(!game.players.get(0).unwrap().is_finished());
     assert!(game.players.get(1).unwrap().is_finished());
     assert!(!game.players.get(2).unwrap().is_finished());
 
-    assert_eq!(game.get_current_player().unwrap().name(), "Andy".to_string());
-    assert!(game.play_card("Andy".into(), value_2.clone(), None, false).is_ok());
+    assert_eq!(
+        game.get_current_player().unwrap().name(),
+        "Andy".to_string()
+    );
+    assert!(game
+        .play_card("Andy".into(), value_2.clone(), None, false)
+        .is_ok());
     assert_eq!(game.status, GameStatus::Finished);
     assert!(game.players.get(0).unwrap().is_finished());
     assert!(game.players.get(1).unwrap().is_finished());
@@ -767,16 +780,32 @@ fn test_all_players_are_finished_when_game_is_finished() {
     game.players.get_mut(2).unwrap().give_card(value_2.clone());
     assert_eq!(game.current_player, 0);
 
-    assert!(game.play_card("Andy".into(), value_2.clone(), None, true).is_ok());
-    assert!(game.play_card("Bob".into(), value_2.clone(), None, true).is_ok());
-    assert!(game.play_card("Candace".into(), value_2.clone(), None, true).is_ok());
+    assert!(game
+        .play_card("Andy".into(), value_2.clone(), None, true)
+        .is_ok());
+    assert!(game
+        .play_card("Bob".into(), value_2.clone(), None, true)
+        .is_ok());
+    assert!(game
+        .play_card("Candace".into(), value_2.clone(), None, true)
+        .is_ok());
 
-    assert!(game.play_card("Andy".into(), value_2.clone(), None, false).is_ok());
-    assert!(game.play_card("Bob".into(), value_2.clone(), None, false).is_ok());
+    assert!(game
+        .play_card("Andy".into(), value_2.clone(), None, false)
+        .is_ok());
+    assert!(game
+        .play_card("Bob".into(), value_2.clone(), None, false)
+        .is_ok());
 
     assert_eq!(game.status, GameStatus::Finished);
     assert!(game.players.get(0).unwrap().is_finished());
     assert!(game.players.get(1).unwrap().is_finished());
     assert!(game.players.get(2).unwrap().is_finished()); // set in play_card_messages
-    assert_eq!(game.get_finished_players().into_iter().map(|p| p.name()).collect::<Vec<String>>(), vec!["Andy".to_string(), "Bob".to_string(), "Candace".to_string()]);
+    assert_eq!(
+        game.get_finished_players()
+            .into_iter()
+            .map(|p| p.name())
+            .collect::<Vec<String>>(),
+        vec!["Andy".to_string(), "Bob".to_string(), "Candace".to_string()]
+    );
 }

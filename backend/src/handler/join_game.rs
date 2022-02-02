@@ -55,13 +55,13 @@ pub async fn join_game(
             let jwt = auth_service.generate_jwt(player_name, &game_id);
             HttpResponse::Created().json(SuccessResponse { token: jwt })
         }
-        Err(err) => {
-            match err {
-                AddPlayerError::AlreadyExists(x) =>
-                    HttpResponse::Conflict().json(ErrMsg::new_from_scratch(&x)),
-                AddPlayerError::CreateStatusError(x) =>
-                    HttpResponse::InternalServerError().json(ErrMsg::new(x))
+        Err(err) => match err {
+            AddPlayerError::AlreadyExists(x) => {
+                HttpResponse::Conflict().json(ErrMsg::new_from_scratch(&x))
             }
-        }
+            AddPlayerError::CreateStatusError(x) => {
+                HttpResponse::InternalServerError().json(ErrMsg::new(x))
+            }
+        },
     }
 }

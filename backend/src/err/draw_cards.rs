@@ -1,9 +1,9 @@
 use crate::err::ai::AiError;
 use crate::err::player_exist::PlayerExistError;
 use crate::err::player_turn::PlayerTurnError;
+use crate::err::status::CreateStatusError;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use crate::err::status::CreateStatusError;
 
 #[derive(Debug)]
 pub enum PlayerDrawError {
@@ -11,7 +11,7 @@ pub enum PlayerDrawError {
     PlayerExistError(PlayerExistError),
     ChainedAiError,
     CanPlayInstead,
-    CreateStatusError(CreateStatusError)
+    CreateStatusError(CreateStatusError),
 }
 
 impl Error for PlayerDrawError {}

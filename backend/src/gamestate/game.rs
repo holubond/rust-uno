@@ -292,8 +292,12 @@ impl Game {
 
         // player name after end_turn == next player
         let next_player_name = match self.get_current_player() {
-            None => return Err(PlayerDrawError::from(CreateStatusError::CurrentPlayerNotFound)),
-            Some(player) => player.name()
+            None => {
+                return Err(PlayerDrawError::from(
+                    CreateStatusError::CurrentPlayerNotFound,
+                ))
+            }
+            Some(player) => player.name(),
         };
         self.message_all_but(
             drawing_player.clone(),
@@ -305,7 +309,7 @@ impl Game {
         );
         match self.find_player(drawing_player.clone()) {
             None => return Err(PlayerExistError::NoSuchPlayer(drawing_player).into()),
-            Some(player) => player.message(WSMsg::draw_me(next_player_name, cards_drawn))
+            Some(player) => player.message(WSMsg::draw_me(next_player_name, cards_drawn)),
         }
 
         self.maybe_ai_turn()?;
@@ -319,9 +323,9 @@ impl Game {
     pub fn draw_cards(&mut self, player_name: String) -> Result<(), PlayerDrawError> {
         self.can_player_draw(player_name.clone())?;
 
-        // Skip turn
+        // Skip turn, unwrap() is safe since are_cards_active() check above
         if self.active_cards.are_cards_active()
-            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip // safe since are_cards_active() check above
+            && self.active_cards.active_symbol().unwrap() == CardSymbol::Skip
         {
             self.active_cards.clear();
             return self.end_drawing(player_name, vec![]);
@@ -531,7 +535,12 @@ impl Game {
             .unwrap(); // safe since we are iterating get_finished_players()
 
         let mut newly_finished = vec![];
-        for (index, ai) in self.players.iter_mut().filter(|p| !p.is_finished()).enumerate() {
+        for (index, ai) in self
+            .players
+            .iter_mut()
+            .filter(|p| !p.is_finished())
+            .enumerate()
+        {
             ai.set_position(last_position + index + 1);
             newly_finished.push(ai.name());
         }
@@ -574,13 +583,14 @@ impl Game {
 
         let current_player = match self.get_current_player() {
             None => return Err(AiError::from(CreateStatusError::CurrentPlayerNotFound)),
-            Some(player) => player
+            Some(player) => player,
         };
         let ai_name = current_player.name();
 
         if let Some(card) = match self.active_cards.are_cards_active() {
             true => {
-                first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap()) // safe since are_cards_active() check above
+                // safe since are_cards_active() check above
+                first_card_of_symbol(current_player, self.active_cards.active_symbol().unwrap())
             }
             false => first_playable_card_against(current_player, self.deck.top_discard_card()),
         } {
