@@ -1,4 +1,4 @@
-use crate::components::card::CardType;
+use crate::components::card::{CardType, Color};
 use crate::module::module::{
     DrawCard, DrawMeCard, Finish, GainedCards, LobbyStatus, Penalty, PlayCard, RunningStatus,
 };
@@ -119,7 +119,14 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
         game.clockwise = !game.clockwise;
     }
     if new_data.who == game.you {
-        let index = game.cards.iter().position(|c| c == &new_data.card).unwrap();
+        let mut index = 0;
+        if new_data.card._type == CardType::Draw4 || new_data.card._type == CardType::Wild {
+            let mut reconstructed_card = new_data.card.clone();
+            reconstructed_card.color = Color::Black;
+            index = game.cards.iter().position(|c| c == &reconstructed_card).unwrap();
+        } else {
+            index = game.cards.iter().position(|c| c == &new_data.card).unwrap();
+        }
         game.cards.remove(index);
     }
     game.current_player = Some(new_data.next);
