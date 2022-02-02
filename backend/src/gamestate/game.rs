@@ -142,7 +142,7 @@ impl Game {
 
     pub fn add_player(&mut self, name: String) -> Result<(), AddPlayerError> {
         if self.find_player(name.clone()).is_some() {
-            return Err(AddPlayerError::AlreadyExists(name.clone()));
+            return Err(AddPlayerError::AlreadyExists(name));
         }
 
         self.players.push(Player::new(name, false, true));
