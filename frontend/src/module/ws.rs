@@ -107,7 +107,29 @@ pub fn handle_running(game: &mut Game, new_data: RunningStatus) {
 }
 
 pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
-    let log_msg = format!("{}: {}", new_data.who, Action::PlayCard.logger_string());
+    let card_info = match new_data.card._type {
+        CardType::Value => format!(
+            "{} {}",
+            new_data.card.color.to_str(),
+            new_data.card.value.unwrap()
+        ),
+        CardType::Reverse | CardType::Draw2 | CardType::Skip => format!(
+            "{} {}",
+            new_data.card.color.to_str(),
+            new_data.card._type.card_type_text()
+        ),
+        CardType::Wild | CardType::Draw4 => format!(
+            "{} {}",
+            new_data.card.color.to_str(),
+            new_data.card._type.card_type_text()
+        ),
+    };
+    let log_msg = format!(
+        "{}: {} {}",
+        new_data.who,
+        Action::PlayCard.logger_string(),
+        card_info
+    );
     add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
@@ -138,6 +160,17 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
 }
 
 pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
+    let action = match new_data.cards.len() {
+        0 => "was skipped".to_string(),
+        x => format!("drawn {} card(s)", x),
+    };
+
+    let log_msg = format!(
+        "{}: {}",
+        game.you,
+        action
+    );
+    add_log(game, log_msg);
     new_data.cards.iter().for_each(|card| {
         game.cards.push(card.clone());
     });
@@ -145,7 +178,16 @@ pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
 }
 
 pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
-    let log_msg = format!("{}: {}", new_data.who, Action::Draw.logger_string());
+    let action = match new_data.cards {
+        0 => "was skipped".to_string(),
+        x => format!("drawn {} card(s)", x),
+    };
+
+    let log_msg = format!(
+        "{}: {}",
+        new_data.who,
+        action
+    );
     add_log(game, log_msg);
     match game.players.iter_mut().find(|x| x.name == new_data.who) {
         Some(player) => {
@@ -163,6 +205,13 @@ pub fn handle_finish(game: &mut Game, new_data: Finish) {
 }
 
 pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
+    let log_msg = format!(
+        "{}: forgot to say UNO (gained {} card(s))",
+        game.you,
+        new_data.cards.len()
+    );
+    add_log(game, log_msg);
+
     new_data.cards.iter().for_each(|card| {
         game.cards.push(card.clone());
     });
@@ -170,9 +219,8 @@ pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
 
 pub fn handle_gained_cards(game: &mut Game, new_data: GainedCards) {
     let log_msg = format!(
-        "{}: {} {}x cards",
+        "{}: forgot to say UNO (gained {} card(s))",
         new_data.who,
-        Action::Gained.logger_string(),
         new_data.number
     );
     add_log(game, log_msg);
@@ -194,7 +242,7 @@ pub enum Action {
 impl Action {
     pub fn logger_string(&self) -> String {
         match self {
-            Action::PlayCard => "played card".to_string(),
+            Action::PlayCard => "played".to_string(),
             Action::Draw => "drawn card".to_string(),
             Action::Finish => "finished!".to_string(),
             Action::Gained => "gained".to_string(),
@@ -202,8 +250,5 @@ impl Action {
     }
 }
 pub fn add_log(game: &mut Game, log: String) {
-    if game.logs.len() == 5 {
-        game.logs.remove(0);
-    }
-    game.logs.push(log);
+    game.logs.push(format!("{}", log));
 }
