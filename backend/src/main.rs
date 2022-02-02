@@ -41,10 +41,7 @@ async fn main() -> anyhow::Result<()> {
     let auth_service = web::Data::new(AuthService::new());
 
     let lb_connector = LoadBalancerConnector::new(opts.load_balancer_addr, opts.server_addr );
-    match lb_connector.connect().await {
-        Err(_) => (),
-        Ok(_) => (),
-    };
+    if lb_connector.connect().await.is_err() { }
     let lb_connector = web::Data::new(lb_connector);
 
     println!("Starting server on port {}", port);
