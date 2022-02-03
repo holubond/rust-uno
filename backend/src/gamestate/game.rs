@@ -74,6 +74,7 @@ impl Game {
         self.randomize_player_order();
         self.randomize_starting_player();
         self.clear_player_positions();
+        self.active_cards.clear();
 
         self.status = GameStatus::Running;
         self.deal_starting_cards()?;
