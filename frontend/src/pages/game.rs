@@ -3,6 +3,7 @@ use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
 use crate::module::modul::{CardConflictMessageResponse, MessageResponse, PlayCardRequest};
 use crate::module::ws::ws_msg_handler;
+use crate::sample_data::test_session;
 use crate::url;
 use crate::url::game_ws;
 use crate::util::alert::alert;
@@ -17,7 +18,6 @@ use std::sync::Arc;
 use wasm_bindgen_futures::spawn_local;
 use yew::html;
 use yew::prelude::*;
-use crate::sample_data::test_session;
 
 pub enum Msg {
     UnoChanged,
@@ -121,10 +121,10 @@ impl Component for Game {
             log!("WebSocket Closed")
         });
 
-        test_session(GameStore{
+        test_session(GameStore {
             game_id: "".to_string(),
             server: "".to_string(),
-            token: "".to_string()
+            token: "".to_string(),
         });
 
         default_data
@@ -161,15 +161,8 @@ impl Component for Game {
                 let game_server = self.game.server.clone();
                 log!("play game sending");
                 ctx.link().send_future(async move {
-                    match play_card_request(
-                        client,
-                        id,
-                        token,
-                        card.clone(),
-                        said_uno,
-                        game_server,
-                    )
-                    .await
+                    match play_card_request(client, id, token, card.clone(), said_uno, game_server)
+                        .await
                     {
                         Ok(_) => Msg::PlaySubmitSuccess,
                         Err(err) => Msg::SubmitFailure(err),
@@ -467,7 +460,9 @@ async fn play_card_request(
     game_server: String,
 ) -> Result<(), String> {
     card.said_uno = said_uno;
-    if let Some(x) = card.new_color { card.new_color = Some(x.to_uppercase()) }
+    if let Some(x) = card.new_color {
+        card.new_color = Some(x.to_uppercase())
+    }
     let url = url::play_card(game_id, game_server);
     let response = client.post(url).json(&card).bearer_auth(token).send().await;
     let response = match response {

@@ -8,26 +8,44 @@ use crate::Game;
 pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
     if msg.contains("\"type\":\"STATUS\"") {
         if msg.contains("\"status\":\"LOBBY\"") {
-            if let Ok(x) = serde_json::from_str::<LobbyStatus>(&msg) { handle_lobby(game, x) };
+            if let Ok(x) = serde_json::from_str::<LobbyStatus>(&msg) {
+                handle_lobby(game, x)
+            };
         } else if msg.contains("\"status\":\"RUNNING\"") {
-            if let Ok(x) = serde_json::from_str::<RunningStatus>(&msg) { handle_running(game, x) };
+            if let Ok(x) = serde_json::from_str::<RunningStatus>(&msg) {
+                handle_running(game, x)
+            };
         } else if msg.contains("\"status\":\"FINISHED\"") {
-            if let Ok(x) = serde_json::from_str::<LobbyStatus>(&msg) { handle_finish_lobby(game, x) };
+            if let Ok(x) = serde_json::from_str::<LobbyStatus>(&msg) {
+                handle_finish_lobby(game, x)
+            };
         } else {
             return Err("Message from server has not valid struct".to_string());
         }
     } else if msg.contains("\"type\":\"PLAY CARD\"") {
-        if let Ok(x) = serde_json::from_str::<PlayCard>(&msg) { handle_play_card(game, x) };
+        if let Ok(x) = serde_json::from_str::<PlayCard>(&msg) {
+            handle_play_card(game, x)
+        };
     } else if msg.contains("\"type\":\"DRAW ME\"") {
-        if let Ok(x) = serde_json::from_str::<DrawMeCard>(&msg) { handle_draw_cards_me(game, x) };
+        if let Ok(x) = serde_json::from_str::<DrawMeCard>(&msg) {
+            handle_draw_cards_me(game, x)
+        };
     } else if msg.contains("\"type\":\"DRAW\"") {
-        if let Ok(x) = serde_json::from_str::<DrawCard>(&msg) { handle_draw_cards(game, x) };
+        if let Ok(x) = serde_json::from_str::<DrawCard>(&msg) {
+            handle_draw_cards(game, x)
+        };
     } else if msg.contains("\"type\":\"FINISH\"") {
-        if let Ok(x) = serde_json::from_str::<Finish>(&msg) { handle_finish(game, x) };
+        if let Ok(x) = serde_json::from_str::<Finish>(&msg) {
+            handle_finish(game, x)
+        };
     } else if msg.contains("\"type\":\"PENALTY\"") {
-        if let Ok(x) = serde_json::from_str::<Penalty>(&msg) { handle_penalty(game, x) };
+        if let Ok(x) = serde_json::from_str::<Penalty>(&msg) {
+            handle_penalty(game, x)
+        };
     } else if msg.contains("\"type\":\"GAINED CARD\"") {
-        if let Ok(x) = serde_json::from_str::<GainedCards>(&msg) { handle_gained_cards(game, x) };
+        if let Ok(x) = serde_json::from_str::<GainedCards>(&msg) {
+            handle_gained_cards(game, x)
+        };
     } else {
         return Err("Message from server has not valid struct".to_string());
     }
@@ -135,11 +153,7 @@ pub fn handle_draw_cards_me(game: &mut Game, new_data: DrawMeCard) {
         x => format!("drawn {} card(s)", x),
     };
 
-    let log_msg = format!(
-        "{}: {}",
-        game.you,
-        action
-    );
+    let log_msg = format!("{}: {}", game.you, action);
     add_log(game, log_msg);
     new_data.cards.iter().for_each(|card| {
         game.cards.push(card.clone());
@@ -153,11 +167,7 @@ pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
         x => format!("drawn {} card(s)", x),
     };
 
-    let log_msg = format!(
-        "{}: {}",
-        new_data.who,
-        action
-    );
+    let log_msg = format!("{}: {}", new_data.who, action);
     add_log(game, log_msg);
     if let Some(player) = game.players.iter_mut().find(|x| x.name == new_data.who) {
         player.cards += new_data.cards;
@@ -187,8 +197,7 @@ pub fn handle_penalty(game: &mut Game, new_data: Penalty) {
 pub fn handle_gained_cards(game: &mut Game, new_data: GainedCards) {
     let log_msg = format!(
         "{}: forgot to say UNO (gained {} card(s))",
-        new_data.who,
-        new_data.number
+        new_data.who, new_data.number
     );
     add_log(game, log_msg);
     if let Some(player) = game.players.iter_mut().find(|x| x.name == new_data.who) {
