@@ -1,5 +1,5 @@
 use crate::components::card::{Card, CardInfo};
-use crate::module::module::PlayCardRequest;
+use crate::module::modul::PlayCardRequest;
 use yew::html;
 use yew::prelude::*;
 

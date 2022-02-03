@@ -1,5 +1,5 @@
 use crate::components::card::{CardType, Color};
-use crate::module::module::{
+use crate::module::modul::{
     DrawCard, DrawMeCard, Finish, GainedCards, LobbyStatus, Penalty, PlayCard, RunningStatus,
 };
 use crate::pages::game::{GameState, Player};
@@ -8,53 +8,26 @@ use crate::Game;
 pub fn ws_msg_handler(game: &mut Game, msg: String) -> Result<(), String> {
     if msg.contains("\"type\":\"STATUS\"") {
         if msg.contains("\"status\":\"LOBBY\"") {
-            match serde_json::from_str::<LobbyStatus>(&msg) {
-                Ok(x) => handle_lobby(game, x),
-                Err(_) => (),
-            };
+            if let Ok(x) = serde_json::from_str::<LobbyStatus>(&msg) { handle_lobby(game, x) };
         } else if msg.contains("\"status\":\"RUNNING\"") {
-            match serde_json::from_str::<RunningStatus>(&msg) {
-                Ok(x) => handle_running(game, x),
-                Err(_) => (),
-            };
+            if let Ok(x) = serde_json::from_str::<RunningStatus>(&msg) { handle_running(game, x) };
         } else if msg.contains("\"status\":\"FINISHED\"") {
-            match serde_json::from_str::<LobbyStatus>(&msg) {
-                Ok(x) => handle_finish_lobby(game, x),
-                Err(_) => (),
-            };
+            if let Ok(x) = serde_json::from_str::<LobbyStatus>(&msg) { handle_finish_lobby(game, x) };
         } else {
             return Err("Message from server has not valid struct".to_string());
         }
     } else if msg.contains("\"type\":\"PLAY CARD\"") {
-        match serde_json::from_str::<PlayCard>(&msg) {
-            Ok(x) => handle_play_card(game, x),
-            Err(_) => (),
-        };
+        if let Ok(x) = serde_json::from_str::<PlayCard>(&msg) { handle_play_card(game, x) };
     } else if msg.contains("\"type\":\"DRAW ME\"") {
-        match serde_json::from_str::<DrawMeCard>(&msg) {
-            Ok(x) => handle_draw_cards_me(game, x),
-            Err(_) => (),
-        };
+        if let Ok(x) = serde_json::from_str::<DrawMeCard>(&msg) { handle_draw_cards_me(game, x) };
     } else if msg.contains("\"type\":\"DRAW\"") {
-        match serde_json::from_str::<DrawCard>(&msg) {
-            Ok(x) => handle_draw_cards(game, x),
-            Err(_) => (),
-        };
+        if let Ok(x) = serde_json::from_str::<DrawCard>(&msg) { handle_draw_cards(game, x) };
     } else if msg.contains("\"type\":\"FINISH\"") {
-        match serde_json::from_str::<Finish>(&msg) {
-            Ok(x) => handle_finish(game, x),
-            Err(_) => (),
-        };
+        if let Ok(x) = serde_json::from_str::<Finish>(&msg) { handle_finish(game, x) };
     } else if msg.contains("\"type\":\"PENALTY\"") {
-        match serde_json::from_str::<Penalty>(&msg) {
-            Ok(x) => handle_penalty(game, x),
-            Err(_) => (),
-        };
+        if let Ok(x) = serde_json::from_str::<Penalty>(&msg) { handle_penalty(game, x) };
     } else if msg.contains("\"type\":\"GAINED CARD\"") {
-        match serde_json::from_str::<GainedCards>(&msg) {
-            Ok(x) => handle_gained_cards(game, x),
-            Err(_) => (),
-        };
+        if let Ok(x) = serde_json::from_str::<GainedCards>(&msg) { handle_gained_cards(game, x) };
     } else {
         return Err("Message from server has not valid struct".to_string());
     }
@@ -131,29 +104,26 @@ pub fn handle_play_card(game: &mut Game, new_data: PlayCard) {
         card_info
     );
     add_log(game, log_msg);
-    match game.players.iter_mut().find(|x| x.name == new_data.who) {
-        Some(player) => {
-            player.cards -= 1;
-        }
-        None => (),
+    if let Some(player) = game.players.iter_mut().find(|x| x.name == new_data.who) {
+        player.cards -= 1;
     };
     if new_data.card._type == CardType::Reverse {
         game.clockwise = !game.clockwise;
     }
     if new_data.who == game.you {
-        let mut index = 0;
         if new_data.card._type == CardType::Draw4 || new_data.card._type == CardType::Wild {
             let mut reconstructed_card = new_data.card.clone();
             reconstructed_card.color = Color::Black;
-            index = game
+            let index = game
                 .cards
                 .iter()
                 .position(|c| c == &reconstructed_card)
                 .unwrap();
+            game.cards.remove(index);
         } else {
-            index = game.cards.iter().position(|c| c == &new_data.card).unwrap();
+            let index = game.cards.iter().position(|c| c == &new_data.card).unwrap();
+            game.cards.remove(index);
         }
-        game.cards.remove(index);
     }
     game.current_player = Some(new_data.next);
     game.discarted_card = new_data.card;
@@ -189,11 +159,8 @@ pub fn handle_draw_cards(game: &mut Game, new_data: DrawCard) {
         action
     );
     add_log(game, log_msg);
-    match game.players.iter_mut().find(|x| x.name == new_data.who) {
-        Some(player) => {
-            player.cards += new_data.cards;
-        }
-        None => (),
+    if let Some(player) = game.players.iter_mut().find(|x| x.name == new_data.who) {
+        player.cards += new_data.cards;
     };
     game.current_player = Some(new_data.next);
 }
@@ -224,31 +191,24 @@ pub fn handle_gained_cards(game: &mut Game, new_data: GainedCards) {
         new_data.number
     );
     add_log(game, log_msg);
-    match game.players.iter_mut().find(|x| x.name == new_data.who) {
-        Some(player) => {
-            player.cards += new_data.number;
-        }
-        None => (),
+    if let Some(player) = game.players.iter_mut().find(|x| x.name == new_data.who) {
+        player.cards += new_data.number;
     };
 }
 
 pub enum Action {
     PlayCard,
-    Draw,
     Finish,
-    Gained,
 }
 
 impl Action {
     pub fn logger_string(&self) -> String {
         match self {
             Action::PlayCard => "played".to_string(),
-            Action::Draw => "drawn card".to_string(),
             Action::Finish => "finished!".to_string(),
-            Action::Gained => "gained".to_string(),
         }
     }
 }
 pub fn add_log(game: &mut Game, log: String) {
-    game.logs.push(format!("{}", log));
+    game.logs.push(log);
 }

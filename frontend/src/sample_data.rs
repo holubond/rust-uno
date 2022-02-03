@@ -64,7 +64,7 @@ pub fn cards() -> Vec<CardInfo> {
         .map(|(c, t, v)| CardInfo {
             color: c.clone(),
             _type: t.clone(),
-            value: v.clone(),
+            value: *v,
         })
         .collect()
 }

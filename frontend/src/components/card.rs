@@ -1,4 +1,4 @@
-use crate::module::module::PlayCardRequest;
+use crate::module::modul::PlayCardRequest;
 use gloo_console::log;
 use serde::{Deserialize, Serialize};
 use yew::html;
