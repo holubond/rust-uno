@@ -39,10 +39,10 @@ cargo run [-p <port - default 9900>]
 ```
 2. Run Game Server - in the brackets are values to use if you did not modify any port.
 ```
-cargo run [-p <port - default 9000>] -s <URL of the GS (localhost:9000) -l <URL of the LB (localhost:9900)>>
+cargo run [-p <port - default 9000>] -s <URL of the GS (localhost:9000)> -l <URL of the LB (localhost:9900)>
 ```
 
-##FAQ
+## FAQ
 
 **I restarted the Load Balancer *(or started GS before LB)* and it does not know about any Game Servers**
 
