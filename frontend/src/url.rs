@@ -47,7 +47,7 @@ fn route_gs(endpoint: String, game_server: String) -> String {
     format!("{}://{}{}", METHOD, game_server, endpoint)
 }
 
-pub fn game_ws(token: &String, game_server: String) -> String {
+pub fn game_ws(token: &str, game_server: String) -> String {
     let endpoint = format!("/ws/token/{}", token);
     if ON_HEROKU {
         return format!("{}://{}{}", HEROKU_WSMETHOD, game_server, endpoint);

@@ -44,7 +44,7 @@ impl Component for Oponent {
     }
 }
 
-fn render_opponent(name: &String, number_of_cards: u32) -> Html {
+fn render_opponent(name: &str, number_of_cards: u32) -> Html {
     html! {
         <>
             <div class="h-1/6">

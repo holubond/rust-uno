@@ -1,8 +1,9 @@
 use crate::components::card::{CardInfo, CardType, Color};
 use crate::components::myuser::MyUser;
 use crate::components::oponent::Oponents;
-use crate::module::module::{CardConflictMessageResponse, MessageResponse, PlayCardRequest};
+use crate::module::modul::{CardConflictMessageResponse, MessageResponse, PlayCardRequest};
 use crate::module::ws::ws_msg_handler;
+use crate::sample_data::test_session;
 use crate::url;
 use crate::url::game_ws;
 use crate::util::alert::alert;
@@ -26,7 +27,7 @@ pub enum Msg {
     PlayCard(PlayCardRequest),
     DrawCard,
     UpdateStatus(Message),
-    PlaySubmitSuccess(PlayCardRequest),
+    PlaySubmitSuccess,
 }
 
 pub struct Game {
@@ -86,9 +87,9 @@ impl Component for Game {
     fn create(ctx: &Context<Self>) -> Self {
         let game: GameStore = gloo_storage::LocalStorage::get("lastGame").unwrap();
         let copy_id = game.game_id.clone();
-        let real_id = copy_id.split("@").collect::<Vec<&str>>();
+        let real_id = copy_id.split('@').collect::<Vec<&str>>();
         let link = ctx.link().clone();
-        let ws = WebSocket::open(&game_ws(&game.token.clone(), game.server.clone())).unwrap();
+        let ws = WebSocket::open(&game_ws(&game.token, game.server.clone())).unwrap();
         let (_write, mut read) = ws.split();
         let default_data = Self {
             client: Arc::new(Client::new()),
@@ -112,22 +113,21 @@ impl Component for Game {
         };
         spawn_local(async move {
             while let Some(msg) = read.next().await {
-                match msg {
-                    Ok(x) => {
-                        log!(format!("got msg in ws: {:?}", x));
-                        link.send_message(Msg::UpdateStatus(x.clone()));
-                        ()
-                    }
-                    Err(_) => (),
+                if let Ok(x) = msg {
+                    log!(format!("got msg in ws: {:?}", x));
+                    link.send_message(Msg::UpdateStatus(x.clone()));
                 }
             }
             log!("WebSocket Closed")
         });
 
-        //test purposes data
-        //test_session(game,)
+        test_session(GameStore {
+            game_id: "".to_string(),
+            server: "".to_string(),
+            token: "".to_string(),
+        });
 
-        return default_data;
+        default_data
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -157,21 +157,14 @@ impl Component for Game {
                 let client = self.client.clone();
                 let id = self.real_game_id.clone();
                 let token = self.game.token.clone();
-                let said_uno = self.uno_bool.clone();
+                let said_uno = self.uno_bool;
                 let game_server = self.game.server.clone();
                 log!("play game sending");
                 ctx.link().send_future(async move {
-                    match play_card_request(
-                        client,
-                        id,
-                        token,
-                        card.clone(),
-                        said_uno.clone(),
-                        game_server,
-                    )
-                    .await
+                    match play_card_request(client, id, token, card.clone(), said_uno, game_server)
+                        .await
                     {
-                        Ok(_) => Msg::PlaySubmitSuccess(card),
+                        Ok(_) => Msg::PlaySubmitSuccess,
                         Err(err) => Msg::SubmitFailure(err),
                     }
                 });
@@ -193,7 +186,7 @@ impl Component for Game {
             }
 
             Msg::SubmitSuccess => {}
-            Msg::PlaySubmitSuccess(card) => {
+            Msg::PlaySubmitSuccess => {
                 if self.uno_bool {
                     self.uno_bool = false;
                 }
@@ -274,7 +267,6 @@ impl Component for Game {
             };
         }
         if self.status.eq(&GameState::Finished) {
-            log!("KONEC");
             return html! {
                 <main class="w-screen h-screen flex flex-col justify-center items-center bg-gray-300">
                     <div class="flex flex-col rounded-lg bg-white shadow-md w-1/3 h-3/4">
@@ -331,7 +323,7 @@ impl Component for Game {
                             id="uno"
                             class="bg-gray-200 w-full py-2 px-4"
                             type="checkbox"
-                            checked={self.uno_bool.clone()}
+                            checked={self.uno_bool}
                             onchange={ctx.link().callback(|_| Msg::UnoChanged)}
                         />
                         <label for="uno">{"UNO!"}</label>
@@ -386,19 +378,19 @@ fn print_discarded_card(card: CardInfo) -> Html {
         >
             <div class="h-1/3">
                 <p class="text-4xl text-left text-White-500 font-bold">
-                    { format!("{}", print_value) }
+                    { print_value.to_string() }
                 </p>
             </div>
 
             <div class="h-1/3 flex justify-center">
                 <p class="text-4xl text-center bg-gray-300 text-Black-500 font-bold">
-                    { format!("{}", print_value) }
+                    { print_value.to_string() }
                 </p>
             </div>
 
             <div class="h-1/3">
                 <p class="text-4xl text-right text-White-500 font-bold">
-                    { format!{"{}", print_value} }
+                    { print_value.to_string() }
                 </p>
             </div>
         </div>
@@ -423,7 +415,7 @@ async fn submit_start_game(
         | StatusCode::FORBIDDEN
         | StatusCode::NOT_FOUND
         | StatusCode::CONFLICT => match response.json::<MessageResponse>().await {
-            Ok(x) => Err(x.message.clone()),
+            Ok(x) => Err(x.message),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
         _ => Err("Undefined error occurred.".to_string()),
@@ -447,12 +439,12 @@ async fn draw_card_request(
         StatusCode::NO_CONTENT => Ok(()),
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN | StatusCode::NOT_FOUND => {
             match response.json::<MessageResponse>().await {
-                Ok(x) => Err(x.message.clone()),
+                Ok(x) => Err(x.message),
                 _ => Err("Error: message from server had bad struct.".to_string()),
             }
         }
         StatusCode::CONFLICT => match response.json::<CardConflictMessageResponse>().await {
-            Ok(x) => Err(x.message.clone()),
+            Ok(x) => Err(x.message),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
         _ => Err("Undefined error occurred.".to_string()),
@@ -468,9 +460,8 @@ async fn play_card_request(
     game_server: String,
 ) -> Result<(), String> {
     card.said_uno = said_uno;
-    match card.new_color {
-        Some(x) => card.new_color = Some(x.to_uppercase()),
-        None => (),
+    if let Some(x) = card.new_color {
+        card.new_color = Some(x.to_uppercase())
     }
     let url = url::play_card(game_id, game_server);
     let response = client.post(url).json(&card).bearer_auth(token).send().await;
@@ -484,11 +475,11 @@ async fn play_card_request(
         | StatusCode::UNAUTHORIZED
         | StatusCode::FORBIDDEN
         | StatusCode::NOT_FOUND => match response.json::<MessageResponse>().await {
-            Ok(x) => Err(x.message.clone()),
+            Ok(x) => Err(x.message),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
         StatusCode::CONFLICT => match response.json::<CardConflictMessageResponse>().await {
-            Ok(x) => Err(x.message.clone()),
+            Ok(x) => Err(x.message),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
         _ => Err("Undefined error occurred.".to_string()),

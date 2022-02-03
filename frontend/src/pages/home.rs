@@ -1,4 +1,4 @@
-use crate::module::module::{MessageResponse, SuccessLBResponse};
+use crate::module::modul::{MessageResponse, SuccessLBResponse};
 use crate::util::alert::alert;
 use crate::util::local_storage;
 use crate::{url, Route};
@@ -69,7 +69,7 @@ impl Component for Home {
                             ai_val = "0".to_string();
                         }
                         if ai_val.parse::<i32>().unwrap() > 5 {
-                            alert("Game can have maximum of 5 oponents!");
+                            alert("Game can have maximum of 5 opponents!");
                             return false;
                         }
                         if ai_val.parse::<i32>().unwrap() < 0 {
@@ -306,7 +306,7 @@ async fn send_create_game_request(
         | StatusCode::NOT_FOUND
         | StatusCode::CONFLICT
         | StatusCode::SERVICE_UNAVAILABLE => match response.json::<MessageResponse>().await {
-            Ok(x) => Err(x.message.clone()),
+            Ok(x) => Err(x.message),
             _ => Err("Error: message from server had bad struct.".to_string()),
         },
         _ => Err("Undefined error occurred.".to_string()),
@@ -330,7 +330,7 @@ async fn send_join_game_lb_request(
         },
         StatusCode::NOT_FOUND | StatusCode::BAD_REQUEST | StatusCode::INTERNAL_SERVER_ERROR => {
             match response.json::<MessageResponse>().await {
-                Ok(x) => Err(x.message.clone()),
+                Ok(x) => Err(x.message),
                 _ => Err("Error: message from server had bad struct.".to_string()),
             }
         }
@@ -359,7 +359,7 @@ async fn send_join_game_gs_request(
         },
         StatusCode::BAD_REQUEST | StatusCode::NOT_FOUND | StatusCode::GONE => {
             match response.json::<MessageResponse>().await {
-                Ok(x) => Err(x.message.clone()),
+                Ok(x) => Err(x.message),
                 _ => Err("Error: message from server had bad struct.".to_string()),
             }
         }
